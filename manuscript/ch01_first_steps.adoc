@@ -1,6 +1,6 @@
-= Introduction
+= First Steps
 
-:imagesdir: ../images/ch01_introduction
+:imagesdir: ../images/ch01_first_steps
 
 This chapter covers
 
