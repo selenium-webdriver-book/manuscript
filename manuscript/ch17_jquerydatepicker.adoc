@@ -1,4 +1,4 @@
-= Automating jQuery Datepicker
+= Chapter 17: Automating jQuery Datepicker
 
 :imagesdir: ../images/ch17_datepicker
 

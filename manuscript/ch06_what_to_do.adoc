@@ -1,4 +1,4 @@
-= What To Do When Something Goes Wrong
+= Chapter 6: What To Do When Something Goes Wrong
 
 :imagesdir: ../images/ch06_what_to_do
 

@@ -1,4 +1,4 @@
-= What you need to know about different browsers
+= Chapter 11: What you need to know about different browsers
 
 :imagesdir: ../images/ch11_drivers
 

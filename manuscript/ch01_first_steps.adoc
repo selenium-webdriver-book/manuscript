@@ -1,4 +1,4 @@
-= First Steps
+= Chapter 1: First Steps
 
 :imagesdir: ../images/ch01_first_steps
 

@@ -1,14 +1,13 @@
 {
-    "plugins": ["ga", "disqus", "anchors", "layout"],
+    "plugins": ["ga", "disqus", "anchors"],
+    "title": "Alex and Yujun's Selenium WebDriver Book",
+    "author": "Alex Collins & Yujun Liang",
     "pluginsConfig": {
         "ga": {
             "token": "UA-63355774-1"
         },
         "disqus": {
            "shortName": "seleniumwebdriverinpractice"
-       },
-       "layout": {
-        	"headerPath" : "layouts/header.html"
         }
      }
 }

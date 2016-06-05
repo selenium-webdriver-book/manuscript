@@ -1,4 +1,4 @@
-= Automating a page flow
+= Chapter 15: Automating a page flow
 
 :imagesdir: ../images/ch15_pageflow
 

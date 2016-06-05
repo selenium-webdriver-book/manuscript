@@ -1,4 +1,4 @@
-= Examining HTML Tables
+= Chapter 16: Examining HTML Tables
 
 :imagesdir: ../images/ch16_table
 

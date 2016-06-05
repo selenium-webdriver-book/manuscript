@@ -1,4 +1,4 @@
-= Windows, pop-ups, and frames
+= Chapter 8: Windows, pop-ups, and frames
 
 :imagesdir: ../images/ch08_windows
 

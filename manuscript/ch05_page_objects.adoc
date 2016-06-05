@@ -1,4 +1,4 @@
-= Making maintainable tests using the Page Object pattern
+= Chapter 4: Making maintainable tests using the Page Object pattern
 
 :imagesdir: ../images/ch05_page_objects
 

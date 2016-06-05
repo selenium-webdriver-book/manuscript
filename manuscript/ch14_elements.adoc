@@ -1,4 +1,4 @@
-= Encapsulating and Grouping elements
+= Chapter 14: Encapsulating and Grouping elements
 
 :imagesdir: ../images/ch14_elements
 

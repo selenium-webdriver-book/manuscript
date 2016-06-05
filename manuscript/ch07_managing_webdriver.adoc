@@ -1,4 +1,4 @@
-= Managing WebDriver
+= Chapter 7: Managing WebDriver
 
 :imagesdir: ../images/ch07_managing_webdriver
 

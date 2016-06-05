@@ -1,4 +1,4 @@
-= Examining a page
+= Chapter 4: Examining a page
 
 :imagesdir: ../images/ch04_examining_a_page
 

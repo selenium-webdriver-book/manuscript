@@ -1,4 +1,4 @@
-= Locating elements on a page
+= Chapter 2: Locating elements on a page
 
 :imagesdir: ../images/ch02_locating_elements
 

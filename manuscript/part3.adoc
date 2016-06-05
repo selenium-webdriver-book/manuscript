@@ -1,4 +1,4 @@
-= Page Based Automation Framework
+= Part 3: Page Based Automation Framework
 
 :imagesdir: ../images/part3
 

@@ -1,4 +1,4 @@
-= Forming a Framework
+= Chapter 13: Forming a Framework
 
 :imagesdir: ../images/ch13_framework
 

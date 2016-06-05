@@ -1,4 +1,4 @@
-= Datepicker Framework
+= Chapter 18: Datepicker Framework
 
 :imagesdir: ../images/ch18_datepicker
 

@@ -4,24 +4,22 @@ set -eu
 cd $(dirname $0)/../manuscript
 
 function part {
-  section part $1 Part
+  section part $1
 }
 
 function ch {
-  section ch $1 Chapter
+  section ch $1
 }
 
 function appendix {
-  section ap $1 Appendix
+  section ap $1
 }
 
 function section {
   PREFIX=$1
   ID=$2
-  NAME=$3
   FILE=$(ls | grep $PREFIX$ID)
-  CHAPTER_TITLE=$(grep '^= ' $FILE | cut -c 3-)
-  TITLE="$NAME $(echo $ID | sed 's/^0*//'): $CHAPTER_TITLE"
+  TITLE=$(grep '^= ' $FILE | cut -c 3-)
   echo "link:manuscript/$FILE[$TITLE]"
 }
 

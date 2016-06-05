@@ -1,4 +1,4 @@
-= Selenium Grid
+= Appendix A: Selenium Grid
 
 :imagesdir: ../images/apA_selenium_grid
 

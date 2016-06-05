@@ -4,7 +4,7 @@
 * link:manuscript/ch02_locating_elements.adoc[Chapter 2: Locating elements on a page]
 * link:manuscript/ch03_interacting_with_elements.adoc[Chapter 3: Interacting with elements on a page]
 * link:manuscript/ch04_examining_a_page.adoc[Chapter 4: Examining a page]
-* link:manuscript/ch05_page_objects.adoc[Chapter 5: Making maintainable tests using the Page Object pattern]
+* link:manuscript/ch05_page_objects.adoc[Chapter 4: Making maintainable tests using the Page Object pattern]
 * link:manuscript/ch06_what_to_do.adoc[Chapter 6: What To Do When Something Goes Wrong]
 * link:manuscript/part2.adoc[Part 2: WebDriver APIs In Depth]
 * link:manuscript/ch07_managing_webdriver.adoc[Chapter 7: Managing WebDriver]

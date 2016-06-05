@@ -1,4 +1,4 @@
-= Unicorns and other beasts: Exotic features of web pages
+= Chapter 9: Unicorns and other beasts: Exotic features of web pages
 
 :imagesdir: ../images/ch09_unicorns
 

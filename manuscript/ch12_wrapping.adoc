@@ -1,4 +1,4 @@
-= Wrapping WebDriver and WebElement
+= Chapter 12: Wrapping WebDriver and WebElement
 
 :imagesdir: ../images/ch12_wrapping
 

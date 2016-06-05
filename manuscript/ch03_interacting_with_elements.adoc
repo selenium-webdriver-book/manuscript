@@ -1,4 +1,4 @@
-= Interacting with elements on a page
+= Chapter 3: Interacting with elements on a page
 
 :imagesdir: ../images/ch03_interacting_with_elements
 

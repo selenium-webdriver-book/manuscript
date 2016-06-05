@@ -1,4 +1,4 @@
-= Executing JavaScript using the `JavascriptExecutor` interface
+= Chapter 10: Executing JavaScript using the `JavascriptExecutor` interface
 
 :imagesdir: ../images/ch10_javascript
 

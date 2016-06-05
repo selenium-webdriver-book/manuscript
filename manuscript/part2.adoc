@@ -1,3 +1,3 @@
-= WebDriver APIs In Depth
+= Part 2: WebDriver APIs In Depth
 
 In this section we will dive into how to use the WebDriver APIs for automating more complex page elements. We’ll also look at automating JavaScript web applications. Finally, we’ll introduce you to each of the main drivers, such as the Firefox Driver, as well as mobile drivers for iOS and Android.
