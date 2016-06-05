@@ -1,0 +1,34 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+interface SearchScope
+
+interface ExplicitWait
+
+interface FormElements
+FormElements : void setInputText(Supplier<By> by, String value)
+FormElements : String getInputText(Supplier<By> by)
+FormElements : void setCheckboxValue(Supplier<By> by, boolean value)
+FormElements : boolean isChecked(Supplier<By> by)
+FormElements : void setRadio(Supplier<By> by, String value)
+FormElements : String getRadio(Supplier<By> by)
+FormElements : Select getSelect(Supplier<By> by)
+
+SearchScope <|--  ExplicitWait
+
+ExplicitWait <|--   FormElements
+
+FormElements <|..  Browser
+FormElements <|..  Element
+
+Browser : doubleClick(Supplier<By> by)
+
+note "These methods can be accessed\nfrom both Browser and Element" as N1
+
+FormElements . N1
+N1 .. Browser
+N1 .. Element
+
+@enduml

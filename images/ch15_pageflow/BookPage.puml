@@ -1,0 +1,26 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+BookstoreHomepage : Browser browser
+note top : Page Flow starts from here
+
+BookstoreHomepage : void searchBook(String bookname)
+note left : Used to handle step\n1,2 in Figure 15.2
+
+BookListPage : Browser browser
+BookListPage : void chooseBook(String bookname)
+note right : Used to handle step\n3 in Figure 15.2
+
+BookPage : Browser browser
+BookPage : void addToCart()
+BookPage : void gotoCart()
+note left : Used to handle step\n4,5 in Figure 15.2
+
+BookstoreHomepage "1" *--- "1" Browser
+BookListPage "1" *--- "1" Browser
+BookPage "1" *-- "1" Browser
+note right : After chooseBook,\nthe browser is on book page
+
+@enduml

@@ -1,0 +1,21 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+interface Attemptable
+
+Attemptable : void attempt()
+
+Retry : int count
+Retry : int interval
+Retry : TimeUnit unit
+note right: You can create a Retry with\n how many times you want\n to retry and what's the\n interval between each retry
+
+Retry : void attempt(Attemptable)
+
+Retry --  Attemptable : attempt >
+note right: You can implement the logic to be retried on failure\n inside the attempt method of Attemptable
+
+
+@enduml

@@ -1,0 +1,32 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+interface SearchScope
+interface ExplicitWait
+
+class DelegatingSearchContext<T extends SearchContext>
+
+SearchScope  <|--    ExplicitWait
+
+
+SearchScope : Element findElement(Supplier<By> by)
+SearchScope : Stream<Element> findElements(Supplier<By> by)
+SearchScope : Optional<Element> optionalElement(Supplier<By> by)
+SearchScope : boolean isPresent(Supplier<By> by)
+note right : search related interface
+
+ExplicitWait <|.. DelegatingSearchContext
+
+ExplicitWait : Element await(Supplier<By> by)
+ExplicitWait : void await(Predicate<SearchScope> predicate)
+ExplicitWait : click(Supplier<By> by)
+ExplicitWait : getText(Supplier<By> by)
+ExplicitWait : getUpperText(Supplier<By> by)
+note right : search with timeout related interface
+
+DelegatingSearchContext : T delegate
+note right : T is any type extending SearchContext
+
+@enduml

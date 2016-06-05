@@ -1,0 +1,93 @@
+@startuml
+
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+
+participant "Test Script"
+participant Datepicker
+participant CalendarPicker
+participant DisplayMonth
+participant NextMonth
+participant PreviousMonth
+participant Browser
+participant Element
+
+activate "Test Script"
+"Test Script" -> Datepicker : pick(APRIL, 1, 2018)
+activate Datepicker
+Datepicker -> CalendarPicker : pick(APRIL)
+activate CalendarPicker
+CalendarPicker -> DisplayMonth: apply(browser)
+activate DisplayMonth
+DisplayMonth -> Browser: await(CALENDAR)
+activate Browser
+Browser -> Element: <<create>>
+activate Element
+Element --> Browser
+deactivate Element
+Browser -> DisplayMonth : Element
+deactivate Browser
+
+DisplayMonth -> Element : getText(MONTH)
+activate Element
+
+Element -> DisplayMonth : displayMonth
+deactivate Element
+
+DisplayMonth -> CalendarPicker: displayMonth
+deactivate DisplayMonth
+
+alt if (APRIL > displayMonth) - pick a future date
+
+ loop (APRIL - displayMonth) times
+
+      CalendarPicker -> NextMonth: accept(browser)
+      activate NextMonth
+      NextMonth -> Browser : await(CALENDAR)
+      activate Browser
+      Browser -> Element: <<create>>
+      activate Element
+      Element --> Browser
+      deactivate Element
+      Browser -> NextMonth : Element
+      deactivate Browser
+      NextMonth -> Element: click(NEXT_MONTH_BUTTON)
+      activate Element
+      Element --> NextMonth
+      deactivate Element
+
+      NextMonth --> CalendarPicker
+      deactivate NextMonth
+ end
+
+else pick a past date
+
+ loop (displayMonth - APRIL) times
+     CalendarPicker -> PreviousMonth: accept(browser)
+     activate PreviousMonth
+     PreviousMonth -> Browser : await(CALENDAR)
+     activate Browser
+     Browser -> Element: <<create>>
+
+     activate Element
+     Element -> Browser
+     deactivate Element
+     Browser -> PreviousMonth : Element
+     deactivate Browser
+     PreviousMonth -> Element: click(PREV_MONTH_BUTTON)
+     activate Element
+     Element --> PreviousMonth
+     deactivate Element
+     PreviousMonth --> CalendarPicker
+     deactivate PreviousMonth
+ end
+      deactivate Browser
+end
+
+CalendarPicker --> Datepicker
+deactivate CalendarPicker
+Datepicker --> "Test Script"
+deactivate Datepicker
+
+@enduml

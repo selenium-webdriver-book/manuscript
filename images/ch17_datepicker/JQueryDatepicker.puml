@@ -1,0 +1,43 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+JQueryCalendar : Browser browser
+JQueryCalendar : void show()
+note bottom : The calendar is displayed\nafter calling show
+
+JQueryMonthPicker : Browser browser
+JQueryMonthPicker : void pickMonth(int month)
+JQueryMonthPicker : void previousMonth()
+JQueryMonthPicker : void nextMonth()
+JQueryMonthPicker : int displayMonth()
+note right : Used to pick\nmonth
+
+JQueryYearPicker : Browser browser
+JQueryYearPicker : JQueryMonthPicker monthPicker
+JQueryYearPicker : void pickYear(int year)
+JQueryYearPicker : void previousYear()
+JQueryYearPicker : void nextYear()
+JQueryYearPicker : int displayYear()
+note bottom : Used to pick year\nIn nextYear(), it calls\nnextMonth() 12 times.\nIn previousYear(), it calls\npreviousMonth 12 times
+
+JQueryDatepicker "1" *-- "1" JQueryCalendar : contains
+JQueryDatepicker "1" *-- "1" JQueryYearPicker : contains
+JQueryDatepicker "1" *-- "1" JQueryMonthPicker : contains
+JQueryDatepicker "1" *-- "1" JQueryDayPicker : contains
+JQueryYearPicker "1" *-- "1" JQueryMonthPicker : contains
+
+JQueryDatepicker : Browser browser
+JQueryDatepicker : JQueryMonthPicker yearPicker
+JQueryDatepicker : JQueryMonthPicker monthPicker
+JQueryDatepicker : JQueryDayPicker dayPicker
+JQueryDatepicker : void pick(Month, int, int)
+note right : Test script calls\npick(APRIL, 1, 2014)
+
+
+JQueryDayPicker : Browser browser
+JQueryDayPicker : void pickDay(int day)
+note bottom : Used for pick the\nday of the month
+
+@enduml

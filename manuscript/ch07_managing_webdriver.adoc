@@ -1,0 +1,469 @@
+= Managing WebDriver
+
+:imagesdir: ../images/ch07_managing_webdriver
+
+This chapter covers:
+
+* How to make sure browsers are properly set up and cleaned up
+* Using *Dependency Injection* to manage your driver
+
+We have all seen it. You've created a fantastic suite of tests. You've set up a Continuous Integration server, such as Jenkins, which is running your test suite regularly and notifying you of any problems with your website. But one day, the Continuous Integration server starts running slowly. You log in to it remotely, only to find dozens of open browsers that have failed to quit. Or perhaps your script has run on another server and failed, but the browser has closed so you do not know why. Or maybe you have a suite of tests that you are running against a test environment, but you need to run them against a preproduction environment, or you have a suite of tests that you are running against one web driver, but you need to run them against other versions. Perhaps your suite is opening a new browser for every test and is extremely slow.
+
+Many of these problems come from "unmanaged" web drivers. But what do I mean by a "managed driver"? It's a driver that is managed by a part of your software. That part is responsible for creating and quitting the driver, so that your tests can focus on testing. In this chapter we will look at how the *Dependency Injection* design pattern can be used to achieve more robust test suites. As usual, we will try to ensure they can be retrofitted to existing code bases.
+
+[sidebar]
+.Dependency Injection in non-Java Languages
+****
+In this chapter we focus on using the Java Spring framework. Martin Fowler has an excellent article on his website describing it in detail: http://www.martinfowler.com/articles/injection.html. Frameworks in other languages also exist, and these can also be used to manage drivers.
+****
+
+By the end of this chapter you will have learned:
+
+* How to make sure browsers are closed at the end of your tests
+* How to use Dependency Injection to reuse a single web driver
+* How to take a screenshot automatically
+
+== Quitting the driver, even if the Java Virtual Machine crashes
+
+The Java Virtual Machine (JVM) can crash, or be forcibly terminated. When this happens, the web driver might not have an opportunity to quit and the browser can remain open.
+
+You have probably seen a JUnit test that sets up a driver and then quits in the teardown method, something similar to the following:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/basic/CommonWebDriverIT.java[CommonWebDriverIT.java]
+----
+    public class CommonWebDriverIT {
+
+	    private final WebDriver driver = new FirefoxDriver();
+
+	    @After
+	    public void tearDown() throws Exception {
+	        driver.quit();
+	    }
+
+	    @Test
+	    public void checkTheRegistrationPage() throws Exception {
+	        // get page, interact and then verify
+	    }
+	}
+----
+
+On initial inspection, everything looks fine. You are creating a driver, using it in your test, and then quitting it when complete. This will work fine to start with, but what happens if you kill the JVM mid-test? The browser will stay open. JUnit does not get the chance to perform the cleanup operation. In Java, you can create a method named `finalize` for any class. This is a special method that the JVM will try to call when the object is garbage collected. It can be used by that object to clean up any resources it might be using. WebDriver is a resource. Maybe you can try to make your code more robust by overriding `finalize`?
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/basic/FinalizeWebDriverIT.java[FinalizeWebDriverIT.java]
+----
+    @Override
+    protected void finalize() throws Throwable {
+        driver.quit();
+        super.finalize();
+    }
+----
+
+Unfortunately, Java makes no promises about when, or even if, the `finalize` method will be called. This won't solve your problem, as you can still be left with an open browser.
+
+A more robust option is to make sure the browser is closed by adding a JVM *shutdown hook* footnote:[http://docs.oracle.com/javase/8/docs/api/java/lang/Runtime.html#addShutdownHook-java.lang.Thread-]. A shutdown hook is executed automatically when the JVM terminates.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/basic/ShutdownHookWebDriverIT.java[ShutdownHookWebDriverIT.java]
+----
+    private WebDriver driver;
+
+    @Before
+    public void setUp() throws Exception {
+        driver = new FirefoxDriver();
+        Runtime.getRuntime().addShutdownHook(new Thread(driver::quit));
+    }
+----
+
+This is a very basic way to manage the lifecycle of the driver. It's not the best solution, for a few reasons:
+
+* There will be a lot of duplicate code related to cleanup.
+* A new browser is created for each test, but you might want to reuse the same browser to make your tests faster.
+
+In the next section, you will see strategies to solve these problems.
+
+== Having a single place to supply drivers
+
+What was your first thought about the duplicate code above? Extract it into a common abstract superclass? If you thought that, then you may have been about to couple your tests into a single unit dependent on that class. You were about to take a step toward making your test suite harder to maintain.
+
+What you can do is have a class to encapsulate the creation and management of the driver. You can then use that class to inject your tests with a driver.
+
+=== Technique 20: Injecting a driver
+
+I've mentioned Dependency Injection in this chapter, but you've not yet seen any code. Injecting a driver into your test is the first step in separating the management of the driver from the test.
+
+==== Problem
+
+You want to reduce the amount of duplicate code for creating and quitting drivers.
+
+==== Solution
+
+Use the Spring Framework footnote:[http://docs.spring.io/spring/docs/current/spring-framework-reference/html/beans.html] to create a Spring context, which is used to inject the driver into your tests.
+
+*Dependency Injection (DI)* footnote:[https://en.wikipedia.org/wiki/Dependency_injection] is also known as *Inversion of Control (IoC)*. It is a design pattern that says that rather than an object finding its own dependencies, a third party determines them on its behalf.
+
+Normally, if a class has a dependency on an instance of another class, it will create an instance of that class itself, using the `new` keyword. If you use DI, you state that you want the framework executing your code to choose an appropriate class for you.
+
+In our case, this is a bit like saying "this test needs a web driver, but it is up to the test framework that runs the test to choose which web driver the test will run using." Not only does your test no longer need to create and configure a driver, but the responsibility for cleaning that driver up becomes a responsibility of the framework too. This leaves your test focused on testing.
+
+image::dependency-injection.png[title="Dependency Injection"]
+
+The `@Inject` annotation is a standard Java way for marking a field as one that needs injecting. By annotating a field on a test that is of class `WebDriver` with the `@Inject` annotation, you're saying to the software that runs the test, "please set this field to the driver you think it should be."
+
+Using DI, you remove the need for tests to have any boilerplate code for getting dependencies, making them simpler, easier to maintain, and more flexible. Spring includes an excellent DI framework. You can use Spring to inject the tests. Spring provides a JUnit test runner that will run your tests, injecting dependencies into them.
+
+The Spring Framework allows you to create a configuration for your tests. The configuration defines a **context**, which is essentially a set of Java objects (known as "beans") that can be reused for each test. It manages the beans so they are initialized when created, and destroyed when the context ceases to be used.
+
+I'm going to assume you are using Maven to build your project. You will need a couple of additional dependencies for this technique:
+
+[source,xml]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/pom.xml[pom.xml]
+----
+	<dependency>
+	    <groupId>org.springframework</groupId>
+	    <artifactId>spring-context-support</artifactId>
+	    <version>4.2.5.RELEASE</version> <1>
+	    <scope>test</scope>
+	</dependency>
+	<dependency>
+	    <groupId>org.springframework</groupId>
+	    <artifactId>spring-test</artifactId>
+	    <version>4.2.5.RELEASE</version>
+	    <scope>test</scope>
+	</dependency>
+----
+<1> You should update this version to the latest
+
+Then, you can create a configuration file that defines the context for your tests:
+
+// TODO - update these listing to reflect the current code
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/injectingdriver/WebDriverConfig.java[WebDriverConfig.java]
+----
+@Configuration
+public class WebDriverConfig {
+
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer(); // <1>
+    }
+
+    @Bean
+    public DesiredCapabilities desiredCapabilities(
+            @Value("${webdriver.capabilities.browserName:firefox}") String browserName // <2>
+    ) {
+        return new DesiredCapabilities(browserName, "", Platform.ANY);
+    }
+
+    @Bean(destroyMethod = "quit") // <3>
+    public WebDriver webDriver(DesiredCapabilities desiredCapabilities) { // <4>
+        switch (desiredCapabilities.getBrowserName()) {
+            case BrowserType.FIREFOX:
+                return new FirefoxDriver(desiredCapabilities);
+            case BrowserType.HTMLUNIT:
+                return new HtmlUnitDriver(desiredCapabilities);
+            default:
+                throw new IllegalStateException("unknown browser " + desiredCapabilities.getBrowserName());
+        }
+    }
+}
+
+----
+<1> This is a special bean that you need so that the `${...}` properties are supported.
+<2> Here you can use `@Value` to get a property for the browser. The `:firefox` part of the property indicates that the desired browser should default to Firefox.
+<3> If you need to clean up any beans once you've used the context, you need to tell Spring. Here it is told the `quit` method must be called for cleanup.
+<4> Return a desired `WebDriver` implementation based on the `getBrowserName()`
+
+[sidebar]
+.Spring XML Config vs. Spring Java Config
+****
+Spring provides two ways to define a context. The first way is using XML, but since Spring version 3, you can use Java Config. Java Config is much less verbose than XML, so we'll be using it in all the examples.
+****
+
+Finally, you can update your test to have the necessary annotations:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/injectingdriver/InjectedDriverIT.java[InjectedDriverIT.java]
+----
+@RunWith(SpringJUnit4ClassRunner.class) // <1>
+@ContextConfiguration(classes = WebDriverConfig.class) // <2>
+public class InjectedDriverIT {
+    @Inject
+    private WebDriver driver; // <3>
+
+    @Test
+    public void loadIndexPage() throws Exception {
+        driver.get("http://localhost:8080/index.html");
+    }
+}
+
+----
+<1> Tell JUnit to run the test with a custom runner: the Spring runner.
+<2> Tell Spring where the configuration is.
+<3> Indicate to Spring where to inject a driver.
+
+==== Discussion
+
+Using Dependency Injection gives the control of which driver to use for the test to the configuration. If you want the configuration to return the Chrome driver, you can do this. The tests will run using that driver, but without any change to the tests themselves. WebDriver provides a class named `DesiredCapabilities` that indicates what kind of browser capabilities you want. One of those capabilities is `browserName`. You can change the browser you want to use for your tests using a system property. For example, to run the tests using the HTMLUnit driver:
+
+[source,bash]
+----
+mvn ... -Dwebdriver.capabilities.browserName=htmlunit
+----
+
+You will see that I have prefixed the property's name with the string `webdriver`. If you use a common prefix like this, then you are unlikely to find your property name is the same as that used by another library your application depends on.
+
+Currently, this doesn't allow you to run remote web drivers, but you can expand your configuration by having a method to create remote drivers:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/WebDriverConfig.java[framework/WebDriverConfig.java]
+----
+    private WebDriver remoteDriver(URL remoteUrl, DesiredCapabilities desiredCapabilities) {
+        return new Augmenter().augment(new RemoteWebDriver(remoteUrl, desiredCapabilities)); // <1>
+    }
+----
+<1> You need to augment your driver if you want to take screenshots.
+
+[sidebar]
+.The `Augmenter` class
+****
+The `RemoteWebDriver` class won't allow you to take screenshots as it does not implement the `TakesScreenshot` interface. You need to wrap it in an `Augmenter` if you want to take screenshots.
+****
+
+And another for local drivers:
+
+[source,java]
+.https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/WebDriverConfig.java[framework/WebDriverConfig.java]
+----
+    private WebDriver localDriver(DesiredCapabilities desiredCapabilities) throws IOException {
+        switch (desiredCapabilities.getBrowserName()) {
+            case BrowserType.CHROME:
+                return new ChromeDriver(desiredCapabilities);
+            case BrowserType.FIREFOX:
+                return new FirefoxDriver(desiredCapabilities);
+            case BrowserType.HTMLUNIT:
+                return new HtmlUnitDriver(desiredCapabilities);
+            case BrowserType.SAFARI:
+                return new SafariDriver(desiredCapabilities);
+            default:
+                throw new IllegalStateException("unknown browser " + desiredCapabilities.getBrowserName());
+        }
+    }
+----
+
+Here is the method that creates the driver for the tests to use:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/WebDriverConfig.java[framework/WebDriverConfig.java]
+----
+    @Bean(destroyMethod = "quit")
+    public WebDriver webDriver(
+            @Value("${webdriver.remote:false}") boolean remoteDriver,
+            @Value("${webdriver.remote.url:http://localhost:4444/wd/hub}") URL remoteUrl,
+            DesiredCapabilities desiredCapabilities) throws Exception {
+
+        return remoteDriver ?
+                remoteDriver(remoteUrl, desiredCapabilities) :
+                localDriver(desiredCapabilities);
+    }
+----
+
+Now you can change the driver to remote based on the property `webdriver.remote`, and the URL using `webdriver.remote.url`.
+
+Tests running using Spring reuse the same beans. This means that the context can become "dirty." For example, cookies set as part of one test will remain for the next test. As cookies are often used for login, if the first test logged the user in but the second expected them to be logged out to start with, this will be a problem.
+
+This can be partly addressed by using the special Spring annotation `@Scope("prototype")`. This annotation tells Spring to create a new driver for every test. However, you might only need to use a driver whose cookies have been deleted, so you could add this method to your configuration:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/WebDriverConfig.java[framework/WebDriverConfig.java]
+----
+    @Bean
+    @Primary // <1>
+    @Scope("prototype")
+    public WebDriver cleanWebDriver(WebDriver driver) throws Exception {
+
+        driver.manage().deleteAllCookies(); // <2>
+
+        return driver;
+    }
+----
+<1> Mark this bean as "primary." This means that it'll be used in preference to other beans.
+<2> Use the `deleteAllCookies` method to clean the driver.
+
+This "clean" driver will be used for each test. But this might not be enough; the driver might be very dirty! For example, a pop-up might have been left open. You can resolve these more serious problems by annotating tests that make the driver very dirty with the `@DirtiesContext` annotation. This indicates to Spring that after these tests are run, the context should not be used again, and a fresh new one created and used for the next test. For example:
+
+[source,java]
+----
+    @Test
+    @DirtiesContext
+    public void dirtyTheDriver() throws Exception {
+        driver.get("http://localhost:8080/popups.html");
+
+        driver.findElement(By.linkText("Prompt")).click();
+    }
+----
+
+== Making code run using base URLs
+
+WebDriver requires absolute URLs. An absolute URL is one that includes the protocol, the host, and optionally the port; for example, <http://localhost:8080/my-page.html>. But what if you want to run the tests locally against one server, then on your CI server, making requests to a different server? You might want to specify a single *base URL* in one place, and then use that URL in all of your tests.
+
+=== Technique 21: Injecting a base URL
+
+The following technique makes use of Dependency Injection, but this time you inject a URL rather than the driver.
+
+==== Problem
+
+You want to run the same code against both a local and a remote web server.
+
+==== Solution
+
+Inject a base URL into your tests.
+
+Define the base URL in the Spring configuration file. Add the following lines:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/injectingbaseurl/WebDriverConfig.java[injectingbaseurl/WebDriverConfig.java]
+----
+    @Bean
+    public URI baseUrl(@Value("${webdriver.baseUrl:http://localhost:8080}") URI value) {
+        return value;
+    }
+----
+
+
+You can inject this into your code:
+
+[source,java]
+.https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/injectingbaseurl/InjectedBaseUrlIT.java[InjectedBaseUrlIT.java]
+----
+	@RunWith(SpringJUnit4ClassRunner.class)
+	@ContextConfiguration(classes = WebDriverConfig.class)
+	public class InjectedBaseUrlIT {
+	    @Inject
+	    private WebDriver driver;
+
+	    @Inject
+	    private URI baseUrl; <1>
+
+	    @Test
+	    public void loadIndexPage() throws Exception {
+	        driver.get(baseUrl + "/index.html");
+	    }
+}
+----
+<1> URL is injected here.
+
+You can run this test with alternative URLs from your terminal by using Maven and changing the property:
+
+[source,bash]
+----
+    mvn failsafe:integration-test \
+		-Dwebdriver.baseUrl=http://mytestserver
+		-Dit.test=InjectedBaseUrlIT
+----
+
+==== Discussion
+
+I hope you can see how using Dependency Injection means that you do not need to change your tests when the setup or configuration needs to change. The website is hosted somewhere else? You want to change the browser? No problem! All you need to do is update one property, and off you go!
+
+== Taking a screenshot when a test finishes
+
+It can be really helpful to take screenshots as part of a normal test cycle, for several reasons:
+
+1. A test fails and you cannot determine the reason it failed because the browser closed before there was a chance to see what happened.
+2. A test fails on your CI server, but passes locally and you want more information to diagnose it.
+3. A test does not provide enough information to diagnose it.
+
+=== Technique 22: Using the Spring test listener to take a screenshot when a test finishes
+
+WebDriver provides a way to take and save a screenshot. Spring has a mechanism that allows us to have code run each time a test finishes. This technique combines those two features to take a screenshot whenever a test fails.
+
+==== Problem
+
+You want to take a screenshot of the browser at the end of every test automatically.
+
+==== Solution
+
+To solve this problem, you'll need to:
+
+1. Expose the web driver's ability to take screenshots.
+2. Take a screenshot when a test finishes.
+3. Copy that screenshot somewhere safe, so it can be accessed later on.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/screenshot/ScreenshotTaker.java[ScreenshotTaker.java]
+----
+public class ScreenshotTaker extends AbstractTestExecutionListener { // <1>
+    @Override
+    public void afterTestMethod(TestContext testContext) throws Exception {
+        TakesScreenshot takesScreenshot = (TakesScreenshot)testContext.getApplicationContext()
+                .getBean(WebDriver.class); // <2>
+        File screenshot = takesScreenshot.getScreenshotAs(OutputType.FILE); // <3>
+        File file = new File("target",
+                testContext.getTestClass().getName() + "_" + testContext.getTestMethod().getName() + ".png"); // <4>
+        FileUtils.deleteQuietly(file);
+        FileUtils.moveFile(screenshot, file); // <5>
+        System.err.println("saved screenshot as " + file);
+    }
+}
+----
+<1> Extend the `AbstractTestExecutionListener` class.
+<2> Get the web driver from the Spring context and cast it to `TakesScreenshot`.
+<3> Save the screenshot as a file.
+<4> Choose a suitable name for the screenshot based on the test class and name.
+<5> Move the screenshot to somewhere safe.
+
+Finally, you need to annotate your test with the `@TestExecutionListeners` annotation, so that Spring is aware of the listeners.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/screenshot/ScreenshotIT.java[ScreenshotIT.java]
+----
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = WebDriverConfig.class)
+@TestExecutionListeners(listeners = {ScreenshotTaker.class, DependencyInjectionTestExecutionListener.class}) // <1>
+public class ScreenshotIT {
+    // ...
+}
+----
+<1> Add the `ScreenshotTaker` and `DependencyInjectionTestExecutionListener` to the `@TestExecutionListeners` annotation.
+
+You need to add both `TestExecutionListeners` and `DependencyInjectionTestExecutionListener` to the `@TestExecutionListeners` annotation. The first listener takes the screenshot and the second one performs the dependency injection. `DependencyInjectionTestExecutionListener` is normally added by default, but if you need to add more, then you need to override it.
+
+==== Discussion
+
+Taking screenshots is a great aid to debugging. You will want to tie in with the testing process to take them, and you want to make sure you name the files in a helpful fashion. The above example uses the test name to generate the name for the screenshot. If your test is running on a CI server, you will need to ensure it makes them available to view and does not delete them as part of its cleanup process.
+
+I am willing to bet that, like me, you have had instances where a test has failed on the CI server, but not enough information was output to help diagnose the problem. You then ran the test locally only to find it would always pass. Worse still, maybe you also have had to diagnose a test that failed on the CI only sporadically, but always passed locally! Having a screenshot taken at the time of the failure can make it much easier to understand what the cause was.
+
+Good diagnostics are key to any good testing framework. Here is a great example from WebDriver itself:
+
+[source,java]
+----
+    org.openqa.selenium.NoSuchElementException: Unable to locate element using css
+	For documentation on this error, please visit: http://seleniumhq.org/exceptions/no_such_element.html
+	Build info: version: '2.45.0', revision: '5017cb8e7ca8e37638dc3091b2440b90a1d8686f', time: '2015-02-27 09:10:26'
+	System info: host: 'alex-collinss-macbook.local', ip: '192.168.59.3', os.name: 'Mac OS X', os.arch: 'x86_64', os.version: '10.7.5', java.version: '1.8.0_20'
+	Driver info: driver.version: HtmlUnitDriver
+		at org.openqa.selenium.htmlunit.HtmlUnitDriver.findElementByCssSelector(HtmlUnitDriver.java:995)
+		at org.openqa.selenium.By$ByCssSelector.findElement(By.java:425)
+----
+
+From this, I have information about:
+
+1. The running code
+2. The computer the test is running on (OS and so on)
+3. Where to look for more information about the `NoSuchElementException` error
+
+Taking screenshots as part of the test lifecycle in a convention-based manner, rather than manually or ad hoc, means that everyone on your team will know where the screenshots can be found, and therefore will be able to diagnose failing tests quicker. This will reduce the maintenance cost of your test suite.
+
+== Summary
+
+* WebDriver doesn't provide any way to manage the driver; you need to do this yourself.
+* Browsers can remain open if you do not quit them. You need to take special action to close them. Otherwise, in the worst case, you might even crash a computer by opening too many browsers.
+* Dependency Injection allows you to have your driver managed centrally. Spring can manage and clean the driver up once it becomes very dirty.
+* Dependency Injection can also provide you with a way to inject a base URL.
+* Screenshots can be taken while running the tests and they are useful as a debugging aid when test fails
+
+This is the end of part one. We've covered all the fundamentals of WebDriver: locating, interacting, and checking elements; page objects; what to do when things go wrong; and managing WebDriver. In the next part we'll dig deeper into the APIs.

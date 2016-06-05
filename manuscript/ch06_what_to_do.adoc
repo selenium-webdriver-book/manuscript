@@ -1,0 +1,525 @@
+= What To Do When Something Goes Wrong
+
+:imagesdir: ../images/ch06_what_to_do
+
+In this chapter:
+
+* Retrying when you can't find a slippery element
+* Understanding implicit waits
+* Explicit waiting
+* Looking for alternative locators
+* Internationalization
+
+
+If only everything in life worked well! But that's not always the case. Your tests have to cooperate with WebDriver, with the browser, and with the web site you are testing. You don't want a set of tests that are failing most of the time due to issues with the tests, rather than issues with the application you are testing. These false positives may mean that you or your team start to see "red" as an indicator of a problem with the test suite, rather than a problem with your application, and gain a false sense of security. This is the dreaded "flaky test suite", which you'll either rapidly become habituated to and one day miss a critical issue, or spend a significant part of your time fixing. Stabilizing your tests is therefore key to keeping you and your team productive.
+
+Here we'll cover common errors when using WebDriver, such as elements that are stale or missing, as well as the causes and possible solutions. For the most common errors, you will see various strategies to mitigate them.
+
+By the end of the chapter, you will have learned a number of techniques that will help you keep your test suites stable and low maintenance.
+
+== Exceptions
+
+There are a large number of different exceptions that WebDriver can produce. They fall into two broad categories: those that are caused by problems with WebDriver (such as being unable to connect to the browser), and those that are caused by code not actually matching the behavior of the site you are testing.
+
+Let's have a look at a few of these exceptions.
+
+[[web-driver-exception]]
+image::web-driver-exception.png[title="WebDriver Exceptions"]
+
+ElementNotVisibleException:: An element is not visible, and therefore cannot be interacted with.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/CommonExceptionsIT.java[CommonExceptionsIT.java]
+----
+    @Before
+    public void setUp() throws Exception {
+        driver.get("/webdriver-exceptions.html");
+    }
+
+    @Test(expected = ElementNotVisibleException.class)
+    public void invisibleElementShouldNotBeVisible() throws Exception {
+        driver.findElement(By.id("invisible")).click();
+    }
+----
+
+You might want to try and wait for the element to become visible.
+
+NoSuchElementException:: This exception is thrown when trying to find an element that cannot be found on the page.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/CommonExceptionsIT.java[CommonExceptionsIT.java]
+----
+    @Test(expected = NoSuchElementException.class)
+    public void noSuchElement() throws Exception {
+        driver.findElement(By.id("no-such-element!")).click();
+    }
+----
+
+You might want to wait for the element to appear, or you might be on the wrong page.
+
+StaleElementReferenceException:: This exception occurs when trying to interact with an element that is no longer on the page, for example if the element has been removed from the page, or the browser has navigated to a new page.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/CommonExceptionsIT.java[CommonExceptionsIT.java]
+----
+    @Test(expected = StaleElementReferenceException.class)
+    public void elementShouldBeStaleWhenPageChanges() throws Exception {
+        WebElement button = driver.findElement(By.id("button"));
+        driver.get("/");
+        button.click(); // <1>
+    }
+----
+<1> This button is no longer visible.
+
+You need to try and locate the element again.
+
+TimeoutException::
+This exception is thrown when a WebDriver has been waiting for an operation to complete, but time ran out. If you're waiting for an element to appear, and it has not within the timeout, then the web application might have changed.
+
+NoAlertPresentException:: This exception is thrown when trying to interact with a JavaScrip alert, but this alert does not exist.
+
+UnsupportedCommandException:: Indicates that an operation you requested is not supported by the browser you are using.
+
+`WebDriverException` is the root of all WebDriver exceptions. Catching this catches all exceptions that WebDriver might produce. WebDriver produces superbly detailed and useful exceptions. Let's look at some of the information that you can find out from them:
+
+WebDriver build information, telling you how old your version is (e.g. if it is time to upgrade):: "Build info: version: '2.52.0', revision: '5017cb8e7ca8e37638dc3091b2440b90a1d8686f', time: '2015-02-27 09:10:26'"
+System information, so you can track problems to the OS or Java version:: e.g. "System info: host: 'GL04321M.lan', ip: '192.168.1.82', os.name: 'Mac OS X', os.arch: 'x86_64', os.version: '10.10.3', java.version: '1.8.0_40'"
+Support URL with more information about the problem:: e.g. "http://seleniumhq.org/exceptions/no_such_element.html"
+Information about the driver's capabilities (such as the browser's name, if it supports JavaScript, or can take a screenshot):: e.g. "Driver info: org.openqa.selenium.firefox.FirefoxDriver Capabilities [{applicationCacheEnabled=true, rotatable=false, handlesAlerts=true, databaseEnabled=true, version=38.0.5, platform=MAC, nativeEvents=false, acceptSslCerts=true, webStorageEnabled=true, locationContextEnabled=true, browserName=firefox, takesScreenshot=true, javascriptEnabled=true, cssSelectorsEnabled=true}]
+The current session:: e.g. Session ID: 3c0185ae-b29d-e14d-84e7-d0034e3fa707
+Information about the exception:: e.g. Element info: {Using=class name, value=does-not-exist}"
+
+If you are using an older driver, and have recently upgraded your browser, you may be able to solve some problems by updating your version of WebDriver to the latest version. Certainly, this can be useful information when investigating issues, or filing bug reports.
+
+== Retrying when you can't find a slippery element
+
+One of the most common problems you will encounter when using WebDriver is being unable to find an element. A *slippery element* is one that might have been in the browser once, but is no longer there. For example:
+
+* The browser might have moved to a new page, but you still have a variable pointing to an element on the previous page.
+* The element might have been deleted from the page, for example an error message that has been dismissed by the user.
+* The element might have become detached from the page's DOM, for example if JavaScript has removed the element but planned to re-use it later on.
+
+Both of the latter are good candidates if the page you are testing uses a lot of JavaScript. The clearest symptom of a slippery element is a `StaleElementReferenceException`.
+
+=== Technique 17: Retrying on exception
+
+If you have a variable pointing to an element, but that element becomes stale, then calling methods on it will result in a `StaleElementReferenceException`. We can retry locating the element when this happens.
+
+==== Problem
+
+Tests are unreliable due to slippery elements.
+
+==== Solution
+
+Transparently retry the locating of your element:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/TransparentRetryIT.java[TransparentRetryIT.java]
+----
+        driver.get("/login.html");
+
+        WebElement email = driver.findElement(By.name("email"));
+
+        driver.get("/index.html");
+
+        try {
+            email.sendKeys("foo@bar.com");
+        } catch (StaleElementReferenceException ignored) {
+            email = driver.findElement(By.name("email"));
+            email.sendKeys("foo@bar.com");
+        }
+----
+
+==== Discussion
+
+This problem can be caused by code that holds a reference to an element longer that it is available for. The above example is a little contrived, but the principle holds for any page that can remove elements: catch the exception and re-find the element.
+
+If you find yourself doing this regularly, you may want to review your code. It might be caused by logic that could be improved.
+
+== Understanding implicit waiting
+
+Many modern web pages use JavaScript and CSS to create animations when you click on elements. In the example application, we have a page with elements that take a few seconds to load footnote:[http://localhost:8080/slow-loading-elements.html].
+
+image::slow-loading-elements-page.png[title=Slow Loading Elements Page]
+
+These animations can be the enemy of automation, as they can mean that your tests will become brittle. This is especially important if the time that elements take to load might vary, or if parts of the page are loaded asynchronously from a remote server.
+
+In Java, if we want to wait for something, we can use the `sleep` method on the `Thread` class. This causes the program to wait (i.e. sleep) for the specified period of time:
+
+[source,java]
+----
+Thread.sleep(1000); // sleep for 1000ms
+----
+
+Unfortunately, it can be hard to figure out the right amount of time to sleep. You might wait longer than you need to, resulting in slow tests, or too little time, resulting in failing tests. The use of `Thread.sleep` is a "test smell" -- I've seen over and over again in test suites that are slow and unreliable.
+
+Lets look at how we can avoid sleeping. WebDriver has a built-in mechanism for waiting — implicit wait. The implicit wait is the amount of time that WebDriver should always wait for elements to be ready to use. It can be set as follows:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ImplicitWaitIT.java[ImplicitWaitIT.java]
+----
+driver.manage().timeouts().implicitlyWait(1, TimeUnit.SECONDS);
+----
+
+Using implicit waits is considered bad practice:
+
+* You may set it in one test, and find that as it will still be configured for another test, your tests become flaky.
+* It can make for slow-running tests, as failing finds (e.g. for invisible or nonexistent elements) will take longer to execute.
+* When mixing implicit waits with explicit waits, you'll find waiting times become unpredictable.
+
+If you do use implicit waits, make sure you reset them at the end of your tests:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ImplicitWaitIT.java[ImplicitWaitIT.java]
+----
+@After
+public void resetImplictWait() {
+    driver.manage().timeouts().implicitlyWait(0, TimeUnit.SECONDS);
+}
+----
+
+== Explicitly waiting for elements to load
+
+An alternative to implicit waits is explicit waits. In this case, you wait for a condition to be true. This might be a condition that expects an element to be visible, or exist on the page. There are two key classes for explicit waits: `WebDriverWait` and `ExpectedConditions` classes. `WebDriverWait` is a class that actually does the waiting. The `ExpectedConditions` class is a factory that can produce the common conditions you might want to wait for.
+
+=== Technique 18: Using WebDriverWait to wait for slippery elements
+
+Sometimes we need to wait until a condition becomes true, as we know something will happen, but we're not sure when. This technique will look at using WebDriverWait to wait for something to change in the page.
+
+==== Problem
+
+You have a web page with elements that take a few moments to load and you need your test to wait until they have loaded.
+
+==== Solution
+
+Use `WebDriverWait` to poll for a condition and return when it is true. If the condition does not become true within the required time, then a `TimeoutException` is thrown.
+
+The condition can be one of two things:
+
+* A *boolean predicate*
+* An *expected condition*
+
+You'll generally find expected conditions the most useful, as an expected condition can also return an element that you can then use. This is fantastic if you are waiting for an element to become visible, as in the following example:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ExplicitWaitIT.java[ExplicitWaitIT.java]
+----
+        driver.get("/slow-loading-elements.html");
+
+        driver.findElement(By.id("fadeInText")).click();
+
+        WebDriverWait wait = new WebDriverWait(
+                driver,
+                3, // <1>
+                100 // <2>
+        );
+
+        final WebElement paraElement = wait
+                .withMessage("could not find the slowly loading text") // <3>
+                .until(
+                        ExpectedConditions
+                                .visibilityOfElementLocated(By.id("theText")) // <4>
+                );
+
+        assertEquals("Some slowly loading text.", paraElement.getText());
+----
+<1> How long to wait in seconds, in this case 3 seconds.
+<2> How often we want to poll for the condition to be true.
+<3> A message to append to the exception when the condition is not satisfied within the time limit.
+<4> A condition: the element must be visible.
+
+==== Discussion
+
+`WebDriverWait` allows you to wait for any condition, not just a visible element. Let's have a look at some of the useful conditions.
+
+|===
+| Method Name | Description
+
+| `alertIsPresent` | A JavaScript alert is open.
+| `elementToBeClickable` | An element is both available and enabled.
+| `frameToBeAvailableAndSwitchToIt` | A frame exists, and also switch to the frame.
+| `invisibilityOfElementLocated` | An element is not visible.
+| `presenceOfElementLocated` | The element found by a locator is on the page (watch out — it might not be visible).
+| `textToBePresentInElement` | An element contains some text - useful for waiting for a warning message.
+| `textToBePresentInElementValue` | A form input's value contains a string.
+| `titleContains` | The page's title contains a certain value. Useful if your page titles have a common prefix.
+| `titleIs` | The page's title becomes a certain value.
+| `visibilityOfElementLocated` | The element is visible on the page.
+|===
+
+If you need to check two conditions, you can use another wait.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ExplicitWaitIT.java[ExplicitWaitIT.java]
+----
+        WebElement paraElement = wait
+                .until(ExpectedConditions.visibilityOfElementLocated(By.id("theText")));
+
+        wait
+                .until(ExpectedConditions.textToBePresentInElement(paraElement,
+                    "Some slowly loading text."));
+----
+
+The class `WebDriverWait` is a specialisation of the `FluentWait` class that makes it simpler to use. You can use `FluentWait` anywhere you `WebDriverWait` for example,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ExplicitFluentWaitIT.java[ExplicitFluentWaitIT.java]
+----
+FluentWait<WebDriver> wait = new FluentWait<>(driver)
+        .withTimeout(3, TimeUnit.SECONDS) // <1>
+        .pollingEvery(100, TimeUnit.MILLISECONDS) // <2>
+        .ignoring(NotFoundException.class); // <3>
+
+WebElement paraElement = wait
+        .withMessage("could not find the slowly loading text")
+        .until(
+                ExpectedConditions
+                        .visibilityOfElementLocated(By.id("theText"))
+        );
+----
+<1> Specify the timeout.
+<2> Specify the polling interval.
+<3> Choose which exceptions you want to ignore.
+
+You can see you need more lines of code to use it, but you may find it clearer. So, when would you use one or the other?
+
+Use `WebDriverWait` unless:
+
+* You want the code to clear as to the timeout and polling intervals.
+* You need an unusual timeout. One that is less than a second for example.
+* You want to use an unusual polling interval. For example, one that is longer than a second.
+* You want to ignore exceptions other than `NotFoundException`, which `WebDriverWait` ignores by default.
+* You need to find one element within another using wait (we'll show an example shortly).
+
+Using waits often requires some fine-tuning. You want to wait the maximum likely time for an element to meet the condition you are waiting for, but no longer. We will go more in-depth with explicit waiting in Chapter 13.
+
+[sidebar]
+.Explicit Wait
+****
+Starting from Chapter 13, we are going to show you a journey of developing a framework based on Selenium WebDriver. We will provide a method with build-in waiting with explicit wait so you don't need to debate whether to choose `WebDriverWait` or `FluentWait`. You no longer need to use them directly, the framework will take care of that for you. We will put that method with wait inside an interface. And we name that interface `ExplicitWait`.
+****
+
+== Looking for alternative locators
+
+You may also encounter a problem, and even after you have tried those techniques, you still can't find the element using WebDriver. If that's the case, you can look for alternative locators. Let us have a look of this example.
+
+For example, you want to automate this ReactJS Datepicker from Hackerone. First, you need find the input field, and click it to display the calendar.
+
+image::react.png[title=ReactJS Datepicker]
+
+You use Web Developer Tool to inspect the element and find it has a `class` attribute `"ignore-react-onclickoutside"`, but it doesn't have an `id` or `name`.
+
+image::trigger.png[title=Input field with class attribute]
+
+So lets try using the class name:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/FindByClassNameIT.java[FindByClassNameIT.java]
+----
+@Test(expected = NoSuchElementException.class)
+public void failedToLocate() {
+    browser.findElement(By.className("ignore-react-onclickoutside"));
+}
+----
+
+It doesn't work, the finder method throws a `NoSuchElementException`. You apply the techniques learned from previous section and add explicit wait to the finders, but it doesn't work either.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/FindByClassNameIT.java[FindByClassNameIT.java]
+----
+WebDriverWait wait = new WebDriverWait(driver, 3, 100);
+wait.until(new Function<WebDriver, WebElement>() {   <1>
+    @Override
+    public WebElement apply(WebDriver webDriver) {
+        return driver.findElement(
+            By.className("ignore-react-onclickoutside"));
+    }
+});
+----
+<1> It will throw a `TimeoutException`
+
+We inspected the page again and find that the input field is inside a container `div` with `class` attribute `"react-datepicker__input-container"`. We learnt from Chapter 2 that we can narrow down the search by searching from a container element. Use its class to find it,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/FindByClassNameIT.java[FindByClassNameIT.java]
+----
+WebElement webElement = driver.findElement(
+    By.className("react-datepicker__input-container"));
+----
+
+We find the container using this approach. But when we try to locate the input field from this container, it fails again.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/FindByClassNameIT.java[FindByClassNameIT.java]
+----
+FluentWait<WebElement> webElementFluentWait = new FluentWait<>(webElement)
+    .withTimeout(3, SECONDS)
+    .pollingEvery(20, MILLISECONDS)
+    .ignoring(NoSuchElementException.class);
+webElementFluentWait.until(new Function<WebElement, WebElement>() {  <1>
+    @Override
+    public WebElement apply(WebElement webElement) {
+        return webElement.findElement(
+          By.className("ignore-react-onclickoutside"));
+    }
+});
+----
+<1> It throws a `TimeoutException`
+
+Even we change the timeout to 30 seconds, we are still not able to find the trigger by its class name. And this datepicker is built from third party library, they may never provide `id` or `name` attribute for us to use. So we need to look for alternative locators.
+
+=== Find by TagName alternative
+
+Since we can find its container, we can try to find the `input` from the container using `By.ByTagName` locator,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/FindByTagNameIT.java[FindByTagNameIT.java]
+----
+@Test
+public void locateSuccessfully() {
+    driver.findElement(By.className("react-datepicker__input-container"))
+        .findElement(By.tagName("input")).click();   <1>
+}
+----
+<1> It doesn't need wait to find the input field.
+
+It works, we can see it triggers the display of the calendar.
+
+=== Find by Xpath alternative
+
+We know we can find it using xpath,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/FindByXpathIT.java[FindByXpathIT.java]
+----
+@Test
+public void locateSuccessfully() {
+    driver.findElement(
+        By.xpath("//*[@id=\"app\"]/descendant::input")).click();
+}
+----
+
+It also works, we can see the calendar is displayed when we run the test.
+
+We use alternatives and find the element we are looking for. Don't try to stick to a single way of doing things.
+
+[sidebar]
+.Datepicker
+****
+Datepicker is a complex web widget so we will dedicate two chapters to explain the techniques to automate datepicker. And we will develop a framework to automate 5 kinds of datepickers including the most contemporary JavaScript libraries such as Material-UI and ReactJS in Chapter 17 and 18. Also, we will use the framework developed in Part 3 to improve the tests shown here in Chapter 18.
+****
+
+== Internationalization
+
+WebDriver's JSON protocol uses UTF-8 character encoding. However, you need to make sure your source code uses the correct encoding. If you are using Java properties files, the encoding of those files is always ISO-8859-1. But you can use various tools to work around this.
+
+=== Technique 19: Extracting link text to resource bundles for internationalization
+
+Most public-facing web sites are in multiple languages. However, the functionality is the same in all versions, with text translated (and perhaps some image changes). This technique will look at how you can avoid copying and pasting tests by using resource bundles to store the text in different languages.
+
+==== Problem
+
+You have a multilingual site, and you want to test in different languages.
+
+==== Solution
+
+Extract all text from your code and store it in a resources bundle. Then run the code using a system property to switch languages. Imagine you have a Spanish login page:
+
+image::login-form-in-spanish.png[title=Spanish Login Form http://localhost:8080/es/login.html]
+
+The link text "Forgotten Password" is "Contraseña Olvidada" is Spanish. The above code will not work. We will use Java's resource bundle to store the link text in different languages.
+
+Create, in the root of your code's resources (for Maven projects that is `src/main/resources`), a file named `strings.properties`:
+
+[source,properties]
+----
+forgotten.password=Forgotten Password
+----
+
+Create a Spanish file, `strings_es.properties`:
+
+[source,properties]
+----
+forgotten.password=Contraseña Olvidada
+----
+
+At this point, it is worth checking that the properties file is in the ISO-8859-1 format, rather than UTF-8. Properties files have to be in ISO-8859-1. You can do this using the `file` command on UNIX, Linux, or Mac, or Cygwin on Windows:
+
+[source,bash]
+----
+% file strings_es.properties
+strings_es.properties: UTF-8 Unicode text, with no line terminators
+----
+
+Uh oh! It is UTF-8. The "ñ" is not an ISO-8859-1 character, and needs to be replaced by the *escaped unicode character* footnote:[https://en.wikipedia.org/wiki/List_of_Unicode_characters]. You can use `native2ascii` to convert the file:
+
+[source,bash]
+----
+% native2ascii -encoding UTF-8 strings_es.properties
+forgotten.password=Contrase\u00f1a Olvidada
+----
+
+You can then use the `ResourceBundle` class to get the value:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ResourceBundleExampleIT.java[ResourceBundleExampleIT.java]
+----
+driver.get("http://localhost:8080/login.html");
+
+ResourceBundle strings = ResourceBundle.getBundle("strings", Locale.ENGLISH);
+
+driver.findElement(By.linkText(strings.getString("forgotten.password")));
+----
+
+Or for Spanish:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ResourceBundleExampleIT.java[ResourceBundleExampleIT.java]
+----
+driver.get("http://localhost:8080/es/login.html");
+
+ResourceBundle strings = ResourceBundle.getBundle("strings",
+    Locale.forLanguageTag("es"));
+
+driver.findElement(By.linkText(strings.getString("forgotten.password")));
+----
+
+==== Discussion
+
+This shows a straightforward technique using core Java libraries to handle internationalization in the code. It is an interesting challenge to develop code that runs under different configurations, such as different browsers and languages. We will discus this in more detail later in the book.
+
+You set the language the code is running in a system property.
+
+[source,bash]
+----
+mvn verify -Duser.language=es
+----
+
+And you can then change your code to:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ResourceBundleExampleIT.java[ResourceBundleExampleIT.java]
+----
+String language = Locale.getDefault().getLanguage();
+
+driver.get("http://localhost:8080/" + language + "/login.html");
+
+ResourceBundle strings = ResourceBundle.getBundle("strings");
+
+driver.findElement(By.linkText(strings.getString("forgotten.password")));
+----
+
+It is worth noting at this point that this is not the only way to locate elements based on the text they contain. We will look at a few techniques using XPaths later on, but before that, let's examine the remaining major locators.
+
+As a final note, the `iconv` tool can also convert text files between encodings.
+
+
+== Summary
+
+* WebDriver has a number of exceptions that it can throw. Some are more common than others, and can be grouped by their type.
+* The `Thread.sleep` command will make your test suite slow and unreliable. Try and use a wait instead.
+* Implicit waiting has some issues that make for brittle tests. It should be avoided.
+* Explicit waits, combined with expected conditions, can resolve page timing issues. `WebDriverWait` provides a number of built in conditions you can wait for.
+* Internationalization can be addressed using resource bundles. There are various command line programs that can help with this.
+
+In the next chapter, we'll look at ways of managing WebDriver itself to reduce problems.

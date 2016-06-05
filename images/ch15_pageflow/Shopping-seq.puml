@@ -1,0 +1,61 @@
+@startuml
+
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+
+activate "Test Script"
+
+"Test Script" -> BookstoreHomepage : searchBook(name)
+
+activate     BookstoreHomepage
+
+BookstoreHomepage --> "Test Script"
+deactivate     BookstoreHomepage
+
+"Test Script" -> BookListPage : chooseBook(name)
+activate     BookListPage
+
+BookListPage --> "Test Script"
+deactivate     BookListPage
+
+"Test Script" -> BookPage : addToCart()
+activate BookPage
+
+BookPage --> "Test Script"
+deactivate BookPage
+
+"Test Script" -> BookPage : goToCart()
+activate     BookPage
+
+BookPage --> "Test Script"
+deactivate     BookPage
+
+"Test Script" -> ShoppingCartPage : setCreditcardForm(Creditcard)
+activate     ShoppingCartPage
+ShoppingCartPage --> "Test Script"
+deactivate ShoppingCartPage
+
+"Test Script" -> ShoppingCartPage : setBillingAddressForm(Address)
+activate     ShoppingCartPage
+ShoppingCartPage --> "Test Script"
+deactivate ShoppingCartPage
+
+"Test Script" -> ShoppingCartPage : setOtherInformationForm(OtherInformation)
+activate     ShoppingCartPage
+ShoppingCartPage --> "Test Script"
+deactivate ShoppingCartPage
+
+"Test Script" -> ShoppingCartPage : continues()
+activate     ShoppingCartPage
+ShoppingCartPage --> "Test Script"
+deactivate ShoppingCartPage
+
+"Test Script" -> ConfirmationPage : getOrderNumber()
+activate     ConfirmationPage
+ConfirmationPage --> "Test Script" : orderNumber
+deactivate ConfirmationPage
+
+deactivate "Test Script"
+
+@enduml

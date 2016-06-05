@@ -1,0 +1,410 @@
+= Examining a page
+
+:imagesdir: ../images/ch04_examining_a_page
+
+This chapter covers
+
+* Checking to see whether an element is present and whether it's visible
+* Verifying the text of headings and other elements
+* Examining the CSS styling of an element
+
+In chapter 2 we looked at locating elements, and in chapter 3 at interacting with them. But like a user, if you can't see what's on the page, you're blind. WebDriver provides a number of ways it can be your "eyes" when writing automation code.
+
+Almost all testing requires you to put your system into a certain known state, perform some action on it, and then verify that the resulting state is what you expect. In _Behavior Driven Development_, footnote:[https://en.wikipedia.org/wiki/Behavior-driven_development] this is known as _given/when/then_. In the case of web automation, you navigate to a page, type or click elements of the page, and check whether the resulting page looks as you expect. WebDriver provides a number of ways to simulate the action of a user “looking” at the page.
+
+In this chapter, we'll explain how to determine whether an element is visible on a page, and we'll look at some quick methods for checking page text. We'll also discuss using WebDriver's helper class `Select`. Then we'll examine how to verify attributes of an element, such as color and size. Much of this revolves around using methods of the `WebElement` class.
+
+By the end of this chapter, you'll have learned how to write code that uses all the key tools WebDriver provides to "look" at a page.
+
+== Checking whether an element is present
+
+For this chapter, we have a styled the web page shown in figure <<styled-page>>. This page has common elements, and it also has some hidden ones.
+
+[[styled-page]]
+image::styled-page.png[title="Screenshot of a styled page - http://localhost:8080/styled-elements.html"]
+
+One of the tasks you may want to do is to determine whether an element is present on a page. You'll doubtless find yourself in a situation in which you want to check that something isn't yet visible. For example, a online shopping basket might be invisible until you click a button. Fortunately, WebDriver can give you access to elements a user can't see. Let's look at how to do this.
+
+=== Technique 10: Using findElements to determine whether an element is present
+
+Some times you want to not just check the color or text of something on the page. You might want to check something more fundamental -- whether or not it exists. This following technique will show you how to do that using the `findElements` method.
+
+==== Problem
+
+You want to check whether an element is present on a page or not.
+
+==== Solution
+
+The `WebElement` interface provides two method to do this. When an element may not be present, you should locate it using `findElements` (plural) rather than `findElement` (singular). The method `findElement` will throw an exception if the element can't be found, but `findElements` will return an empty list:
+
+[[checking-an-element-is-present]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/ElementIsPresentIT.java[ElementIsPresentIT.java]
+----
+@Test
+public void checkingAnElementIsPresent() throws Exception {
+    driver.get("http://localhost:8080/styled-elements.html");
+
+    assertThat(driver.findElements(By.id("invisible")), hasSize(1));
+}
+----
+
+==== Discussion
+
+You could use a few different approaches to check the elements in the list. You could check whether it's an empty list, or you could assert that its size equals 1. The problem with both of these methods is that when the test fails, you don't get clear diagnostic information. Instead, you might want to use `assertThat` (as we do in listing <<checking-an-element-is-present>>), as this typically gives more information.
+
+== Verifying whether an element is visible (or not)
+
+Sometimes you may have an element that is hidden from view and that becomes visible only after some action, such as opening a navigation menu, and you don't wish to continue unless the element is visible. Or you may want to make sure an element isn't visible after some operation has occurred. `WebElement` provides the `isDisplayed` method to help you achieve this.
+
+=== Technique 11: Using isDisplayed to determine whether an element is visible
+
+==== Problem
+
+You know that an element will be on a page, and you want to make sure it's visible.
+
+==== Solution
+
+Use `findElement` to find an element, and then check whether it's visible using `isDisplayed()`. Consider the following HTML:
+
+[source,html]
+----
+<p id="invisible" style="display:none;">Some hidden text.</p>
+----
+
+The paragraph of text is invisible.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/ElementIsVisibleIT.java[ElementIsVisibleIT.java]
+----
+    @Test
+    public void visibleElementIsDisplayed() throws Exception {
+        driver.get("http://localhost:8080/styled-elements.html");
+
+        assertTrue(driver.findElement(By.id("visible")).isDisplayed());
+    }
+----
+
+==== Discussion
+
+This test is shorter than a check for the presence of an element. It can be used to check that an item isn't visible. Naturally, it would be time-consuming to check for every hidden element on the page! This technique is most useful in the case when you want to make sure an element is invisible until some action is performed, as per listing <<invisible>>.
+
+[[invisible]]
+[source,java]
+----
+assertFalse(driver.findElement(By.id("invisible")).isDisplayed());
+----
+
+== Verify the page title
+
+Checking the page title is straightforward and fast. This can make it a great first choice for checking that the correct page has been loaded after a link or button has been clicked.
+
+===  Technique 14: Using getTitle to check the title of a page
+
+Many parts of a page are subject to change based on how the page's developer lays them out. But one part is almost always available, is quick to access and fundamental to the page -- its title. This technique will show you how to access and verify that.
+
+==== Problem
+
+You want to make sure a page's title is correct, but you want to ignore any prefix the title might have.
+
+==== Solution
+
+You can use the `getTitle` method to get the current page's title:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/PageTitleIT.java[PageTitleIT.java]
+----
+    @Test
+    public void checkThePageTitle() throws Exception {
+        driver.get("http://localhost:8080/styled-elements.html");
+
+        assertThat(driver.getTitle(), containsString("Styled Elements"));
+    }
+----
+
+==== Discussion
+
+It's extremely straightforward to verify a page's title. Our test site prepends the site's name to every page title, so using `containsString` means you won't have to rewrite the test if the site's name changes. In figure <<page-assertion-error>>, you can see the diagnostics produced by using `assertThat`.
+
+[[page-assertion-error]]
+image::assertion-error.png[title=Page assertion error]
+
+== Verifying that text is on the page
+
+You'll often want to make sure certain text has appeared in response to an operation. For example, clicking the Buy button results in a Purchase Confirmed message. If you know where the text will be on the page, you can use `getText` method to verify it:
+
+[source,java]
+----
+    @Test
+    public void checkItemWasPurchased() throws Exception {
+        ... // purchase code here
+
+        assertThat(driver.findElement(By.id("confirmation")).getText(),
+                containsString("Purchase Confirmed."));
+    }
+----
+
+Checking text when you don't know where it might be on the page is more challenging. Let's look at a couple of approaches that work well.
+
+=== Technique 12: Using XPath and an element stream to verify that text is on the page
+
+Sometimes you might find that you're not too worried about where text is on a page, but more worried that it is actually visible and correct. This technique will show you how to use XPath to achieve that.
+
+==== Problem
+
+You want to verify that text appears on a page, but you don't know where it might appear.
+
+==== Solution
+
+If you can't find the element easily, you have two options. We'll cover each of these in turn.
+
+Option 1: The _easy to find method_ checks that the text is somewhere in the page source.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/VerifyingTextIT.java[VerifyingTextIT.java]
+----
+    @Test
+    public void pageSourceMethod() throws Exception {
+        driver.get("http://localhost:8080/styled-elements.html");
+
+        assertThat(driver.getPageSource(),
+                containsString("This page contains a variety of styled elements."));
+    }
+----
+
+Unfortunately, this also recognizes your text in the header, a script, or even a page comment. Thus tests may pass or fail when they shouldn't. Consider the following example.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/VerifyingTextIT.java[VerifyingTextIT.java]
+----
+    @Test
+    public void whenPageSourceFails() throws Exception {
+        driver.get("http://localhost:8080/styled-elements.html");
+
+        assertThat(driver.getPageSource(),
+                anyOf(
+                        containsString("<p id=\"invisible\" style=\"display:none;\">"), // <1>
+                        containsString("<p style=\"display:none;\" id=\"invisible\">")
+                )
+        );
+        assertThat(driver.getPageSource(),
+                containsString("<!-- a comment about the page -->")); // <2>
+    }
+----
+<1> The order of an element's attributes may not be the same in different drivers.
+<2> This even passes on a page comment.
+
+
+Option 2: The _XPath text method_ uses a complex XPath to find the element.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/VerifyingTextIT.java[VerifyingTextIT.java]
+----
+    @Test
+    public void xpathTextMethod() throws Exception {
+        driver.get("http://localhost:8080/styled-elements.html");
+
+        assertNotNull(driver.findElement(By.xpath("//*[text()='A visible paragraph.']")));
+    }
+----
+
+==== Discussion
+
+You can see from the previous examples that there are several ways to check for text on a page. The best approach depends on your circumstances. We recommend targeting the element directly by ID or CSS locator, as shown in chapter 2.
+
+When direct location fails, the page source method is concise but can produce false positives when the text isn't on the page--for example, it forms part of comments, script, or style tags. The page source method is also slow on large pages, because the page's entire source must be transferred from the browser to the driver each time you use it. Furthermore, the page source can be different for the same page in different browsers.
+
+The XPath text method is concise, but the example only checks the entire element's text.
+
+== Examining an element's styling
+
+In addition to verifying text you can see, you'll want to check that it's styled the way you expect. You can do this using the `getCssValue` method, which returns the CSS value of the style applied to the element.
+
+=== Technique 13: Verifying an element's style using getCssValue
+
+All elements on a page have styling. This can be important, for example, you might want error messages is red, and informational messages in blue. This technique will show you how to check an elements style, and some pitfalls to watch out for.
+
+==== Problem
+
+You want to make sure an element is styled correctly.
+
+==== Solution
+
+Checking the style of an element isn't straightforward. You can specify the color of a web page element via inlined-styles:
+
+[source,html]
+----
+    <p style="color:red;">Some red text.</p>
+----
+
+Or using CSS:
+
+[source,html]
+----
+    <p class=”red”>Some red text.</p>
+----
+
+Watch out! Although both paragraphs are colored with “red”, when you access their color, you'll get what's known as the _computed value_. The computed value is the color of the element you see on the page, and it's the one you have to check. Computed colors are usually in the format `rgba(red, green, blue, alpha)`, where `red`, `green`, and `blue` are integers between 0 and 255. Red is therefore `rgba(255, 0, 0, 1)`. You may find that some colors are returned without alpha, as in `rgb(red, green, blue)`:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/VerifyingStylesIT.java[VerifyingStylesIT.java]
+----
+    @Test
+    public void elementHasRedText() throws Exception {
+        driver.get("http://localhost:8080/styled-elements.html");
+
+        WebElement element = driver.findElement(By.id("red"));
+
+        assertEquals("rgba(255, 0, 0, 1)", element.getCssValue("color"));
+    }
+----
+
+==== Discussion
+
+The `WebElement` class provides the `getCssValue` method to examine an element's CSS values. These aren't the values applied inline or via a stylesheet, but the computed values. This means they may not be the same and the source code of the web page. Watch out _shorthand values_, which aren't meant to be returned. A shorthand value is used to aggregate several independent values. For example, consider this piece of HTML:
+
+[source,html]
+----
+    <div style=”border: solid #000 1px”>
+        ...
+    </div>
+----
+
+This is short-hand for
+
+[source,html]
+----
+    <div style=”border-style: solid; border-color: #000; border-width: 1px”>
+        ...
+    </div>
+----
+
+Interestingly, most major browsers (Safari, Chrome, and Firefox) return shorthand values (despite what the JavaDoc says) for `border`, so the following test passes for them:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/VerifyingStylesIT.java[VerifyingStylesIT.java]
+----
+    @Test
+    public void cssShortHand() throws Exception {
+        driver.get("http://localhost:8080/styled-elements.html");
+
+        WebElement div = driver.findElement(By.id("shorthand"));
+
+        assertEquals("1px solid rgb(0, 0, 0)", div.getCssValue("border"));
+    }
+----
+
+We recommend avoiding shorthand. For `background`, what you get depends on the browser. The following code works on Safari and Chrome, but not on Firefox:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/CssShorthandIT.java[CssShorthandIT.java]
+----
+    @Test
+    public void cssShortHandBackground() throws Exception {
+        driver.get("http://localhost:8080/styled-elements.html");
+
+        WebElement div = driver.findElement(By.id("shorthand"));
+
+        assertEquals(
+            "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+            div.getCssValue("background")
+        );
+    }
+----
+
+You can see that the `background` shorthand has many parts. When you need to check CSS values, don't check short-hand values. Rather than checking short-hand values, check each value separately:
+
+[source,java]
+----
+WebElement div = driver.findElement(By.id("shorthand"));
+
+assertEquals("rgb(0, 0, 0)", div.getCssValue("border-color"));
+assertEquals("solid", div.getCssValue("border-style"));
+assertEquals("1px", div.getCssValue("border-width"));
+----
+
+=== Examining specific elements
+
+There are a bag of different ways to check other part of your page. In this section we'll go through some of the ones we've not talked about before so you have seen a (hopefully) complete set of them.
+
+==== Examining elements using getAttribute
+
+Form elements are a special case. If you want to verify them, you need to use `getAttribute` to examine most form input. In this section, you'll verify the form in figure <<pre-filled-form>>.
+
+[[pre-filled-form]]
+image::pre-filled-form.png[title=Pre-filled Form]
+
+To check a field's value, you can get the `value` attribute:
+
+[source,java]
+----
+    assertEquals("john.doe@swip.com",
+        driver.findElement(By.name("email")).getAttribute("value"));
+----
+
+===== Password input
+
+You may have thought it be impossible to get the value of a password, because you might imagine it's a security issue. But fear not: you use the same techniques as for text inputs:
+
+[source,java]
+----
+    assertEquals("secret",
+        driver.findElement(By.name("password")).getAttribute("value"));
+----
+
+==== TextArea
+
+Text areas don't have a `value` attribute. Instead, you examine their text:
+
+[source,java]
+----
+    assertEquals("Tell us what you think.",
+        driver.findElement(By.name("comments")).getText());
+----
+
+==== Check boxes and radio buttons
+
+Check boxes and radio buttons can be verified using the `WebElement.isSelected` method:
+
+[source,java]
+----
+    assertTrue(driver.findElement(InputBy.label("phone")).isSelected());
+----
+
+==== Select drop-downs
+
+Just as when you interact with a select drop-down, you wrap it using the `Select` class. If you're only checking one option, then you can use the `getFirstSelectedOption` method:
+
+[source,java]
+----
+    Select hearAboutSelect = new Select(driver.findElement(By.name("hearAbout")));
+    assertEquals("Friend", hearAboutSelect.getFirstSelectedOption().getText());
+----
+
+If the select has multiple options, you can use `getAllSelectedOptions`, but you'll want to extract the selected text:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/VerifyingFormIT.java[VerifyingFormIT.java]
+----
+        WebElement interestsElement = driver.findElement(By.name("interest"));
+        List<String> selectedText = new ArrayList<>();
+
+        for (WebElement option : new Select(interestsElement).getAllSelectedOptions()) {
+            selectedText.add(option.getText());
+        }
+
+        Collections.sort(selectedText); <1>
+
+        assertEquals(Arrays.asList("Movies", "Music"), selectedText);
+----
+<1> This sort makes the following assert stable, even if the element order changes.
+
+== Summary
+
+* WebDriver provides most of the methods you need in the `WebElement` class. The main ones are `isDisplayed`, `getText`, `getCssValue`, `getAttribute`, and `isSelected`.
+* You cannot find the text of an `input` using the `getText` method, use `getAttribute("value")`` instead.
+* Use the `Select` class to assist verifying select boxes.
+* Be careful about checking a page based on its page source. Different browser can return different values
+* CSS shorthand can be different across browsers, but you might want to prefer the longhand values as this is likely to be more reliable.
+
+Now that you've seen how to examine a page, in the next chapter we'll look at extracting common automation code using the Page Object pattern. This will make completing forms easier by abstracting away the details of checking boxes and choosing options from select lists.

@@ -1,0 +1,842 @@
+= What you need to know about different browsers
+
+:imagesdir: ../images/ch11_drivers
+
+This chapter covers
+
+* Features common to each browser
+* Each of the main desktop browsers
+* Mobile automation with Appium
+
+When you invoke methods on the `WebDriver` interface, your computer sends a message to the web browser to tell it what to do -- much in the manner a car's driver tells the car how to act. As all browsers are different, written in different languages and having different features, this means that the `WebDriver` interface is reimplemented for each and every browser. This naturally leads to a number of different implementations, each with slight variations. When you start automating, you have to make a decision: do I automate using many different browsers, or do I focus on the one or two that are most important to my users? This is a key choice when automating, and it helps to know and understand a bit about each driver and how they work.
+
+In this chapter, you'll see what features are common to each browser, so you can understand what those features mean. You'll then see how to download programs you need for your tests automatically. Browsers can leave your computer in a dirty state, or they might not be available on your computer's operating system. You'll see a technique to use virtual machines to overcome this. You will also see how to test iPhone and Android apps using Appium, an open source test automation framework for use with native, hybrid, and mobile web apps.
+
+Drivers change as often as browsers are updated -- and that's pretty often. In fact, the Microsoft Edge browser had not even been released when we started writing this chapter.
+
+You will have learned about all the major desktop, headless, and mobile browsers by the end of the chapter. This will help you save time when making choices about what browser to use with your tests.
+
+== Comparing drivers
+
+There are a number of key features and aspects that are worth bearing in mind when dealing with any of the drivers and browsers. Here is a high-level view of them:
+
+Browser::
+  Naturally, if you want to test with a browser, then you'll need to install it. If you need a specific version, then you'll need to locate and download that version from the vendor's website.
+
+Driver binary/extension::
+  Some (but not all) drivers require you to set up or install some additional software. This is often in the form of a *driver binary*. You may need to download this and install it before you get started. If it's not a binary, it may be a *browser extension*. Whenever the browser updates, you may find that you also need to update your WebDriver client libraries (for example, by updating their versions in Maven). But don't confuse the driver binary (only needed when using the browser with WebDriver) with the *browser binary*, part of the browser itself.
+
+Web browser engine::
+  Each browser uses a *web browser engine* to render each web page. This affects how the page looks and behaves. Different browsers that use the same engine will behave similarly. Is it worthwhile repeating a test in two browsers that are very similar to one another?
+
+Customization -- profiles, preferences, and options::
+  Many drivers allow you to customize the browser in some way, such as setting whether or not user history is saved. This can be useful in some circumstances, but you'll probably find that you generally leave the settings alone. If you need to customize your browser to run your tests, then think about which browsers you want to run your tests on.
+
+Extensions::
+  Some browsers allow you to install extensions or plugins. If the application you are testing makes a lot of use of specific extensions, you can install them. But generally you'll find that the time it takes to set up the extensions might be better spent documenting and executing a manual test.
+
+Handling self-signed certificates and protected domains::
+  When developing a new application, it is not uncommon to use a *self-signed certificate* for secure HTTPS connections. An application may require a *client certificate* too. Getting rid of this pop up can be a bit tricky, so we'll cover it in this chapter.
+
+Synthetic versus native events::
+  A driver can use *native events*, *synthetic events*, or a mixture of the two. A synthetic event is one that is implemented using JavaScript (similar to using the `JavascriptExecutor` interface). JavaScript can do things like click buttons that are disabled, which means that the behavior might not accurately reflect what would happen when a user clicks the button. A native event is one that more accurately mimics the user's interaction with the browser. Pretty much all drivers support native events, so you'll probably never need to consider synthetic events, but there may be very rare scenarios where you need to use them.
+
+[NOTE]
+.Local vs. remote drivers
+====
+A *local driver* is one that is running on a machine you are working on. This has the benefits of allowing you to set up, control, and debug your tests easily. It has the disadvantage that a badly managed driver can crash your computer, or it might upgrade itself midway through your test. A *remote driver* runs on a remote machine. It has the advantages of being well behaved and managed by someone else, but the disadvantages of being harder to access, control, and debug.
+
+As many mature test suites run using remote drivers on a Selenium grid, we try to make sure all techniques in the book run on both.
+
+You can refer to appendix A for more information about setting up a grid.
+====
+
+Table <<driver-summary>> lists the platform, engine, and type of events supported by each driver.
+
+[[driver-summary]]
+.Driver summary
+|===
+|Name |Platform |Engine |Events |Notes
+
+|Firefox |Desktop |Gecko |Native |
+|Chrome |Desktop |Blink |Native |Separate binary download, mobile emulation mode
+|Internet Explorer |Desktop |Trident |Native |Windows only
+|Microsoft Edge |Desktop |EdgeHTML |Native |Windows only
+|Safari |Desktop |WebKit |Native and synthetic |Use Appium for mobile testing
+|HtmlUnit |Desktop |Java |Native |Headless
+|PhantomJS |Desktop |WebKit |Native |Headless
+|Appium |Mobile |Various |Native |Requires Xcode and/or Android SDK
+
+|===
+
+== Self-signed certificates
+
+When you are developing a new website, you may use a self-signed certificate for HTTPS requests. This typically results in a pop up that you cannot dismiss (see figure <<firefox-untrusted-popup>>).
+
+[[firefox-untrusted-popup]]
+image::firefox-untrusted-popup.png[title="Firefox showing a pop up about an untrusted connection that must be dismissed"]
+
+To prevent this appearing, set the following capability:
+
+[source,java]
+----
+capabilities.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
+----
+
+// TODO - do we want to add client certificates
+
+== Desktop browsers
+
+Not so long ago, most people browsing the Internet were using Internet Explorer. But this has changed dramatically.
+
+In 2005, Internet Explorer was top dog with 85% market share.footnote:[https://en.wikipedia.org/wiki/Usage_share_of_web_browsers] In 2010, Firefox was the head honcho with 45% share, and in 2015 Chrome dominated with 65%. Things change rapidly, but I would not write off either Firefox or IE just yet. For one thing, plenty of governmental and commercial systems still run only on IE. For another, Firefox is the easiest browser to use with WebDriver.
+
+Browser usage also varies by region. While Chrome dominates in most countries, Opera is popular in Africa, UC Browser in India and China, Firefox in the Africa and the Far East, and IE in Japan.
+
+You'll notice we don't cover every single different browser in this chapter. Some browsers are much more popular, and their drivers much better supported, than others. Also, browsers often share engines, and by testing using one browser you can have some confidence that your web application works in other browsers that use the same or a similar engine.
+
+== Firefox
+
+image::firefox.png[title=Firefox]
+
+`FirefoxDriver` is probably your first choice for a driver. It runs *Mozilla Firefox* on Windows, OS X, and Linux. It supports all the driver features you'll need and requires the least amount of setup. `FirefoxDriver` uses the *Gecko* engine and supports extensions.
+
+You can customize it using the `FirefoxProfile` class. With this class you can control how SSL certificates are handled (using the `setAcceptUntrustedCertificates` and `setAssumeUntrustedCertificateIssuer` methods). If you want to install and automate multiple versions, you can do so using the `FirefoxBinary` class.
+
+To use Firefox, add the following to your pom.xml file (note you'll need to set `selenium.version` in your properties):
+
+[source,xml]
+----
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-firefox-driver</artifactId>
+            <version>${selenium.version}</version>
+            <scope>test</scope>
+        </dependency>
+----
+
+== Chrome
+
+image::chrome.png[title=Chrome]
+
+`ChromeDriver` runs the *Google Chrome* browser on Windows, OS X, and Linux. You need to download a driver binary to use it. It supports extensions. `ChromeDriver` uses the *Blink* engine, also used by recent versions of Opera. This means you might be confident enough using this driver that you do not need to test Opera. Blink is a fork of the *WebKit* engine, which is used by Safari and PhantomJS.
+
+You can customize `ChromeDriver` using the `ChromeOptions` class.
+
+To use Chrome, you'll need to add the following to your pom.xml file:
+
+[source,xml]
+----
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-chrome-driver</artifactId>
+            <version>${selenium.version}</version>
+            <scope>test</scope>
+        </dependency>
+----
+
+To use `ChromeDriver`, you must tell it where to find a special file known as the *chromedriver binary*. This driver can be downloaded from <https://sites.google.com/a/chromium.org/chromedriver/downloads>. You'll need to download and unpack the correct version for your operating system. Once you have done that, you need to set the system property `webdriver.chrome.driver` to the path of the binary:
+
+[source,java]
+----
+System.setProperty("webdriver.chrome.driver", "/path/to/chromedriver");
+----
+
+You can save the binary anywhere, and one good place is within your project (for example, in src/test/bin). On OS X and Linux you'll need to make it executable -- you can do this from the terminal:
+
+[source,bash]
+----
+chmod +x chromedriver
+----
+
+=== Technique 30: Automatically downloading the driver binary
+
+Chromedriver binaries are large, and require you to download different versions for different operating systems. This technique shows you how to automatically download the correct version.
+
+==== Problem
+
+You want to use `ChromeDriver` without having to manually download the binary.
+
+==== Solution
+
+Automatically download the correct driver binary for your computer's operating system. As you may want to do this in a different way for different drivers, you can use the *strategy pattern* by creating an interface that can be implemented for each browser.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/WebDriverBinarySupplier.java#L6-L12[WebDriverBinarySupplier.java]
+----
+public interface WebDriverBinarySupplier {
+    /**
+     * @param target A directory to place the binary in.
+     * @return The name of the binary file.
+     */
+    Path get(Path target) throws IOException;
+}
+----
+
+There are four basic steps that you need to do to get a binary:
+
+1. Determine which URL to get it from for your computer's operating system.
+2. Download the file.
+3. Unpack or unzip the file.
+4. Make sure it is executable.
+
+We implement these steps in the `ChromeDriverBinarySupplier` class. To make it easy to understand, we define some variables first:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/ChromeDriverBinarySupplier.java#L26-L34[ChromeDriverBinarySupplier.java]
+----
+private Logger LOGGER = getLogger(ChromeDriverBinarySupplier.class);
+private String BASE_PATH = "http://chromedriver.storage.googleapis.com";
+private Path download = Paths.get(getProperty("java.io.tmpdir"),
+    "chrome-driver"); //<1>
+private String osName = getProperty("os.name"); //<2>
+private String osArch = getProperty("os.arch");
+private String os = osName.contains("win") ? "win" :
+    osName.contains("nix") ? "linux" : "mac";
+private int arch = os.equals("linux") && osArch.endsWith("64") ? 64 : 32; //<3>
+----
+<1> The name and download destination
+<2> You typically need to know what operating system and architecture you are running on to get the binary
+<3> Chrome has a 64-bit version for Linux and a 32-bit version for everyone else
+
+We then implement those four steps in this method:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/ChromeDriverBinarySupplier.java#L36-L48[ChromeDriverBinarySupplier.java]
+----
+@Override
+public Path get(Path driverDir) throws IOException {
+
+    Path driverPath = resolvePath(driverDir);
+    if (!driverPath.toFile().exists()) { //<1>
+        if (!download.toFile().exists()) {
+           download();
+        }
+        unzipFiles(driverPath);
+        makeExecutable(driverPath);
+    }
+    return driverPath;
+}
+----
+<1> Do not download again if you already have it
+
+Some helper methods used in that method are listed here:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/ChromeDriverBinarySupplier.java#L50-L110[ChromeDriverBinarySupplier.java]
+----
+private void download() throws IOException {
+    try (FileOutputStream fos = new FileOutputStream(download.toFile())) {
+        fos.getChannel().transferFrom(createChannel(), 0, Long.MAX_VALUE);
+    }
+}
+
+private void unzipFiles(final Path driverPath) throws IOException {
+    LOGGER.info("extracting chrome driver to " + driverPath);
+
+    try (FileSystem fileSystem = createFile()) {
+        walkFileTree(fileSystem.getPath("/"), new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(
+                Path file, BasicFileAttributes attrs) throws IOException {
+
+                LOGGER.info("unzipping " + file); //<1>
+                copy(file, driverPath, REPLACE_EXISTING);
+
+                return CONTINUE;
+            }
+        });
+    }
+}
+
+private void makeExecutable(Path path) {
+    LOGGER.info("making " + path + " executable");
+
+    if (!path.toFile().setExecutable(true)) { //<2>
+        throw new IllegalStateException("failed to make " + path +
+            " executable");
+    }
+}
+
+private ReadableByteChannel createChannel() throws IOException {
+    URL url = createUrl();
+
+    LOGGER.info("downloading " + url + " to " + download);
+    return newChannel(url.openStream()); //<3>
+}
+
+private FileSystem createFile() throws IOException {
+    return newFileSystem(create("jar:file:" + download), emptyMap()); //<4>
+}
+
+private URL createUrl() throws IOException {
+    return new URL(BASE_PATH + "/" + lastRelease() +
+        "/chromedriver_" + os + arch + ".zip");
+}
+
+private Path resolvePath(Path driverDir) {
+    return driverDir.resolve(os.equals("win") ?
+        "chromedriver.exe" : "chromedriver");
+}
+
+private String lastRelease() throws IOException {
+
+    URL url = new URL(BASE_PATH + "/LATEST_RELEASE");
+
+    try (Scanner scanner = new Scanner(url.openStream())) {
+        return scanner.useDelimiter("\\A").next().trim(); //<5>
+    }
+}
+----
+<1> We assume we will only find a single file in the zip
+<2> Finally, we need to make it executable
+<3> Download the file using Java 7's NIO APIs
+<4> Java 7 can unpack a jar file automatically -- a jar file is actually a zip file, so we take advantage of that here
+<5> Get the latest version from this URL
+
+==== Discussion
+
+The preceding example has some code for downloading and unzipping files. This could be extracted into a utility class for reuse in other drivers.
+
+We discussed downloading the driver binary manually (which will require you to update it each time the browser is updated), and automatically downloading the latest version. If you are using Maven, there is another option, the *Selenium driver-binary-downloader-maven-plugin*.footnote:[https://github.com/Ardesco/selenium-standalone-server-plugin] This is a Maven plugin that downloads driver binaries automatically. To use it, you need to add a few lines to your pom.xml file:
+
+[source,xml]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/pom.xml#L264-L278[pom.xml]
+----
+<plugins>
+    ...
+    <plugin>
+        <groupId>com.lazerycode.selenium</groupId>
+        <artifactId>driver-binary-downloader-maven-plugin</artifactId>
+        <version>1.0.7</version>
+        <executions>
+            <execution>
+                <phase>pre-integration-test</phase> //<1>
+                <goals>
+                    <goal>selenium</goal>
+                </goals>
+            </execution>
+        </executions>
+    </plugin>
+    ...
+</plugins>
+----
+<1> Adding a `pre-integration-test` phase makes sure this is executed before the integration tests are run
+
+You should see something similar to the following in the output:
+
+[source,bash]
+----
+[INFO] Setting maven property - ${phantomjs.binary.path} =
+  selenium_standalone/osx/phantomjs/64bit/phantomjs
+[INFO] Setting maven property - ${webdriver.chrome.driver} =
+  selenium_standalone/osx/googlechrome/64bit/chromedriver
+[INFO] Setting maven property - ${webdriver.opera.driver} =
+  selenium_standalone/osx/operachromium/64bit/operadriver
+----
+
+All the binaries you might need will be downloaded. For example, running on OS X creates the following files:
+
+[source,bash]
+----
+selenium_standalone/osx/googlechrome/64bit/chromedriver
+selenium_standalone/osx/operachromium/64bit/operadriver
+selenium_standalone/osx/phantomjs/64bit/phantomjs
+----
+
+Chrome has one feature that might make it the preferred choice of browser to test with: the ability to emulate mobile devices. The next technique looks at how to do that.
+
+=== Technique 31: Mobile testing using Chrome's mobile emulation
+
+Chrome provides the ability to emulate different mobile devices. This can be useful for early identification of problems with your site on mobile devices, without the time and effort required to set up a full mobile automation system.
+
+==== Problem
+
+You want to test for mobile, but without too much special setup.
+
+==== Solution
+
+Use Chrome's mobile emulation mode.
+
+If Chrome knows about the device you want to emulate, you can *specify a known mobile device*.
+
+To get Chrome to emulate a mobile device, you need to know the name of the device you want to emulate. To find this out, open the Dev Tools by right-clicking on the page and choosing Inspect. Click the small Toggle Device Mode button shown in figure <<device-mode-button>>. This button looks like a small iPad.
+
+[[device-mode-button]]
+image::device-mode-button.png[title="Toggle device mode button"]
+
+The new toolbar shown in figure <<device-mode-toolbar>> will appear, allowing you to choose the device you want.
+
+[[device-mode-toolbar]]
+image::device-mode-toolbar.png[title="Device mode toolbar"]
+
+You need the exact string shown -- in this example, "Apple iPad".
+
+To tell the `ChromeDriver` class to start in mobile emulation mode, you must pass some properties of `DesiredCapabilities`:
+
+* `chromeOptions` -- Must be set to a map
+* `chromeOptions.mobileEmulation` -- Must be set to a map too
+* `chromeOptions.mobileEmulation.deviceName` -- Must be set to the device name
+
+For example:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/mobileemulation/ChromeMobileEmulationKnownDeviceIT.java#L28-L37[ChromeMobileEmulationKnownDeviceIT.java]
+----
+mobileEmulation.put("deviceName", "Apple iPad");
+
+Map<String, Object> chromeOptions = new HashMap<>();
+
+chromeOptions.put("mobileEmulation", mobileEmulation);
+
+DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+
+capabilities.setCapability(ChromeOptions.CAPABILITY, chromeOptions);
+
+driver = new ChromeDriver(capabilities);
+----
+
+If Chrome does not know about the device, you must *specify individual device attributes*. You need to specify:
+
+* `chromeOptions.mobileEmulation.deviceMetrics.width` -- The width of the device's screen
+* `chromeOptions.mobileEmulation.deviceMetrics.height` -- The height of the device's screen
+* `chromeOptions.mobileEmulation.deviceMetrics.pixelRatio` -- The pixel ratio
+* `chromeOptions.mobileEmulation.userAgent` -- The value of the HTTP user agent header
+
+The following example uses the same values as the Apple iPad:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/mobileemulation/ChromeMobileEmulationDeviceAttributesIT.java#L26-L45[ChromeMobileEmulationDeviceAttributesIT.java]
+----
+Map<String, Object> deviceMetrics = new HashMap<>();
+
+deviceMetrics.put("width", 768);
+deviceMetrics.put("height", 1024);
+deviceMetrics.put("pixelRatio", 2);
+
+Map<String, Object> mobileEmulation = new HashMap<>();
+
+mobileEmulation.put("deviceMetrics", deviceMetrics);
+mobileEmulation.put("userAgent", "Mozilla/5.0 (iPad; CPU OS 7_0 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) Version/7.0 Mobile/11A465 Safari/9537.53");
+
+Map<String, Object> chromeOptions = new HashMap<>();
+
+chromeOptions.put("mobileEmulation", mobileEmulation);
+
+DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+
+capabilities.setCapability(ChromeOptions.CAPABILITY, chromeOptions);
+----
+
+[sidebar]
+****
+You can run the test application in mobile mode if you like. See https://github.com/selenium-webdriver-in-practice/source/ for details.
+****
+
+==== Discussion
+
+Chrome's mobile emulation feature is a great and inexpensive way to test mobile devices. It doesn't require any extra software installed on either developers' PCs or your CI system, so there is very little cost in getting set up. Naturally, there are a few differences between emulation and testing on a real device:
+
+* A desktop machine is likely to be much more powerful than a mobile device, so performance will greatly differ.
+* Many mobile features (such as the camera) are not supported.
+
+If your site uses mobile features and you want to emulate them, then you might want to consider Appium, which we'll talk about shortly.
+
+== Internet Explorer
+
+image::ie.png[title="Internet Explorer"]
+
+`InternetExplorerDriver` runs the *Internet Explorer* browser on Windows. It requires you to download a driver binary to use. It supports extensions and uses the *Trident* engine.
+
+To use Internet Explorer, add the following to your pom.xml file:
+
+[source,xml]
+----
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-ie-driver</artifactId>
+            <version>${selenium.version}</version>
+            <scope>test</scope>
+        </dependency>
+----
+
+=== Technique 32: Using a Vagrant virtual machine to run IE
+
+You may want to use a browser that is not available on your operating system, such as Internet Explorer when your computer is an Apple Mac. This technique shows you how to create a virtual machine to run a different operating system, allowing you to test a greater variety of browsers.
+
+==== Problem
+
+Your desktop machine is not running Windows, but you want to run your tests on Internet Explorer. Or, you want to start from scratch each time with a working machine, as your tests can make the machine dirty.
+
+==== Solution
+
+Use VirtualBox and Vagrant to create a virtual machine (VM) that you roll back to a known good state before running your tests.
+
+VirtualBox (figure <<virtual-box>>) allows you to run a virtual computer (a "virtual box" or "virtual machine") within your desktop computer. This is what allows you to run another operating system without needing another piece of computer hardware to run it on.
+
+[[virtual-box]]
+image::virtual-box.png[title="VirtualBox"]
+
+Vagrant is a tool used to control VirtualBox, telling it how to create the virtual machine.
+
+[sidebar]
+.How to find out more about VirtualBox and Vagrant
+****
+If you've not used either VirtualBox or Vagrant, we recommend you try out the tutorials on their websites, as it will make this technique much easier to understand:
+
+* https://www.virtualbox.org
+* https://www.vagrantup.com
+****
+
+As is often the case with Windows, this will require a series of manual steps.
+
+You are going to create a Windows 8 virtual machine with Internet Explorer 10 installed on it. First, some prerequisites. You need to install VirtualBox and Vagrant.
+
+[sidebar]
+.What is the difference between a "guest" and a "host" OS?
+****
+The *host OS* is the operating system running on your desktop machine. The operating system running on the virtual machine is called the *guest OS*.
+****
+
+Make sure you have an appropriate license from Microsoft for running Windows.
+
+Create an empty directory (we called ours win8-ie10), and in that directory create a file named Vagrantfile. It should contain the following content:
+
+[source,plain]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/vagrant/Vagrantfile#L25-L34[Vagrantfile]
+----
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "win8-ie10" //<1>
+  config.vm.box_url = "http://aka.ms/vagrant-win8-ie10" //<2>
+  config.vm.communicator = "winrm" //<3>
+  config.vm.network "forwarded_port", guest: 4444, host: 14444 //<4>
+
+  config.vm.provider "virtualbox" do |v|
+    v.gui = true <5>
+  end
+
+end
+----
+<1> A name for your virtual box
+<2> The URL to download the virtual box from
+<3> Enable Windows Remote Management
+<4> Make sure that port 14444 on your desktop is forwarded to port 4444 on your virtual machine -- this is the port that the IE driver listens on
+<5> Turn on the user interface so you can interact with it.
+
+[sidebar]
+.What is a "port forward"?
+****
+VirtualBox allows you to map a port on your host machine to one on your guest machine. This is called a *port forward*. It means that when the port on your host is accessed, data is forwarded to the guest. This allows you to access services and programs listening on a port on the guest machine as if they were running on the host.
+****
+
+Next, type `vagrant up`. After a few minutes, you should see Windows running within a window on your desktop. On the Windows guest machine, download and install Java. Now is a good time to check that IE is working and can connect to websites. Use IE to download the latest versions of `IEDriverServer` (this runs a server that allows WebDriver to speak to IE) and selenium-server-standalone-2.52.0.jar (this runs the WebDriver server) from <http://docs.seleniumhq.org/download/>. Save these on the machine's desktop. Unzip the zip file containing IEDriverServer.exe onto the desktop.
+
+You need to start up the standalone driver now. To do this, open the Windows *cmd* application (for example, by pressing Windows+R and then typing `cmd`). Enter the following:
+
+[source,plain]
+----
+cd c:\Users\IEUser\Desktop
+"c:\Program Files\Java\jre1.8.0_73\java.exe" -Dwebdriver.ie.driver=IEDriverServer.exe \
+    -jar selenium-server-standalone-2.52.0.jar -port 4444
+----
+
+You may need to change the version from `2.52.0`. You should see the output in figure <<ie-command>>.
+
+[[ie-command]]
+image::ie-command.png[title=Expected output from command]
+
+Now, you can create a test!
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/VagrantInternetExplorerIT.java#L16-L33[VagrantInternetExplorerIT.java]
+----
+private WebDriver driver;
+
+@Before
+public void setUp() throws Exception {
+    driver = new RemoteWebDriver(
+            new URL("http://localhost:14444/wd/hub"),
+            DesiredCapabilities.internetExplorer() //<1>
+    );
+}
+
+@Test
+public void openGoogle() throws Exception {
+    driver.get("http://www.google.com");
+}
+----
+<1> Note the port number is the one we set up earlier
+
+==== Discussion
+
+Using `InternetExplorerDriver` is the only way to test on Internet Explorer with WebDriver. This example allows you to set up a Windows machine that lives inside your machine. Before you run your first test, you can save the virtual machine. To do this, you need to install a plugin into Vagrant:
+
+[source,plain]
+----
+vagrant plugin install vagrant-vbox-snapshot
+----
+
+You can then take a snapshot of the machine:
+
+[source,plain]
+----
+vagrant snapshot take win-ie
+----
+
+And each time, you can start fresh using the machine when the snapshot was taken:
+
+[source,plain]
+----
+vagrant snapshot go win-ie
+----
+
+You can find a full list of virtual machines on https://dev.windows.com/en-us/microsoft-edge/tools/vms/windows/[Microsoft's website].
+
+As mentioned earlier, Internet Explorer may require some manual setup, so you may also want to do the following before you use the snapshot:
+
+* Disable "protected mode" so you can test browser plugins.
+* Enable deletion of browser history.
+* Turn off the pop up blocker.
+* Disable autocompletion of passwords.
+* Disable certificate warnings.
+
+These changes reduce the chances of a pop up interrupting your tests, causing them to fail.
+
+VirtualBox and Vagrant allow you to create multiple guest VMs on a single host OS.
+
+== Microsoft Edge
+
+*Microsoft Edge* is a new browser (as of 2015) from Microsoft that supports the WebDriver protocol. You need to install Microsoft WebDriver to use it. There isn't a complete implementation of the WebDriver protocol at the time of writing, so we won't talk much about it in case it changes. Edge uses the *EdgeHTML* engine. This is a fork of Internet Explorer's Trident engine, so you may expect to see similar behavior.
+
+== Safari
+
+image::safari.png[title="Safari"]
+
+`SafariDriver` is the driver for the *Safari* browser on OS X. It uses both injected JavaScript and native events to control the browser. To use it, you need to install an extension. `SafariDriver` does not automate some features, such as alerts, file uploads, or drag and drop. As Safari is based on the WebKit engine, it behaves in a similar way to Chrome.
+
+To use Safari, add the following to your pom.xml file:
+
+[source,xml]
+----
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-safari-driver</artifactId>
+            <version>${selenium.version}</version>
+            <scope>test</scope>
+        </dependency>
+----
+
+Now that we have looked at the main desktop browsers WebDriver supports, we'll look at a special class of browser -- the headless browser.
+
+== Headless browsers
+
+One thing you might want to consider is headless testing. A headless browser is one that does not display a user interface -- it's missing its "head"! This allows a computer to access web pages, but without the overhead of rendering the graphics to the screen.
+
+Headless browsers tend to be faster, as they do not have the overhead of rendering graphics. However, this can make problems with tests harder to diagnose, as you cannot simply view the web page at the point your test fails.
+
+Let's take a look at three ways to run a headless browser.
+
+=== HtmlUnit
+
+`HtmlUnitDriver` is the driver for HtmlUnit. This is not a browser in the normal sense; it's a Java implementation of a browser. This means that it'll run on any operating system, even one without a browser installed. It uses a different JavaScript engine to other browsers, which means that JavaScript does not always work as expected. We've found that pages that rely on jQuery may not work. This means it might not be a great choice for a JavaScript-rich website. But it is very fast, so it may be an appropriate choice for some simple websites.
+
+You cannot capture the screen when something goes wrong. This means that diagnosing failures might take longer than with other drivers.
+
+To use HtmlUnit, add the following to your pom.xml file:
+
+[source,xml]
+----
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-htmlunit-driver</artifactId>
+            <version>${selenium.version}</version>
+            <scope>test</scope>
+        </dependency>
+----
+
+Note that the driver's version does not always seem to be up to date.
+
+=== PhantomJS
+
+PhantomJS is a headless browser based on the WebKit engine. This means it is similar to Chrome and Safari. It is headless, but it does not have some of the drawbacks of HtmlUnit; for example, JavaScript works as expected. It can be a good choice for using on your continuous integration server. But you should be aware that the small differences to Chrome can result in hard-to-diagnose bugs in your tests.
+
+To run PhantomJS on your computer, you need to install it. If you are on OS X and you have Brew installed, then run:
+
+[source,bash]
+----
+brew install phantomjs
+----
+
+If you are running Linux, then you can use your package manager to install it. On Windows, you can download it from http://phantomjs.org/download.html[the PhantomJS website].
+
+You need to add the following to your pom.xml file to get the `PhantomJSDriver` class:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.codeborne</groupId>
+    <artifactId>phantomjsdriver</artifactId>
+    <version>1.2.1</version>
+    <exclusions>
+        <exclusion>
+            <groupId>org.seleniumhq.selenium</groupId> //<1>
+            <artifactId>selenium-java</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-remote-driver</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+----
+<1> We exclude these dependencies, as they are often out of date
+
+We've had trouble testing JavaScript pop ups with PhantomJS, so watch out for that.
+
+If you want to run a browser without a head, another option is to use XVFB. We'll look at that next.
+
+=== XVFB: The X11 virtual frame buffer
+
+X11-based operating systems, such as Linux, can create a virtual screen to run tests using the `Xvfb` command. This is installed by default in many Linux versions. To use it, you only need to do the following in your terminal:
+
+[source,plain]
+----
+Xvfb :99 &
+export DISPLAY=:99
+----
+
+Any graphical process that starts in that terminal from now on will start without a GUI. This gives you some of the benefits of running headless, with the benefits of having a browser that is well supported.
+
+== iPhone, iPad, and Android -- Appium
+
+Mobile browsing is set to overtake desktop browsing globally any time now -- in fact, maybe even between when I write these words and when you read them!
+
+Mobile drivers have some common features:
+
+* Typically you need to install the phone's SDK. This can limit you to the platform that the OS vendor favors.
+* You can often test various versions of the operating system by providing a capability to the driver.
+* They are typically remote drivers that you need to start up before you use them.
+
+A popular way to automate mobile browsers is using Appium.footnote:[http://appium.io/] Not only does it support multiple browsers, but it can allow you to test native applications. It's also well supported by cloud testing solutions such as Sauce Labs.
+
+You need to install some prerequisites to use Appium: Xcode footnote:[https://developer.apple.com/xcode/] if you want to test on iOS, and the Android SDK footnote:[https://developer.android.com/sdk/installing/index.html] if you want to test on Android. Once you've installed the Android SDK, you'll also need to download an emulator. As this process can change, I won't document it here. The instructions can be found on http://appium.io/[Appium's website].
+
+The Appium user interface (figure <<appium-toolbar>>) provides a number of useful features.
+
+[[appium-toolbar]]
+image::appium-toolbar.png[title=Appium toolbar]
+
+It's worthwhile running the Appium Doctor to check everything is working:
+
+[source,bash]
+----
+Running iOS Checks
+✔ Xcode is installed at /Applications/Xcode.app/Contents/Developer
+✔ Xcode Command Line Tools are installed.
+✔ DevToolsSecurity is enabled.
+✔ The Authorization DB is set up properly.
+✔ Node binary found at /usr/local/bin/node
+✔ iOS Checks were successful.
+
+Running Android Checks
+✔ ANDROID_HOME is set to "/usr/local/opt/android-sdk"
+✔ JAVA_HOME is set to "/Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home/."
+✔ ADB exists at /usr/local/opt/android-sdk/platform-tools/adb
+✔ Android exists at /usr/local/opt/android-sdk/tools/android
+✔ Emulator exists at /usr/local/opt/android-sdk/tools/emulator
+✔ Android Checks were successful.
+
+✔ All Checks were successful
+----
+
+Appium and Appium Doctor can be run from the command line, which is ideal for a CI server:
+
+[source,bash]
+----
+$ appium-doctor
+Running iOS Checks
+...
+$ appium
+info: Welcome to Appium v1.4.7 (REV 3b1a3b3ddffa1b74ce39015a7a6d46a55028e32c)
+info: Appium REST http interface listener started on 0.0.0.0:4723
+info: Console LogLevel: debug
+----
+
+It's well worth making sure you can start the device you want to test on before you start writing your tests. This can be done in Xcode, or within Android Studio.
+
+Finally, you use `AppiumDriver` in a similar manner to other remote drivers:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/AppiumIPhoneIT.java#L20-L51[AppiumIPhoneIT.java]
+----
+public class AppiumIPhoneIT {
+    private AppiumDriver<MobileElement> driver; //<1>
+
+    @Before
+    public void setUp() throws Exception {
+        DesiredCapabilities capabilities = new DesiredCapabilities();
+
+        capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, "iPhone 5"); //<2>
+        capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "iOS");
+        capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, "9.2");
+        capabilities.setCapability(CapabilityType.BROWSER_NAME, "safari"); //<3>
+
+        driver = new IOSDriver<>(
+                new URL("http://127.0.0.1:4723/wd/hub"),
+                capabilities
+        );
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        driver.quit();
+    }
+
+    @Test
+    public void openGoogle() throws Exception {
+        driver.get("http://www.google.com");
+
+        MobileElement element = driver.findElement(By.xpath("//button]"));
+
+        element.click();
+
+    }
+}
+----
+<1> The `AppiumDriver` class exposes the `MobileElement` class, which has more methods than `WebElement`
+<2> The device you need -- don't worry, Appium will log a list of devices if you don't know which one you need
+<3> You need either a `browserName` or an `app` name: this should be "safari"
+
+You'll see the device start up, the browser load, and then your page appear as per figure <<appium-ios-flow>>.
+
+[[appium-ios-flow]]
+image::appium-ios-flow.png[title="Appium iOS flow"]
+
+The code for Android is very similar, with just a change to the parameters:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/AppiumAndroidIT.java#L26-L29[AppiumAndroid.java]
+----
+capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, "Nexus");
+capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "Android");
+capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, "4.4");
+capabilities.setCapability(MobileCapabilityType.BROWSER_NAME, "browser");
+----
+
+This will result in you seeing the browser loading and your page appearing as per figure <<appium-android-flow>>.
+
+[[appium-android-flow]]
+image::appium-android-flow.png[title="Appium Android flow"]
+
+A couple of notes on Appium. First, it only supports a subset of locators: XPath and class name. Also, some methods, such as swipe and pinch, are not currently supported. But it is rapidly improving, so by the time you read this, this might have changed!
+
+== Summary
+
+* Not all browsers support all features. Use table <<driver-summary>> to compare them.
+* Some browsers need manual configuration before you can use them. This is different for each browser.
+* Some browsers are similar to others, so using just one of them to test can give you a lot of value.
+* VirtualBox and Vagrant will allow you to use browsers that are not native to your OS.
+* Appium is your one-stop-shop for mobile browser automation. You can use this for both iPhone and Android testing.
+
+In the next chapter we will look at ways you can decorate WebDriver to add to or modify its behavior.

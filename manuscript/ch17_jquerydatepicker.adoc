@@ -1,0 +1,829 @@
+= Automating jQuery Datepicker
+
+:imagesdir: ../images/ch17_datepicker
+
+This chapter covers
+
+* Understanding the datepicker
+* Automating the jQuery datepicker
+* Introducing collaborators to split responsibilities
+
+In Chapter 6, we showed you how to trigger the display of a ReactJS calendar. But we didn't go into details about picking a date. Because it needs an entire chapter to automate a datepicker. So we decided to do it when we have a framework to do the finding and clicking. And now it is time for us to automate it.
+
+The reason datepicker made its place in this book is because it is a commonly used widget on web application, and it is difficult to automate. The reason it is difficult to automate lies on the fact they come out of third party libraries and may not have an easy way for Selenium to locate its elements. Also the logic to pick a date is complex.
+
+By the end of this chapter, you'll learn to automate one datepicker, which will allow you select a date from a datepicker calendar and use that to fill out the date field on a web page.
+
+== Understanding datepickers
+
+On web applications, for example, flight booking and hotel booking, users need to enter dates for the flights and hotel. Without any help, users will be confused about what is expected format they should use. That is because when talking about date, we live in an varied world because there are so many date formats used by different countries, to represent April 1st, 2014,
+
+.Date formats in some countries
+[cols=",",options="header",]
+|=====
+|Country    |Format       | Example
+| USA       | MM/dd/YYYY  | 04/01/2014
+| China     | YYYY-MM-DD  | 2014-04-01
+| Australia | dd-MM-YYYY  | 01-04-2014
+| UK        | dd-MM-YYYY  | 01-04-2014
+|=====
+
+But on a web page, usually the date field expects only one format for user input. In the past, an instruction about the format is annotated next to the date field to tell users what’s the expect format of the date (see figure <<date_field>>), with the hope it can reduce the chance of users entering invalid dates.
+
+[[date_field]]
+image::date_field.png[title=A date field with annotation of the format it expects]
+
+Even with this prompt, it was still possible for you to enter an invalid date, and you'd only know about it when you submitted the form you were filling out. It was annoying.
+
+Also, this approach cluttered the web pages with information only useful for the first time and it soon became nuisance for subsequent visits. As web technology became more advanced, many input assistant libraries were added to make the web page more user friendly. Datepicker is one of them.
+
+=== What is a datepicker
+
+A datepicker is an input assistance method to help user to select a date and converts the user selection into the format expected by the web pages. The application of datepicker on web page greatly reduced the confusion on the date format, made it impossible to enter invalid dates, and improved user experience. On web pages, all HTML datepickers are built using JavaScript libraries, with or without a calendar icon next to the input field.
+
+Let us take a look of a datepicker built using Material-UI Date Picker, it is associated with an input field on form, you can click it to open an interactive calendar, flip the calendar to a future or past month and choose a day. The date you chose is shown as the input's value.
+
+image::datepicking.png[title=Material-UI Date Picker]
+
+Let us say today it is April 17th, 2016 and you want to pick April 1, 2014. Because it is a past date, you need to click previous month arrow `<` and keep track of the change on the calendar until it is on the month of April 2014. Then you click 1 on the calendar to choose the day. Depending on the implementation of the calendar, it may not close, so we need to take further action to close the calendar in order to move on. For this particular example, we need to click OK to close the calendar.
+
+Since they are built using JavaScript, the timing of the elements appear on the page is unpredictable and the structure of datepicker is very complex. Also some calendar, such as Material-UI, uses *CSS Transition* to provide a transition effect when people flip the calendar. All these web techniques complicate web automation. Many people struggled to get it working and the solutions people posted on internet are very inconsistent.
+
+Despite the difficulties we are facing, datepickers can still be automated. Let us start by breaking down the steps taken in automating a datepicker. Same as automating other web elements, we need to,
+
+1. Locate the important elements on a datepicker.
+2. Trigger the display of the calendar
+3. Read the calendar title to find out the current month and year and decide the direction to flip the calendar.
+4. Based on the direction, click either previous or next month button to flip the calendar and,
+5. Choose a day when reaching the target month.
+
+First let us have a look what elements a datepicker has and how can we locate them.
+
+=== Identifying the elements of a datepicker
+
+As the first step to automate date picking, you need to locate the trigger element to display the calendar. The trigger can be an input field or a calendar icon. When you click the input field, a calendar pops up, so we define the input field as a "Trigger", which triggers the display of the calendar, as shown below,
+
+image::input.png[title=Datepicker Calendar Trigger]
+
+Then you need to locate other calendar elements. For Material-UI datepicker, these elements are annotated on the following figure,
+
+[[calendar_element]]
+image::calendar.png[title=Elements of a Datepicker]
+
+In the figure shown above, all annotated elements are the important elements you use to automate datepicker, so you need to use Web Developer Tool to inspect them to find out the HTML codes behind them. We are going to use these names to refer to the elements in the code. Once you understand the elements of the datepicker, you can write locating and manipulating code to automate the operation of picking a date.
+
+There are many styles of the calendar implementation from popular JavaScript frameworks. Even they have different kinds of look and feel, they all have some common elements. Let us have a look of some popular datepickers.
+
+=== Some popular datepickers
+
+Here are some popular datepickers, they are developed by different people so the look and feels are different. But, they have some common elements.
+
+Let us take a look of jQuery calendar.
+
+==== jQuery
+
+JQuery calendar is almost same as Material-UI with different style.
+
+image::jquery.png[title=jQuery Datepicker]
+
+The major difference is JQuery calendar we configured doesn't have Cancel and OK buttons.
+
+Next let us look at the calendar provided for ReactJS.
+
+==== ReactJS
+
+ReactJS doesn't have built-in datepicker but there are many datepickers written for ReactJS, the one we choose as the example is from Hackerone and it has the same elements as jQuery.
+
+image::react.png[title=ReactJS Datepicker]
+
+There is still difference but the difference can only be seen by Web Developer Tool. We will take about it when automating ReactJS datepicker.
+
+And next is Bootstrap.
+
+==== Bootstrap
+
+Bootstrap also has the same elements as jQuery.
+
+image::bootstrap.png[title=Bootstrap Datepicker]
+
+Also we need to find out the real difference by using Web Devoloper Tool.
+
+And one of the oldest datepicker, JsDatePick.
+
+==== JsDatePick
+
+Unlike the other datepickers, JsDatePick has Previous and Next Year buttons so it makes it quicker to pick a date far from today. Also the week starts on Monday.
+
+image::jsdatepick.png[title=JsDatePick Datepicker]
+
+How about Polymer?
+
+==== Polymer
+
+Polymer also doesn't have its own datepicker. There are many datepickers used with it. One is built on top of Material-UI Date Picker. And there are other choices available. So we don't have example for Polymer. If you need to automate datepickers using Polymer, you can refer the these examples. As soon as the page is rendered on browser, it doesn't matter what libraries are used to build, it is just some HTML elements. So we can use Selenium WebDriver to automate them.
+
+The similarity among these datepickers suggests us that we may be able to use a common codebase to automate these datepickers. But we don't know that yet, and we need to start from automating one datepicker, jQuery datepicker.
+
+[sidebar]
+.Why jQuery
+****
+Besides ReactJS, we also thought of using Material-UI Date Picker as the first example since they are the most trendy JavaScript libraries when this book is written. But we have learnt in Chapter 6 that it is difficult to automate ReactJS. Also since Material-UI Date Picker uses *CSS Transition*, we will have other difficulties when automating it. Those details to solve these problems may distract you from learning the principles of developing a framework. So we decide to choose another datepicker as the first example to automate. JQuery is widely used, and its elements are easy to locate and click.
+
+We will show you how to automate Material-UI Date Picker in Chapter 18, as well as all other datepickers introduced in this chapter.
+****
+
+We are going to inspect the elements on jQuery datepicker and find out the locators we can use to locate them.
+
+=== Choosing locators for the elements of a jQuery datepicker
+
+We will inspect jQuery datepicker the same way we inspect the calendar in Figure <<calendar_element>> and find all HTML codes for these elements on calendar, based on the HTML codes, we can decide what locators to use and how to apply the technique introduced in Chapter 12 to use locator supplier enum constants to organize them.
+
+We learnt from earlier chapters that if an `id` attribute is provided for an element, we had better use it since it is the most stable and efficient locator to use. For example, the trigger and calendar elements have `id` associated with them, so we are going to use `By.ById` locator,
+
+==== Trigger
+
+Trigger has id "datepicker" so we can use it,
+
+[source, html]
+----
+<input type="text" id="datepicker" class="hasDatepicker">
+----
+
+We can use `By.id("datepicker")` to locate Trigger as a `Element`. Then we can use the `click` method to click the trigger element to popup the calendar.
+
+==== Calendar
+
+Calendar also has id "ui-datepicker-div" for us to use,
+
+[source, html]
+----
+<div id="ui-datepicker-div"
+     class="ui-datepicker ui-widget ui-widget-content
+            ui-helper-clearfix ui-corner-all"
+     style="position: absolute;top: 31px; left: 37.484375px; z-index: 1;"
+     display: "block">
+     ...
+</div>
+----
+
+We can use `By.id("ui-datepicker-div")` to locate Calendar. We locate Calendar so we can search other elements within the Calendar search scope. That is because `id` attribute is not provided for following elements. We need to use other locators to locate them, as we saw in chapter 2, we can narrow down the search by searching within an element. See technique 4 for more details. Also we can only read or click the following elements while the calendar is displayed.
+
+==== Display Month
+
+Display month has a class `"ui-datepicker-month"` and we can use it, but before we can use it to read the text, we need to make the calendar visible first, locate the calendar and then locate it using `By.className("ui-datepicker-month")` locator within the Calendar.
+
+[source, html]
+----
+<span class="ui-datepicker-month">February</span>
+----
+
+Then we can use `getText` method to read the text.
+
+==== Display Year
+
+We can apply the same locating mechanism to locate Display Year since it has a `class` attribute `"ui-datepicker-year"`.
+
+[source, html]
+----
+<span class="ui-datepicker-year">2016</span>
+----
+
+We can use `By.className("ui-datepicker-year")` to locate Display Year within the Calendar and read its text using `getText`.
+
+We need to use logic to find out whether we need to click Previous or Next Month Button and how many times we need to click it in order to flip the calendar to the month we are picking.
+
+==== Previous Month Button
+
+We need to use Previous Month Button if the date to pick is in the past. It has a `class` attribute `"ui-datepicker-prev"`.
+
+[source, html]
+----
+<a class="ui-datepicker-prev ui-corner-all" data-handler="prev"
+   data-event="click" title="Prev">
+   <span class="ui-icon ui-icon-circle-triangle-w">Prev</span>
+</a>
+----
+
+We can use `By.className("ui-datepicker-prev")` to locate Previous Month Button within the Calendar.
+
+==== Next Month Button
+
+We need to use Next Month Button if the date to pick is in the future. It has a `class` attribute `"ui-datepicker-next"`.
+
+[source, html]
+----
+<a class="ui-datepicker-next ui-corner-all" data-handler="next"
+   data-event="click" title="Next">
+   <span class="ui-icon ui-icon-circle-triangle-e">Next</span>
+</a>
+----
+
+We can use `By.className("ui-datepicker-next")` to locate Next Month Button within the Calendar.
+
+==== Day buttons
+
+Once we reach the target month, we need to click the day on the monthly calendar to choose the day. For jQuery datepicker, it is a link so we can use `By.linkText("18")` to pick 18th. But it may not be a link on other calendars. So we need to use other locating methods.
+
+[source, html]
+----
+<a class="ui-state-default" href="#">18</a>
+----
+
+We learnt from earlier chapters that enum is a good practice to organize locators. And we are going to define enum constants to organize these locators, as illustrated by following table.
+
+.Elements, locators and enums for jQuery patepicker
+[width="80%",cols="2,2,3",options="header"]
+|=====
+| Elements
+| Locators
+| Enum constants
+
+| Trigger
+| `By.id("datepicker")`
+| `JQueryById.TRIGGER_BY`
+
+| Calendar
+| `By.id(
+  "ui-datepicker-div")`
+| `JQueryById.CALENDAR`
+
+| DisplayMonth
+| `By.className(
+  "ui-datepicker-month")`
+| `JQueryByClassName .MONTH`
+
+| DisplayYear
+| `By.className(
+  "ui-datepicker-year")`
+| `JQueryByClassName .YEAR`
+
+| Previous Month Button
+| `By.className(
+  "ui-datepicker-prev")`
+| `JQueryByClassName
+.NEXT_MONTH_BUTTON`
+
+| Next Month Button
+| `By.className(
+  "ui-datepicker-next")`
+| `JQueryByClassName
+.NEXT_MONTH_BUTTON`
+
+| Day Buttons
+| `By.linkText("18")`
+| N/A
+|=====
+
+In the table, each row is an element, its locator and the enum constant to wrap the locator. Except the Day buttons, since we don't want to define 31 enum constants for those days.
+
+Now that we all the locators, we can apply the technique we learnt from Technique 38: Expose locator enums as a `Supplier<By>` interface. Now we create two enum constants.
+
+==== Locator supplier enum by Id
+
+We create `JQueryById` enum to organize the locators using `By.ById` locators, those locators build from `By.id(id)`, and we can keep adding new locators of `By.ById` to this enum when the project grows,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/jquery/JQueryById.java#L12-L35[JQueryById.java]
+----
+CALENDAR("ui-datepicker-div"),  <1>
+TRIGGER_BY("datepicker");                <2>
+----
+<1> Used to locate calendar and it will be used in `await` method
+<2> Used to locate trigger and it will be used in `click` method
+
+Then we can use these enum constants to,
+
+1. Locate the trigger and click it.
+2. Locate the calendar popup.
+
+And a locator supplier enum to organize those `By.ByClassName`
+
+==== Locator suppliers by ClassName
+
+We use this enum to organize `By.ByClassName` locators. Similarly to `JQueryById`, we can keep adding new locators of `By.ByClassName` type to this enum,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/jquery/JQueryByClassName.java#L12-L37[JQueryByClassName.java]
+----
+NEXT_MONTH_BUTTON("ui-datepicker-next"), //<1>
+NEXT_MONTH_BUTTON("ui-datepicker-prev"), //<2>
+MONTH("ui-datepicker-month"),    //<3>
+YEAR("ui-datepicker-year");      //<4>
+----
+<1> Used to locate next month button and it will be used in `click` method
+<2> Used to locate previous month button and it will be used in `click` method
+<3> Used to locate display month and it will be used in `getText` method
+<4> Used to locate display year and it will be used in `getText` method
+
+Then we can use these enum constants to
+
+1. Locate the elements on the calendar popup.
+2. Read the text of display year and month.
+3. Click the buttons to flip calendar.
+4. On the target month, pick a day.
+
+We are introducing the following techniques to accomplish the above tasks.
+
+== Implementing the jQuery datepicker class
+
+We are going to implement a datepicker class to automate jQuery datepicker, and gradually refactor it into a general purpose framework, so we can use the framework to automate those datepickers built from other JavaScript libraries.
+
+=== Technique 51: Choose Parameters Carefully to Simplify API Call
+
+We are going to introduce a technique associated with API design to simplify the method invocation. For example, we don't want the user of the method call to go a long way to think how to construct a `java.util.Date`, `java.util.Calendar` or a Java 8 `java.time.LocalDate` in order to use out API, the API should be as simple as `1`,`2`,`3`. For a datepicker, its functionality is to assist you to pick. year, month and then day. So the most strait forward interface is `Datepicker.pick(year, month, day)`.
+
+==== Problem
+
+In Java language, there are many classes represent the concept of date. They are `java.util.Date`, `java.util.Calendar` or a Java 8 `java.time.LocalDate`. If `pickDate` method took any of them as parameter, we need to construct an object of these classes first. But in the code handling date picking, we need to extract the year, month and day information from this object in order to operate on the jQuery calendar widget. There are conversions back and forth between normal string and the date type object.
+
+==== Solution
+
+Good API should be easy to use and read fluently. To save the trouble of writing above mentioned conversion code, an alternative API for datepicker should be the strait forward one, but we change the sequence of the parameters to make it read more like English language, `pick(Month month, int day, int year)`, When you call this method from the automation code, it is as simple as,
+
+[source,java]
+.Method call to pick date
+----
+datepicker.pick(APRIL, 1, 2014)  <1>
+----
+<1> This is similar to `LocalDate.of(2014, APRIL, 1)` method except the sequence of the parameters
+
+`APRIL` is an enum constant defined in `java.time.Month`, this code reads more fluent and it is much easier to understand. Here is the method body,
+
+[[pick-method]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L27-L33[JQueryDatepicker.java]
+----
+public void pick(Month month, int day, int year) {
+    LocalDate.of(year, month, day);            //<1>
+    show();                                    //<2>
+    pickYear(year);                            //<3>
+    pickMonth(month.ordinal());                //<4>
+    pickDay(day);                              //<5>
+}
+----
+<1> Use java.time.LocalDate to validate the parameter, LocalDate is from Java 8
+<2> Display the calendar, we are going to move this method into `JQueryCalendar` class
+<3> Flip the calendar into target year, we are going to move it into `JQueryYearControl` class
+<4> Flip the calendar into target month, we are going to move it into `JQueryMonthControl` class
+<5> Click the day item and close the calendar, we are going to move it into `JQueryDayPicker` class
+
+From the code above, we can clearly see not only the client code is simple, but the internal logic is simple as well, we can just specify it in the parameters so they can be used directly.
+
+[sidebar]
+.LocalDate
+****
+`LocalDate` originated from Joda Date library and after being used many years by the industry as a better date framework, it is officially incorporated into Java 8.
+
+To create a `LocalDate` object, simply call the factory method `of(year, month, day)`
+
+[source,java]
+----
+LocalDate thatDay = LocalDate.of(2014, APRIL, 1)
+----
+
+The `pick` method of our datepicker class, follows this style.
+
+Even we didn't design the method to take a `LocalDate` as the parameter, but inside the method body, the first statement is to construct a `LocalDate` using the 3 parameters, if they are invalid, the method will throw an exception.
+
+[source,java]
+----
+datepicker.pick(Month.APRIL,31, 2012);
+----
+
+When we run the above code, it will throw the following exception,
+
+[source,java]
+----
+java.time.DateTimeException: Invalid date 'APRIL 31'
+----
+
+It tells you that the date you try to pick doesn't exist. It is better than telling you an `NoSuchElementException`.
+****
+
+==== Discussion
+
+Instead of using extra code to convert a string into an object of `java.util.Date`, `java.util.Calendar` or a Java 8 `java.time.LocalDate`, or introducing a dependency to third party date processing API such as Joda Date library, the new API just takes a `java.time.Month`, two `int` values as parameters. Even generally speaking, the less parameters a method takes, the better. But for this case, it is better to use these 3 parameters. You use type `java.time.Month` to restrict the first parameter to be an enum constant of a `Month` which is type safe. And it is not difficult to guess the second parameter is for day and third one for year. You still need to be careful not to pass negative value as day and year. But we have validation logic to verify the parameters are valid.
+
+=== Implementing a single datepicker class
+
+We don't use too many methods in this chapter, the most frequently used methods are `until`, `await`, `click`, `getText`, `getUpperText` and `optionalElement`. Here is the class diagram showing where these 6 methods coming from.
+
+image::UsedMethods.png[title=Some frequently used methods]
+
+We don't have `Browser` and `Element` in the class diagram, because those methods are not defined in `Browser` and `Element`. `Browser` is a grandson level sub-class of `DelegatingSearchContext` so it has the genes from it and you can call these 6 methods from `Browser` class. Same is `Element` class.
+
+Now we can start to design the class to handle all the date picking logic. First we have the `pick` method from Listing <<pick-method>>, and methods related to display the calendar which is private since it is in the same class,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L35-L37[JQueryDatepicker.java]
+----
+private void show() {
+    browser.click(TRIGGER_BY);          <1>
+}
+----
+<1> Click the input field to display the calendar
+
+And here are the methods used to pick year. They are in the same class and these methods are declared `private`,
+
+[[methods-pick-year]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L39-L74[JQueryDatepicker.java]
+----
+private void previousYear() {          <5>
+    for (int i = 0; i < 12; i++) {
+        previousMonth();
+    }
+}
+
+private void nextYear() {               <6>
+    for (int i = 0; i < 12; i++) {
+        nextMonth();
+    }
+}
+
+private int  displayYear() {
+    String text = browser.await(CALENDAR).getText(YEAR);  <8>
+    return Integer.parseInt(text);    <7>
+}
+
+private void pickYear(int year) {      <1>
+    if ( displayYear() < year) {        <2>
+        while ( displayYear() != year) {       <3>
+            nextYear();
+        }
+    } else if (displayYear() > year) {    <4>
+        while (displayYear() != year) {
+            previousYear();
+        }
+    }
+}
+
+private void previousMonth() {              <9>
+    browser.await(CALENDAR).click(PREV_MONTH_BUTTON);
+}
+
+private void nextMonth() {                                   <10>
+    browser.await(CALENDAR).click(NEXT_MONTH_BUTTON);
+}
+----
+<1> All of the methods are private for now since they are in the same class
+<2> Determine whether the year to pick is in the past or future
+<3> Year to pick is in the future in this block
+<4> Year to pick is in the past in this block so it calls `previousYear()`
+<5> Since there is no previous year button on the calendar, we just click previous month button 12 times
+<6> Similar to previousYear except calling `nextMonth()`
+<7> Use the `Integer.parseInt` to convert the year string into an integer value
+<8> Read the display year string from the calendar
+<9> Locate previous month button and click it
+<10> Locate next month button and click it please see sequence diagram
+
+We can use `nextMonth` as example, to understand the interaction between `JQueryDatepicker`, `Browser` and `Element` classes.
+
+image::pickfuture-seq.png[title=Sequence Diagram of how `nextMonth` method works]
+
+And methods related to pick month, which are also `private`,
+
+[[methods-pick-month]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L68-L91[JQueryDatepicker.java]
+----
+private void previousMonth() {...}
+
+private void nextMonth() {...}
+
+private int  displayMonth() {
+    String text = browser.await(CALENDAR).getUpperText(MONTH); <2>
+    return Month.valueOf(text).ordinal();   <1>
+}
+
+private void pickMonth(int month) {
+    if ( displayMonth() < month) {            <3>
+        while ( displayMonth() != month) {     <4>
+            nextMonth();
+        }
+    } else if (displayMonth() > month) {
+        while (displayMonth() != month) {   <5>
+            previousMonth();
+        }
+    }
+}
+----
+<1> Use the `java.time.Month` enum to convert the month and get its ordinal
+<2> Read the display month from the calendar
+<3> Determine whether the month to pick is in the past or future
+<4> Month to pick is in the future
+<5> Month to pick is in the past so it calls `previousMonth()`
+
+and here is the sequence diagram of `displayMonth` method.
+
+image::displayMonth-seq.png[title=Sequence Diagram of how `displayMonth` method works]
+
+As well as the `private` method used to pick the day,
+
+[[pick-day]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L93-L102[JQueryDatepicker.java]
+----
+private void pickDay(int day) {
+    browser.await(CALENDAR)
+        .click(new Supplier<By>() {   <1>
+            @Override
+            public By get() {
+                return By.linkText(String.valueOf(day));
+            }
+        }); //<2>
+    browser.await(new ElementVisible(CALENDAR).negate());  //<3>
+}
+----
+<1> Create an anonymous inner class from interface Supplier<By>, this is pre-Java 8 approach and the Supplier is from Google Guava library
+<2> Click the day on the calendar
+<3> Wait until the calendar is closed
+
+In the method body of `pickDay`, we use `new ElementVisible(CALENDAR).negate()` to wait until the calendar is closed. `ElementVisible` class can be used to check whether an element is visible. The `negate()` method is a method from `Predicate` to reverse the condition so we don't need to have another class `ElementNotVisible`.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/ElementVisible.java#L9-L22[ElementVisible.java]
+----
+public class ElementVisible implements Predicate<SearchScope> { <1>
+
+    private final Supplier<By> by;   <2>
+
+    public ElementVisible(Supplier<By> by) {  <5>
+        this.by = by;
+    }
+
+    @Override
+    public boolean test(SearchScope searchScope) {
+        Optional<Element> element = searchScope.optionalElement(by);  <3>
+        return element.isPresent() && element.get().isDisplayed();  <4>
+    }
+}
+----
+<1> It implements `Predicate<SearchScope>` interface so it can be use as the parameter for `until` method of `ExplicitWait` interface
+<2> This is the locator to the element
+<3> Locate an optional element
+<4> The logic to check whether it is displayed.
+<5> From now on we will omit this kind of constructor used to inject the instance variables by assignment only
+
+You can see the from code, `JQueryDatepicker` is very clean. For normal automation code, this class is already clean enough to be considered production quality. But it is not good enough to be used as framework code to automate other datepickers. If you pay attention, you will notice, we split those methods into 4 blocks in order to explain the functionalities of those methods. It means the original design is not cohesive and we put unrelated methods inside one class and give it too many responsibilities. We are going to continue refactoring it and move its methods into some calendar control classes to make `JQueryDatepicker` class less crowded.
+
+=== Improve the performance of calendar flipping
+
+The methods `pickYear` in `JQueryDatepicker` need to read the display value each time after clicking the previous or next month button to determine whether it needs to click again. So each time, it needs to call `displayYear` multiple times in the while loop and it in turn calls the following code through `WebDriver` API,
+
+[source,java]
+----
+browser.await(CALENDAR).getText(YEAR);
+----
+
+This approach automates one situation, somebody watches the calendar while clicking and stops clicking when the display year and display month are the same as the year and month to pick. To improve the performance, the code to flip calendar has been changed to the following. It simulates another person read the current month and year and calculates how many times he need to click the button to go to target month. It may be difficult for a human to calculate the difference but it is a thing a computer is good at.
+
+[[methods-pick-year2]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryYearPicker.java#L18-29[JQueryYearPicker.java]
+----
+public void pickYear(int year) {
+    int difference =  displayYear() - year;    <1>
+    if (difference < 0) {                       <2>
+        for (int i = difference; i < 0; i++) {
+            nextYear();
+        }
+    } else if (difference > 0) {                  <3>
+        for (int i = 0; i < difference; i++) {
+            previousYear();
+        }
+    }    <4>
+}
+----
+<1> Read display year and calculate the difference between year to pick
+<2> If the difference is negative, execute the nextYear() method the absolute value of difference times
+<3> If the difference is positive, execute the previousYear() method the value of difference times
+<4> In this method, displayYear() only executes once
+
+Same, we can change the logic to pick month as following so the read from display month is also executed once,
+
+[[methods-pick-month2]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryMonthPicker.java#L18-L29[JQueryMonthPicker.java]
+----
+public void pickMonth(int month) {
+    int difference =  displayMonth() - month;  <1>
+    if (difference < 0) {                         <2>
+        for (int i = difference; i < 0; i++) {
+            nextMonth();
+        }
+    } else if (difference > 0) {                 <3>
+        for (int i = 0; i < difference; i++) {
+            previousMonth();
+        }
+    }  <4>
+}
+----
+<1> Calculate the difference between the display month and month to pick
+<2> If the difference is negative, click the next month button the absolute value of difference times
+<3> If the difference is positive, click the previous month button the value of difference times
+<4> In this method, displayMonth() only executes once
+
+In the changed `pickMonth` method, `displayMonth` method is only called once. It reduces the times it needs to read data through `WebDriver`.
+
+[sidebar]
+.Automation
+****
+From these two way of flipping the calendar, it is analogous to two people clicking the datepicker, one watches the calendar changing while clicking the button and the other calculates how many times he needs to click and counts down the number of clicks with eye closed. Test automation is just to use programming languages to simulate human interaction on web applications. As to how we interact, it still can be different so the logic will be different too.
+****
+
+== Introducing delegate classes to split responsibilities
+
+If we want to reuse some date picking logic to automate the datepicker built using other JavaScript framework, we need to extract common logic into some framework classes.
+
+=== Creating `JQueryCalendar` class to show the calendar
+
+First, we create a `JQueryCalendar` class move `show()` method over and change it to `public`, then we inject this class into `JQueryDatepicker` to be in charge the `show` method that triggers the display of calendar.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryCalendar.java#L7-L18[JQueryCalendar.java]
+----
+public class JQueryCalendar {
+
+    private final Browser browser;
+
+    public void show() {             <1>
+        browser.click(TRIGGER_BY);
+    }
+}
+----
+<1> The method access level changed from `private` to `public`
+
+Next we are going to create a class to pick year.
+
+=== Creating `JQueryYearPicker` and `JQueryMonthPicker` to pick year and month
+
+And create `JQueryYearPicker` class and move all methods in Listing <<methods-pick-year>> over, but replace `pickYear` method by improved Listing <<methods-pick-year2>>. After these changes, all year picking related methods are in this class,
+
+[[JQueryYearPicker-version1]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v1_5/JQueryYearPicker.java#L8-L54[JQueryYearPicker.java]
+----
+public class JQueryYearPicker {
+
+    private final Browser browser;
+
+    public void pickYear(int year) {...}  <1>
+    ...  <2>
+}
+----
+<1> This method changed from private to public since it is in another class now
+<2> These omitted methods are exactly same as the ones in JQueryYearPicker
+
+Then another class to pick month.
+
+And methods in Listing <<methods-pick-month>> are moved into `JQueryMonthPicker` and `pickMonth` method is replace by Listing <<methods-pick-month2>> so all month related methods are in this class,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryMonthPicker.java#L10-L44[JQueryMonthPicker.java]
+----
+public class JQueryMonthPicker {
+
+    private final Browser browser;
+
+    public void pickMonth(int month) {...} <1>
+    ... <2>
+}
+
+----
+<1> This method changed from private to public since it is in another class now
+<2> These omitted methods are exactly same as the ones in JQueryYearPicker
+
+Here is the sequence diagram to illustrate the method invocation to pick month.
+
+image::calendarpicker-seq.png[title=Sequence Diagram of how `JQueryMonthPicker` works]
+
+Due to lacking of Previous Year Button, `JQueryYearPicker` needs to click Previous Month Button 12 times in `previousYear` method. These two methods `previousMonth` and `nextMonth` repeat in both `JQueryYearPicker` and `JQueryMonthPicker` classes. We can remove the duplicates by creating a `JQueryMonthPicker` object during the construction of `JQueryYearPicker` object and use it as a collaborator, as shown in the following code,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryYearPicker.java#L13-L16[JQueryYearPicker.java]
+----
+public JQueryYearPicker(Browser browser) {
+    this.browser = browser;
+    this.monthPicker = new JQueryMonthPicker(browser);  <1>
+}
+----
+<1> It creates a `JQueryMonthPicker` object and use it to click the month buttons
+
+And modify `previousYear` and `nextYear` methods to use the collaborator.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryYearPicker.java#L31-L41[JQueryYearPicker.java]
+----
+private void previousYear() {
+    for (int i = 0; i < 12; i++) {
+        monthPicker.previousMonth();   <1>
+    }
+}
+
+private void nextYear() {
+    for (int i = 0; i < 12; i++) {
+        monthPicker.nextMonth();   <2>
+    }
+}
+----
+<1> Invoke the `previousMonth` method of the collaborator
+<2> Invoke the `nextMonth` method of the collaborator
+
+Then delete `previousMonth` and `nextMonth` methods from `JQueryYearPicker` from Listing <<JQueryYearPicker-version1>>. The other methods remain unchanged.
+
+Here is the sequence diagram how to select a future date.
+
+image::jqueryyearpicker-seq.png[title=Sequence Diagram of `JQueryYearPicker`]
+
+
+Next, We implement day clicking logic in `JQueryDayPicker` class as method `pickDay`.
+
+=== Creating `JQueryDayPicker` class to click the day button
+
+The method is same as in Listing <<pick-day>>, we need to change the method from `private` to `public` since it is in `JQueryDayPicker` class.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryDayPicker.java#L10-L23[JQueryDayPicker.java]
+----
+public class JQueryDayPicker {
+
+    private final Browser browser;
+
+    public void pickDay(int day) {                 <1>
+        browser.await(CALENDAR)               <2>
+            .click(() -> linkText(String.valueOf(day)));  <3>
+        browser.await(new ElementVisible(CALENDAR).negate());
+    }
+}
+----
+<1> This method is `public` now
+<2> This logic doesn't change
+<3> We use lambda expression replacing the anonymous inner class from now on
+
+Now let us come back to the new `JQueryDatepicker` class.
+
+=== Inject all collaborators into `JQueryDatepicker`
+
+Now we inject all the collaborators into `JQueryDatepicker` through its constructor so it changed to,
+
+[[v2-JQueryDatepicker]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryDatepicker.java#L6-L31[JQueryDatepicker.java]
+----
+public class JQueryDatepicker {
+
+    private final JQueryCalendar calendar;
+    private final JQueryYearPicker yearPicker;
+    private final JQueryMonthPicker monthPicker;
+    private final JQueryDayPicker dayPicker;
+
+    public void pick(Month month, int day, int year) {
+        LocalDate.of(year, month.ordinal(), day);
+        calendar.show();                           <1>
+        yearPicker.pickYear(year);                 <2>
+        monthPicker.pickMonth(month.ordinal());    <3>
+        dayPicker.pickDay(day);                    <4>
+    }
+}
+----
+<1> Call the show method of JQueryCalendar class
+<2> Call the pickYear method of JQueryYearPicker class
+<3> Call the pickMonth method of JQueryMonthPicker class
+<4> Call the pickDay method of JQueryDayPicker class
+
+Here is the sequence diagram of `JQueryDatepicker`,
+
+image::jquerydatepicker-seq.png[title=Sequence Diagram of `JQueryDatepicker`]
+
+And the class diagram of `JQueryDatepicker`,
+
+image::JQueryDatepicker.png[title=Class Diagram of JQueryDatepicker]
+
+The structure is much better now but we will continue to refactor it in the next chapter to remove jQuery specific logic out of the main datepicker class so it can be used as framework code.
+
+As a rule of thumb, delegate pattern often works together with *Dependency Injection* footnote:[http://en.wikipedia.org/wiki/Dependency_injection] pattern, so you can inject different implementation for the same framework foundation. In the next chapter, we are going to change it to take `Calendar` and `CalendarPicker` classes to operate different datepicker elements.
+
+You can run this test on your computer to watch the calendar flipping and "04/01/2014" is on the input field after the calendar closed.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/tests/JQueryDatepicker_v2_IT.java#L34-L38[JQueryDatepicker_v2_IT.java]
+----
+@Test
+public void pickADate() {
+    jQueryDatePickerPage.pick(APRIL, 1, 2014);
+    assertEquals("04/01/2014", jQueryDatePickerPage.getDate());
+}
+----
+
+When other people read the test, it is very clear what it does, to automate a page to pick April 1st, 2014. This style is very close to English language.
+
+== Summary
+
+// AC --  I think this might be even better if it is chapter's "key takeaways".
+
+* You started automating a datepicker by inspecting its elements using Web Developer Tool
+* You developed `JQueryDatepicker` class to automate jQuery datepicker.
+* You refactored the `JQueryDatepicker` class into a controller class and moved the detailed logic to couple of collaborators and paved the way for a framework.
+
+In the next chapter, we are going to refactor and move jQuery specific implementation out of the `Datepicker` class, which is renamed from `JQueryDatepicker` and inject all collaborators when constructing the `Datepicker` object during runtime. And then we are going to inject other implementations into the same `Datepicker` to automate the datepicker built using other libraries such as Bootstrap, JsDatePick, ReactJS and Material-UI.

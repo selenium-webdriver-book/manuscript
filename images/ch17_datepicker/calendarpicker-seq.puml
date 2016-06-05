@@ -1,0 +1,56 @@
+@startuml
+
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+
+participant JQueryDatepicker
+participant JQueryMonthPicker
+participant Browser
+participant Element
+
+activate JQueryDatepicker
+JQueryDatepicker -> JQueryMonthPicker : pickMonth(APRIL)
+activate JQueryMonthPicker
+
+JQueryMonthPicker -> JQueryMonthPicker: displayMonth()
+
+note right of JQueryMonthPicker : Details of displayMonth() is in Figure 17.11
+
+alt pick a future date
+
+ loop (4 - displayMonth) times
+
+      JQueryMonthPicker -> JQueryMonthPicker: nextMonth()
+
+      note right of JQueryMonthPicker : Details of nextMonth() is in Figure 17.10
+ end
+
+else pick a past date
+  loop (displayMonth - 4) times
+
+       JQueryMonthPicker -> JQueryMonthPicker: previousMonth()
+
+      JQueryMonthPicker -> Browser : await(CALENDAR)
+       activate Browser
+       Browser -> Element: <<create>>
+       activate Element
+       Element --> Browser
+       deactivate Element
+       Browser -> JQueryMonthPicker : Element
+
+       deactivate Browser
+       JQueryMonthPicker -> Element: click(PREV_MONTH_BUTTON)
+       activate Element
+       Element -->JQueryMonthPicker :
+       deactivate Element
+
+  end
+
+end
+
+JQueryMonthPicker --> JQueryDatepicker :
+deactivate JQueryMonthPicker
+deactivate JQueryDatepicker
+
+@enduml

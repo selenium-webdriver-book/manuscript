@@ -1,0 +1,33 @@
+@startuml
+
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+
+activate JQueryDatepicker
+
+JQueryDatepicker -> JQueryDatepicker : displayYear()
+
+group private int displayYear()
+
+JQueryDatepicker -> Browser: await(CALENDAR)
+
+activate Browser
+
+Browser -> Element: <<create>>
+activate Element
+Element --> Browser :
+deactivate Element
+
+Browser -> JQueryDatepicker: Element
+deactivate Browser
+
+JQueryDatepicker -> Element : getText(YEAR)
+activate Element
+Element -> JQueryDatepicker : displayYear
+deactivate Element
+
+deactivate JQueryDatepicker
+
+end
+@enduml

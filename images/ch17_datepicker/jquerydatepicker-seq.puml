@@ -1,0 +1,45 @@
+@startuml
+
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+
+participant "Test Script"
+participant JQueryDatepicker
+participant JQueryCalendar
+participant JQueryYearPicker
+participant JQueryMonthPicker
+participant JQueryDayPicker
+
+activate "Test Script"
+
+"Test Script" -> JQueryDatepicker : pick(APRIL, 1, 2018)
+activate JQueryDatepicker
+JQueryDatepicker -> JQueryCalendar : show()
+activate JQueryCalendar
+JQueryCalendar --> JQueryDatepicker
+deactivate JQueryCalendar
+
+JQueryDatepicker -> JQueryYearPicker: pickYear(2018)
+activate JQueryYearPicker
+
+JQueryYearPicker --> JQueryDatepicker
+deactivate JQueryYearPicker
+
+JQueryDatepicker -> JQueryMonthPicker: pickMonth(APRIL)
+activate JQueryMonthPicker
+JQueryMonthPicker --> JQueryDatepicker
+deactivate JQueryMonthPicker
+
+
+JQueryDatepicker -> JQueryDayPicker: pickDay(1)
+activate JQueryDayPicker
+JQueryDayPicker --> JQueryDatepicker
+deactivate JQueryDayPicker
+
+JQueryDatepicker --> "Test Script"
+deactivate JQueryDatepicker
+
+deactivate "Test Script"
+
+@enduml

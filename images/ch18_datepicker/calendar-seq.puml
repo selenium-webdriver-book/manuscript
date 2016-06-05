@@ -1,0 +1,50 @@
+@startuml
+
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+
+participant "Test Script"
+participant Datepicker
+participant Calendar
+participant Trigger
+
+activate "Test Script"
+activate Browser
+
+"Test Script" -> Datepicker : pick(APRIL, 1, 2018)
+activate Datepicker
+Datepicker -> Calendar : show()
+activate Calendar
+Calendar -> Trigger: accept(browser)
+activate Trigger
+Trigger -> Browser: click(TRIGGER_BY)
+
+Browser -> Element : <<create>>
+activate Element
+Element --> Browser
+deactivate Element
+
+Browser -> Trigger : Element
+deactivate Browser
+
+Trigger -> Element : click()
+activate Element
+Element --> Trigger
+deactivate Element
+
+Trigger --> Calendar
+
+deactivate Trigger
+
+Calendar --> Datepicker
+
+deactivate Calendar
+
+Datepicker --> "Test Script"
+
+deactivate Datepicker
+
+deactivate "Test Script"
+
+@enduml

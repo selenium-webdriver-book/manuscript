@@ -1,0 +1,31 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+interface SearchScope
+interface ExplicitWait
+
+
+class DelegatingSearchContext<T extends SearchContext>
+
+SearchScope  <|--    ExplicitWait
+ExplicitWait <|.. DelegatingSearchContext
+
+DelegatingSearchContext : T delegate
+note right : We don't use the original methods from WebDriver
+
+SearchScope : Element findElement(Supplier<By> by)
+SearchScope : Stream<Element> findElements(Supplier<By> by)
+SearchScope : Optional<Element> optionalElement(Supplier<By> by)
+SearchScope : boolean isPresent(Supplier<By> by)
+note right : 1. findElements(by) for all the day\n    buttons\n2. optionalElement to check whether \n    the calendar is closed\n3. isPresent to check whether an\n    element can be found using\n    the enum
+
+ExplicitWait : Element await(Supplier<By> by)
+ExplicitWait : void await(Predicate<SearchScope> predicate)
+ExplicitWait : click(Supplier<By> by)
+ExplicitWait : getText(Supplier<By> by)
+ExplicitWait : getUpperText(Supplier<By> by)
+note right :   4. await to find elements\n5. until to wait for calendar become closed\n6. click to click buttons\n7. getText to read display year\n8. getUpperText to read display month
+
+@enduml

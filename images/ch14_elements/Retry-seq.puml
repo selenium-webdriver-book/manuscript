@@ -1,0 +1,66 @@
+@startuml
+
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+
+participant "Test Script"
+participant Browser
+participant Retry
+participant Attemptable
+participant Element
+
+activate "Test Script"
+
+"Test Script" -> Browser : setInputText(by, "foo@bar.com")
+activate Browser
+
+create Retry
+Browser -> Retry : create (count) times Retry
+
+create Attemptable
+Browser -> Attemptable : create
+
+Browser -> Retry : attempt(attemptable)
+activate Retry
+
+loop (count) times
+
+Retry -> Attemptable : attempt()
+activate Attemptable
+
+Attemptable -> Browser : await(by)
+activate Browser
+
+create Element
+Browser -> Element : create
+
+Browser --> Attemptable
+deactivate Browser
+
+Attemptable -> Element : clear()
+activate Element
+Element --> Attemptable
+deactivate Element
+
+Attemptable -> Element : sendKeys("foo@bar.com");
+activate Element
+Element --> Attemptable
+deactivate Element
+
+deactivate Element
+
+end loop
+
+Attemptable --> Retry
+deactivate Attemptable
+
+Retry --> Browser
+deactivate Retry
+
+Browser --> "Test Script"
+deactivate Browser
+
+deactivate "Test Script"
+
+@enduml

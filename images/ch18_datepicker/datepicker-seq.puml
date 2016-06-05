@@ -1,0 +1,43 @@
+@startuml
+
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+
+participant "Test Script"
+participant Datepicker
+participant Calendar
+participant YearPicker
+participant MonthPicker
+participant DayPicker
+
+activate "Test Script"
+
+"Test Script" -> Datepicker : pick(APRIL, 1, 2018)
+activate Datepicker
+Datepicker -> Calendar : show()
+activate Calendar
+Calendar --> Datepicker
+deactivate Calendar
+
+Datepicker -> YearPicker: pickYear(2018)
+activate YearPicker
+YearPicker --> Datepicker
+deactivate YearPicker
+
+Datepicker -> MonthPicker: pickMonth(APRIL)
+activate MonthPicker
+MonthPicker --> Datepicker
+deactivate MonthPicker
+
+Datepicker -> DayPicker: pickDay(1)
+activate DayPicker
+DayPicker --> Datepicker
+deactivate DayPicker
+
+Datepicker --> "Test Script"
+deactivate Datepicker
+
+deactivate "Test Script"
+
+@enduml

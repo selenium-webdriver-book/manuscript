@@ -1,0 +1,33 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+Calendar : Browsre browser
+Calendar : Consumer<Browser> trigger
+Calendar : void show()
+note bottom : The calendar is displayed\nafter calling show
+
+CalendarPicker : Browser browser
+CalendarPicker : Consumer<Browser> previous
+CalendarPicker : Consumer<Browser> next
+CalendarPicker : Function<Browser, Integer> displayValue
+CalendarPicker : void pick(int value)
+note bottom : There are two CalendarPicker\none to pick year\none to pick month
+
+interface DayPicker
+DayPicker : void pick(int day)
+note bottom : Used for pick the\nday of the month
+
+Datepicker "1" *-- "1" Calendar : contains
+Datepicker "1" *-- "2" CalendarPicker : contains
+Datepicker "1" *-- "1" DayPicker : contains
+
+Datepicker : Browser browser
+Datepicker : CalendarPicker yearPicker
+Datepicker : CalendarPicker monthPicker
+Datepicker : DayPicker dayPicker
+Datepicker : void pick(Month, int, int)
+note right : Test script calls\npick(APRIL, 1, 2014)
+
+@enduml

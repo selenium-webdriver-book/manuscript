@@ -1,0 +1,591 @@
+= Windows, pop-ups, and frames
+
+:imagesdir: ../images/ch08_windows
+
+This chapter covers
+
+* Encapsulating new windows
+* Interacting with pop-ups
+* Accessing inline frames
+
+Part 1 of this book will have given you many strategies to deal with most of the common automation techniques that you need for working with web applications.
+
+In this chapter we will go over working with windows, pop-ups, and inline frames. We will cover techniques for accessing windows and frames reliably, and dealing with pop-up alerts. Imagine you have a test that opens an alert, but then fails due to the contents of the alert, and does not close the alert afterward. This will result in an alert being left open that might interfere with another piece of code. We'll cover a technique to deal with this situation.
+
+By the end of this chapter you will have learned how to encapsulate both window and pop-up handling into utility classes, as well as ways to interact with frames.
+
+== Finding the window a page opens
+
+When automating a page, you might find that the browser opens a new window. This might be a confirmation dialog box, an advertisement, or simply an external link.
+
+New windows can be opened either if the HTML uses the `target` attribute, as in
+
+[[open-using-target]]
+[source,html]
+----
+<a href="new-window.html" target="new-window-name"
+	>Open A New Window</a>
+----
+
+or using JavaScript's `window.open()` function, as in
+
+[[open-using-javascript]]
+[source,html]
+----
+<a href="#" onclick="window.open('new-window.html');"
+	>Open A New Window</a>
+----
+
+When you are working with new windows you are likely to find yourself doing the steps in figure <<windows-diagram>>.
+
+[[windows-diagram]]
+image::window-diagram.png[title=Windows - localhost:8080/open-a-new-window.html]
+
+The steps are
+
+1.  Execute an operation that you expect to result in a new window.
+2.  Store a reference to the current window.
+3.  Locate the new window.
+4.  Switch to the new window.
+5.  Perform operations on the new window.
+6.  Execute an operation that closes the new window.
+7.  Switch back to the original window.
+
+=== Dirty windows
+
+When working with the new window, you may find that your script throws an exception and leaves the browser in a "dirty" state, with multiple windows open that slow down the machine, or result in unpredictable behavior in code that runs later. We want to make sure that, even in the event of failure, we clean up after ourselves by closing any opened windows.
+
+You can examine the open windows using `driver.getWindowHandles()`. This returns a list of *window handles*. Window handles are hexadecimal strings, footnote:[https://en.wikipedia.org/wiki/Hexadecimal] for example `fef0ba8a-6400-304a-b46b-b8919ba1d354`, and do not provide enough information on their own to differentiate which window is which. There are some good strategies to find the right window:
+
+* If you think there are only two open windows, then only one window can be the newly opened window, and it's not the one that you are currently on.
+* Locate the window based on its name.
+* Switch to another window and use information that web driver can tell you about that window (for example, it's title) to determine if it is the window you want.
+
+What would these steps look like as code?
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/windows/NewWindowIT.java[NewWindowIT.java]
+----
+driver.get("http://localhost:8080/open-a-new-window.html");
+
+String originalWindowHandle = driver.getWindowHandle(); <1>
+try { <2>
+
+    driver.findElement(By.tagName("a")).click(); <3>
+
+    for (String windowHandle : driver.getWindowHandles()) { <4>
+        if (!windowHandle.equals(originalWindowHandle)) { <5>
+             driver.switchTo().window(windowHandle); <6>
+            break;
+        }
+    }
+    try {
+        // <7>
+    } finally {
+        driver.close(); <8>
+    }
+} finally {
+    driver.switchTo().window(originalWindowHandle); <9>
+}
+----
+<1> Store the original window handle.
+<2> Wrap the operations on the new window in a try/finally block.
+<3> Execute an operation to open a new window.
+<4> Iterate over all open windows.
+<5> Find a window that is not the current one.
+<6> Switch to the new window.
+<7> Perform operations on the new window.
+<8> Make sure the new window is closed.
+<9> Switch back to the original window.
+
+If you look at the HTML source code from earlier, you can see that the link has a `target` attribute:
+
+[source,html]
+----
+<a href="new-window.html" target="new-window-name"
+	>Open A New Window</a>
+----
+
+The `target` attribute indicates the name of the window it will open. You can use the code in the following listing to find that window.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/windows/NewWindowIT.java[NewWindowIT.java]
+----
+        driver.get("http://localhost:8080/open-a-new-window.html");
+
+        try {
+            driver.findElement(By.tagName("a")).click();
+
+            driver.switchTo().window("new-window-name");
+
+            try {
+                assertEquals("You Are In The New Window", driver.findElement(By.tagName("h1")).getText());
+            } finally {
+                driver.close();
+            }
+        } finally {
+            driver.switchTo().defaultContent();
+        }
+----
+
+If the "finding the window that is not the original window" strategy does not work (e.g. in the rare case there are multiple open windows), you can use a feature of the window to identify it. This code sample looks for the first window that has an `h1` heading of "You Are In The New Window".
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/windows/NewWindowIT.java[NewWindowIT.java]
+----
+        driver.get("http://localhost:8080/open-a-new-window.html");
+
+        String originalWindowHandle = driver.getWindowHandle();
+
+        driver.findElement(By.tagName("a")).click();
+
+        try {
+            for (String windowHandle : driver.getWindowHandles()) {
+                driver.switchTo().window(windowHandle);
+                if (driver.findElement(By.tagName("h1")).getText()
+                        .equals("You Are In The New Window")) { <1>
+                    break;
+                }
+            }
+
+            assertEquals("You Are In The New Window", driver.findElement(By.tagName("h1")).getText());
+
+            driver.close();
+        } finally {
+            driver.switchTo().window(originalWindowHandle);
+        }
+----
+<1> Find a window that has the text you want.
+
+As the filter switches to the window as part of the operation, you do not need to switch to it afterward.
+
+Both these approaches have a fair amount of boilerplate code. You would probably just like to focus on the important things:
+
+* Opening the window
+* Identifying the window to switch to
+* Performing operations on the new window
+
+You've seen the basics of opening windows and tidying up after yourself. Let's now look at encapsulating that into a useful utility class.
+
+=== Technique 23: Encapsulating window handling
+
+With this technique you will see how you can encapsulate the three operations into a single utility class.
+
+==== Problem
+
+Code that has to deal with new windows is verbose and error-prone.
+
+==== Solution
+
+Encapsulate the handling of new windows to represent these three actions:
+
+* Opening the window:
+
+[source,java]
+--------------------------------------------------
+driver.findElement(By.tagName("a")).click())
+--------------------------------------------------
+
+* Identifying the window:
+
+[source,java]
+-------------------------------------------------------------------------------------------------
+!windowHandle.equals(originalWindowHandle))
+-------------------------------------------------------------------------------------------------
+
+* Operating on the window:
+
+[source,java]
+-------------------------------------------------------------------------------
+assertEquals("Thank You!", driver.findElement(By.tagName("h1")).getText());
+-------------------------------------------------------------------------------
+
+You can put this together into a class. We'll create a class named `WindowHandler`. To use this, you override the `openWindow` and `useWindow` methods.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/windows/WindowHandlerIT.java[WindowHandlerIT.java]
+----
+        new WindowHandler(driver) {
+            @Override
+            public void openWindow(WebDriver driver) {  <1>
+                driver.findElement(By.tagName("a")).click();
+            }
+
+            @Override
+            public void useWindow(WebDriver driver) { <2>
+                assertEquals("You Are In The New Window", driver.findElement(By.tagName("h1")).getText());
+            }
+        }.run(); <3>
+----
+<1> This is a method that will open the window.
+<2> This is a method that will use the window.
+<3> This will open the window, use it, and then clean up afterward.
+
+Let's put the underlying `WindowHandler` class together.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/windows/WindowHandler.java[WindowHandler.java]
+----
+public abstract class WindowHandler {
+    private final WebDriver driver;
+
+    public WindowHandler(WebDriver driver) {
+        this.driver = driver;
+    }
+
+    protected abstract void openWindow(WebDriver driver); <1>
+
+    protected boolean isExpectedWindow(WebDriver driver, String originalWindowHandle) {
+        return !driver.getWindowHandle().equals(originalWindowHandle); <2>
+    }
+
+    public abstract void useWindow(WebDriver driver); <3>
+
+    public void run() {
+        String originalWindowHandle = driver.getWindowHandle();
+
+        openWindow(driver); <4>
+        try {
+            for (String windowHandle : driver.getWindowHandles()) {
+
+                driver.switchTo().window(windowHandle);
+
+                if (isExpectedWindow(driver, originalWindowHandle)) {
+
+                    useWindow(driver);
+
+                    if (!driver.getWindowHandle().equals(originalWindowHandle)) { <5>
+                        driver.close();
+                    }
+
+                    return;
+                }
+            }
+            throw new IllegalStateException("unable to find correct window");
+        } finally {
+            driver.switchTo().window(originalWindowHandle);
+        }
+    }
+}
+----
+<1> Override this method to perform an action to open the window.
+<2> You can use the default method, or just find a window that was not the opening window.
+<3> Override this method to use the window (for example, clicking on it or asserting on it).
+<4> This code is largely the same as the code we used previously.
+<5> Only close the window if using it didn't result in it being closed already.
+
+==== Discussion
+
+This class looks long, but it can be reused whenever you want to deal with opened windows. We wrap up the opening of the window, identifying the opened window, and then operating on the window. By putting the executed code into a method, we can then perform the necessary cleanup afterward.
+
+== Modal pop-ups
+
+There are a couple of types of modal pop-up: *JavaScript*, *HTTP authentication*, *synthetic*, and *system*. They are modal because they are designed to prevent the user from performing any operation until they have dismissed the dialog box. They are typically used to make sure that the user has performed some action before they continue; for example, requiring confirmation to make sure they realize that what they are about to do cannot be undone.
+
+=== JavaScript pop-ups
+
+There are three types of JavaScript pop-up you may be familiar with: *alert*, *confirm*, and *prompt*.
+
+image::alert.png[title=JavaScript Alert - http://localhost:8080/popups.html]
+
+The HTML source code would show you the use of the JavaScript `alert` function
+
+[source,html]
+----
+<a href="#" onclick="alert('Alert!');">Alert</a>
+----
+image::confirm.png[title=JavaScript Confirm - http://localhost:8080/popups.html]
+
+For a confirmation popup, you will often be able to see the use of the JavaScript `confirm` function:
+
+[source,html]
+----
+<a href="#" onclick="confirm('Confirm?');">Confirm</a>
+----
+
+image::prompt.png[title=JavaScript Prompt - http://localhost:8080/popups.html]
+
+[source,html]
+----
+<a href="#" onclick="prompt('Prompt?', 'Enter text here');">Prompt</a>
+----
+
+To dismiss an alert, confirm, or prompt pop-up (that is, click "OK"):
+
+[source,java]
+------------------------------------
+driver.switchTo().alert().dismiss();
+------------------------------------
+
+If you want to accept a confirm box or prompt:
+
+[source,java]
+-----------------------------------
+driver.switchTo().alert().accept();
+-----------------------------------
+
+If you want to enter text into (or get text from) a prompt:
+
+[source,java]
+-----------------------------------------
+driver.switchTo().alert().sendKeys("text")
+driver.switchTo().alert().getText();
+-----------------------------------------
+
+The Safari driver does not support alerts. They are automatically dismissed.
+
+You may find that you get a `NoAlertPresentException` error. To wait for the alert, you can use an instance of the `WebDriverWait` class with the `ExpectedConditions.alertIsPresent` condition.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/modals/JavaScriptAlertIT.java[JavaScriptAlertIT.java]
+------------------------------------------------------------------------
+new WebDriverWait(driver, 5).until(ExpectedConditions.alertIsPresent());
+------------------------------------------------------------------------
+
+=== HTTP authentication pop-ups
+
+Perhaps less common these days is the HTTP authentication footnote:[http://en.wikipedia.org/wiki/Basic_access_authentication] pop-up. You can only dismiss this using a username and password. Unfortunately, WebDriver browser implementations do not currently support this.
+
+image::auth-popup.png[title=HTTP Authentication Pop-up]
+
+The authentication is enforced by the addition of HTTP headers. HTTP headers cannot be seen in the normal HTML source views provided by most browsers. You can find them in the network view in Firefox, under Response Headers.
+
+You can see in figure <<firefox-network>> that the HTTP response code was "401 Unauthorized," which indicates that authentication is required. Also, there is a "WWW-Authenticate" header, which tells the browser to show the HTTP authentication pop-up.
+
+[[firefox-network]]
+image::firefox-network.png[title=Firefox Network Panel]
+
+Unfortunately, as this is a system pop-up, WebDriver cannot enter anything into it. To deal with this pop-up, you need to pass the username and password in the URL. You do this by inserting the username and password before the hostname. If the username is "admin" and the password is "secret", then you need to add "admin:secret@" to the URL, as in the following listing.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/modals/HttpAuthenticationIT.java[HttpAuthenticationIT.java]
+----
+driver.get("http://admin:secret@localhost:8080/auth.html");
+
+assertEquals("You Are Logged In", driver.findElement(By.tagName("h1")).getText());
+----
+
+This way of setting the password reveals it to anyone using your computer. Make sure you don't accidentally reveal your bank account password by doing this!
+
+=== Synthetic pop-ups
+
+Bootstrap and other frameworks provide JavaScript pop-ups that do not use the native support. These pop-ups are actually HTML overlaid onto the page.
+
+image::synthetic-modal.png[title=Synthetic Modal Pop-up - http://localost:8080/popups.html]
+
+We can inspect the source code for this to see the relevant HTML.
+
+[source,html]
+--------------------------------------------------------------------------------------------------------------------
+<div class="modal fade" id="basicModal" tabindex="-1" role="dialog"
+        aria-labelledby="basicModal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Modal</h4>
+            </div>
+            <div class="modal-body">
+                <p><input class="span12" type="text"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary">OK</button>
+                <button type="button" class="btn btn-default"
+                    data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+--------------------------------------------------------------------------------------------------------------------
+
+Looking at this, you can see that the modal is actually composed of many different HTML elements, such as divs and buttons.
+
+=== Technique 24: Creating a Page Object for synthetic modals
+
+As a synthetic modal contains many different elements, but encapsulated on behavior, it is a good candidate for a Page Object. Perhaps you do not want to know what kind of modal you are using, but you want to hide the nitty-gritty of how to interact with it -- after all, you just want to inspect it, then dismiss it! The next technique looks at how to encapsulate a synthetic modal into a Page Object.
+
+==== Problem
+
+You want a unified way to identify modal pop-ups, inspect them, and dismiss them.
+
+==== Solution
+
+Create a Page Object that encapsulates the pop-up by implementing the `Alert` interface and provides an `ExpectedCondition` to identify it.
+
+Let's look at how you can implement the condition first.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/modals/Modals.java[Modals.java]
+----
+    public static ExpectedCondition<Alert> modalIsDisplayed() { <1>
+        return new ExpectedCondition<Alert>() {
+
+            @Override
+            public Alert apply(WebDriver driver) {
+                List<WebElement> bootstrapModal = driver.findElements(By.className("modal-dialog"));
+                List<WebElement> otherModal = driver.findElements(By.className("other-modal"));
+
+                return !bootstrapModal.isEmpty() <2>
+                        ? new BootstrapModal(bootstrapModal.get(0))
+                        : !otherModal.isEmpty()
+                        ? new OtherModel(otherModal.get(0))
+                        : null;
+            }
+        };
+    }
+----
+<1> A static method that returns an `ExpectedCondition`.
+<2> Look for a Bootstrap modal first, then look for others.
+
+The modal might not be visible to the user, so you should check for both presence and visibility.
+
+This solution provides a single class for locating modals. The modal you have might be written using the Bootstrap framework, but there are other frameworks, and you could extend this to support those frameworks by searching for their types as well.
+
+You can implement each type of synthetic alert individually.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/modals/BootstrapModal.java[BootstrapModal.java]
+----
+public class BootstrapModal implements Alert { <1>
+    private static final By INPUT_SELECTOR
+        = By.cssSelector("input[type='text']");
+    private final SearchContext searchContext;
+
+    public BootstrapModal(SearchContext searchContext) { <2>
+        this.searchContext = searchContext;
+    }
+
+    @Override
+    public void dismiss() {
+        searchContext.findElement(By.cssSelector("button.btn-default"))
+            .click(); <3>
+    }
+
+    @Override
+    public void accept() {
+        searchContext.findElement(By.cssSelector("button.btn-primary"))
+            .click(); <4>
+    }
+
+    @Override
+    public String getText() {
+        return searchContext.findElement(INPUT_SELECTOR)
+            .getAttribute("value"); <5>
+    }
+
+    @Override
+    public void sendKeys(String keysToSend) {
+        searchContext.findElement(INPUT_SELECTOR).sendKeys(keysToSend);
+    }
+
+    @Override
+    public void authenticateUsing(Credentials credentials) {
+        throw new UnsupportedOperationException();
+    }
+}
+----
+<1> Implementing the `Alert` interface will ensure other developers will understand how to use it.
+<2> Accept just the part of the page we are interested in.
+<3> The cancel button.
+<4> The OK button.
+<5> The text input.
+
+==== Discussion
+
+Implementing a Page Object for a synthetic modal is reasonably straightforward. Using the same interface, `Alert`, as other browser alerts means that you can abstract away the details of the individual alert from the code using it, arguably making for easier-to-read code. This also can mean that, if the modal framework used changes, the automation code does not have to.
+
+A couple of words of warning. While both native and synthetic dialog will prevent a user accessing the page, a synthetic may not block WebDriver from accessing the page. It will be possible for your code to find parts of the page a user would not be able to, but not interact with them.
+
+[source,java]
+----
+@Test
+public void demonstrateAccessToUnclickableElement() throws Exception {
+
+		driver.get("/popups.html");
+
+		driver.findElement(By.linkText("Modal")).click();
+
+		new WebDriverWait(driver, 2).until(Modals.modalIsDisplayed());
+
+		WebElement openModalButton = driver.findElement(By.linkText("Modal")); // <1>
+
+		try {
+				openModalButton.click(); // <2>
+				fail("should not be able to click when modal is displayed");
+		} catch(WebDriverException e) {
+				assertThat(e.getMessage(),
+								containsString("Other element would receive the click"));
+		}
+}
+----
+<1> We can still locate the element, even thought the modal dialog is visible.
+<2> But, when we try to click, we'll get an exception.
+
+There is get a message to indicate that the element is not-clickable. If this was an alert, then there would get a clear message saying an alert is open.
+
+This can make for hard-to-identify bugs if care is not taken when working with synthetic modals. For example, if a native alert pop-up appears when your test does not expect it, you will get errors when you try to interact with other elements. If this happens with a synthetic alert, then your test may pass when it shouldn't have.
+
+=== System pop-ups
+
+You may find that the browser sometimes opens up a system pop-up. WebDriver does not provide a way to interact with these, and you want to make sure all your techniques work on both locally running browsers (where you could use Java's built-in `Robot` class) and remotely running browsers (where you cannot).
+
+The most effective technique to deal with them is to make sure that the browser is configured to prevent them from occurring in the first place. This can often be achieved from the browser's settings.
+
+To find out more about configuring browsers, please read chapter 11, which cover many aspects of drivers.
+
+== Inline frames
+
+As single-page web apps have become more popular, embedded *inline frames* (a.k.a. "iframes," or sometimes just "frames") are another feature of web pages that are seen less often in the wild. Yet I'm sure you will encounter them sooner or later, for example, in applications involving the following:
+
+* Advertisements
+* WYSIWYG editors
+* OAuth authentication
+* 3D Secure (3DS) banking
+
+Inline frames are very similar to new windows. They contain fully formed pages, they can be from another website, and you can have more than one open. This means some of the techniques that apply to windows also apply to frames.
+
+image::inline-frames.png[title=Inlines Frames]
+
+The HTML code looks like this:
+
+[source,html]
+-----------------------------------------------------------
+<iframe src="frame-1-content.html" name="frame-1"></iframe>
+<iframe src="frame-2-content.html" name="frame-2"></iframe>
+-----------------------------------------------------------
+
+You may find that the iframes are named, which makes switching to them straightforward:
+
+[source,java]
+---------------------------------------
+driver.switchTo().frame("frame-1");
+---------------------------------------
+
+Once you are done, you can switch back to the original page with `defaultContent()`:
+
+[source,java]
+---------------------------------------
+driver.switchTo().defaultContent();
+---------------------------------------
+
+You might wish to use a `try/finally` block, in case any of the operations you perform fail and you are left focused on a page you do not want to be focused on:
+
+[source,java]
+---------------------------------------
+try {
+    driver.switchTo().frame("frame-1");
+} finally {
+    driver.switchTo().defaultContent();
+}
+---------------------------------------
+
+== Summary
+
+* Newly opened windows can be accessed using `driver.switchTo().window(..)`. You can return to the original window using `driver.switchTo().defaultContent()`.
+* If a window or frame is opened, your code should switch back to the original page when done interacting with that window.
+* There are a variety of different pop-ups that you can interact with. Some are native to the browser, but you can also have synthetic pop-ups written using a JavaScript framework.
+* Interacting with pop-ups can be encapsulated into a utility class.
+* Inline frames can be accessed using the `driver.switchTo().frame(..)` method.
+
+In the next chapter we will look at a number of less common web page features, and how to test them.

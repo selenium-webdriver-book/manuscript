@@ -1,0 +1,48 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+DomainBase : boolean equals(Object o)
+DomainBase : int hashCode()
+DomainBase : String toString()
+note left : It provides default\nimplementation for\n 1. equals\n 2. hashCode and\n 3. toString
+
+Person : int id
+Person : String firstName
+Person : String lastName
+Person : int age
+Person : String toString()
+
+City : int id
+City : String name
+City : String stateName
+City : String toString()
+
+class Table<T>
+note bottom : Table is a generic class\nwith parameter T
+
+class TableContents<T>
+note bottom : TableContents is a also\ngeneric class with\nparameter T
+
+DomainBase <|-- Person
+DomainBase <|-- City
+DomainBase <|-- TableContents
+
+Table "1" *-- "1"  TableContents : create
+
+
+TableContents : List<String> headers
+TableContents : List<T> rows
+TableContents : String describeDiff(PersonTableContents other)
+TableContents : String diff(List<T> row1, List<T> row2, String message)
+
+TableContents "1" *-- "n"  City : contains
+TableContents "1" *-- "n"  Person : contains
+
+Table : Element table
+Table : TableContents getTableContents()
+
+
+
+@enduml

@@ -1,0 +1,553 @@
+= Unicorns and other beasts: Exotic features of web pages
+
+:imagesdir: ../images/ch09_unicorns
+
+This chapter covers
+
+* Using action chains
+* Advanced form interaction
+* Working with different types of tooltip
+
+The first part of this book has enough techniques to test many web pages. But there are a few cases that we have not covered yet -- the unicorns of web application testing.
+
+In this chapter we'll look at using action chains to achieve such goals as copy and paste, or moving and dragging with the mouse. We'll cover advanced form interaction, such as multiple selects, and how to upload files to a server. We'll see how WebDriver exposes browser cookies, which can be very handy when trying to debug certain issues. Finally, there are several types of tooltip, and we'll look at interacting with them.
+
+At the end of this chapter you will have learned how to use action chains to perform complex actions, how to upload files, and how to examine cookies and tooltips.
+
+== Advanced user interaction with action chains
+
+An **action chain** is a way to chain several user interactions together. It's useful when you have to perform complex actions that the `WebElement` class does not directly support, such as:
+
+- Typing keyboard "chords": holding down a "modifier key" such as Ctrl, then typing some text, and finally releasing the modifier key
+- Copying and pasting: for example, selecting the text of an input, pressing Ctrl-C, moving to another input or element, and pressing Ctrl-V
+- Hovering over an element to see if a tooltip appears or the element otherwise changes as expected
+- Using the mouse to drag and drop
+- Dragging elements by *N* pixels, for example, to drag a control or resize a text area
+- Right-clicking using the mouse
+
+The primary class for building and then performing a chain of actions is `Actions`. To use it, create a new instance from your driver, add some actions, and finally invoke the `perform` method. For example:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/ExampleIT.java[ExampleIT.java]
+----
+        driver.get("/login.html");
+
+        new Actions(driver)
+                .sendKeys(driver.findElement(By.name("email")), "john.doe@email.com")
+                .sendKeys(driver.findElement(By.name("password")), "secret")
+                .click(driver.findElement(By.cssSelector("input[type='submit']")))
+                .perform();
+----
+
+Most methods on the `Actions` class have two versions, one that takes a `WebElement` as the first parameter, and another that requires you to focus on the element beforehand. The preceding test can also be written as follows:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/ExampleIT.java[ExampleIT.java]
+----
+        new Actions(driver)
+                .moveToElement(driver.findElement(By.name("email")))
+                .click()
+                .sendKeys("john.doe@email.com")
+                .moveToElement(driver.findElement(By.name("password")))
+                .click()
+                .sendKeys("secret")
+                .moveToElement(driver.findElement(By.cssSelector("input[type='submit']")))
+                .click()
+                .perform();
+----
+
+.Tip
+****
+You might find it easier to read action chains if each action is on a single line.
+****
+
+There are a number of keyboard and mouse actions available to you (see table 9.1).
+
+.Actions
+[options="header"]
+|=========================================================
+|Action |Description
+
+| `keyDown(Keys theKey)` | Press down a modifier key (such as Ctrl, Alt, or Shift).
+
+| `keyUp(Keys theKey)` | Release a modifier key.
+
+| `sendKeys(CharSequence... keysToSend)` | Send a series of keys.
+
+| `release()` | Release the left mouse button.
+
+| `click()` | Click on an element.
+
+| `doubleClick()` | Double-click on an element.
+
+| `contextClick()` | Right-click on an element, revealing any context menu.
+
+| `clickAndHold()` | Click the mouse button on an element, and hold it down.
+
+| `moveToElement(WebElement toElement)` | Move the mouse to the center of an element.
+
+| `moveToElement(WebElement toElement, int xOffset, int yOffset)` | Move the mouse to an element, but with an offset from the top-lefthand corner.
+
+| `moveByOffset(int xOffset, int yOffset)` | Move the mouse.
+
+| `dragAndDrop(WebElement source, WebElement target)` | Drag one element to another.
+
+| `dragAndDropBy(WebElement source, int xOffset, int yOffset)` | Drag an element by a specific offset.
+
+|=========================================================
+
+.Mobile automation
+****
+If you are doing mobile testing, then there is another class named `TouchActions` that provides similar methods for touchscreen devices -- methods for actions such as touch, tap, double-tap, long press, or flick.
+****
+
+OK. So that was an overview of the APIs, but what are they useful for? One use is copying from one input to another. To do this, you need to use the correct modifier key with the copy key and the paste key. On Windows and Linux the modifier key is the Ctrl key, but on Mac OS X it's the Cmd key. This means there is a little extra logic necessary to determine which operating system you are using and therefore which modifier key to use.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/CopyAndPasteIT.java[CopyAndPasteIT.java]
+----
+        driver.get("/registration-form.html");
+
+        JavascriptExecutor javascriptExecutor = (JavascriptExecutor) this.driver;
+        String userAgent = (String) javascriptExecutor.executeScript("return navigator.userAgent;"); <1>
+        Keys modifier = userAgent.contains("Mac OS X") ? Keys.COMMAND : Keys.CONTROL; <2>
+
+        WebElement email = driver.findElement(By.name("email"));
+        WebElement password = driver.findElement(By.name("password"));
+
+        new Actions(driver)
+                .sendKeys(email, "john.doe@email.com")
+                .sendKeys(email, Keys.chord(modifier, "a", "c")) // <3>
+                .sendKeys(password, Keys.chord(modifier, "v"))
+                .perform();
+----
+<1> Use `JavascriptExecutor` to get the browser's operating system
+<2> If you are using OS X then you need to use the Command key instead of the Control key
+<3> Use `Keys.chord(..)` to do a Ctrl-A followed by a Ctrl-C (or or Cmd-A and Cmd-C on OS-X)
+
+You can use action chains to move the mouse over an element:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/MouseHoverIT.java[MouseHoverIT.java]
+----
+        driver.get("/mouse-hover.html");
+
+        new Actions(driver)
+                .moveToElement(driver.findElement(By.id("target")))
+                .perform();
+----
+
+Drag-and-drop is where you can move an element from one place to another using the mouse. The `Actions` class provides a method for that:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/draganddrop/DragAndDropIT.java[DragAndDropIT.java]
+----------------------------------------------
+driver.get("/drag-and-drop.html");
+
+new Actions(driver)
+    .dragAndDrop(
+            driver.findElement(By.id("move")),
+            driver.findElement(By.id("drop"))
+    ).perform();
+----------------------------------------------
+
+Now you've seen a number of use cases for action chains. When you use them a lot, you may find out that you sometimes get a `StaleElementReferenceException`. This will be because you normally have to locate elements before you create the action chain. As you execute the chain, the page changes, and elements can become stale.
+
+=== Technique 25: Lazy element for action chains
+
+Action chains require you to locate elements prior to performing the sequence of actions. On certain pages, the element might become stale before part of the action is performed. In this case you want to locate the element lazily. This can be done by creating a lazy `WebElement` class.
+
+==== Problem
+
+You want to use action chains on elements that cannot be located before part of the chain is executed.
+
+==== Solution
+
+Use a **lazy element** that locates the element each time a method is called. This is similar to the mechanism that the `PageFactory` class uses.
+
+To demonstrate this problem, we've created a page in the test app. The page  at <http://localhost:8080/stale-elements.html> has a button that, when clicked, is removed from the page, and an identical button is added in its place. A second click results in a `StaleElementReferenceException `. Let's have a look at an example of a test that uses this problematic button.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/LazyActionChainIT.java[LazyActionChainIT.java]
+----
+    @Test(expected = StaleElementReferenceException.class)
+    public void staleElementProblem() throws Exception {
+
+        driver.get("/stale-elements.html");
+
+        WebElement button = driver.findElement(By.id("button"));
+
+        new Actions(driver)
+                .click(button)
+                .click(button) <1>
+                .perform();
+    }
+----
+<1> The second action will result in a `StaleElement` exception
+
+You can create a class that implements the `WebElement` interface, but actually locates the element each time a method is invoked and then delegates the call to the freshly located element:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/LazyElement.java[LazyElement.java]
+----
+public class LazyElement implements WebElement, Locatable { <1>
+    private final SearchContext searchContext;
+    private final By locator;
+
+    public LazyElement(SearchContext searchContext, By locator) {
+        this.searchContext = searchContext;
+        this.locator = locator;
+    }
+
+    private WebElement get() {
+        return searchContext.findElement(locator);
+    }
+
+    @Override
+    public void click() {
+        get().click(); <2>
+    }
+
+    // ...
+
+    @Override
+    public Coordinates getCoordinates() {
+        return ((Locatable)get()).getCoordinates(); <3>
+    }
+}
+----
+<1> Implement both the `WebElement` and `Locatable` interfaces (the `Actions` class requires both of them to be able to perform actions)
+<2> Each time, invoke `get` to get the latest element
+<3> For methods from the `Locatable` interface, we need to cast the element
+
+You can then use this in a test:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/LazyActionChainIT.java[LazyActionChainIT.java]
+----
+    @Test
+    public void lazyActionChain() throws Exception {
+
+        driver.get("/stale-elements.html");
+
+        WebElement button = new LazyElement(driver, By.id("button")); <1>
+
+        new Actions(driver)
+                .click(button)
+                .click(button)
+                .perform();
+
+        assertEquals("Click This Button", button.getText());
+    }
+----
+<1> Create a lazy element from the driver and a locator
+
+==== Discussion
+
+Using a lazy element to wrap an existing element will allow you to create long action chains. Lazy elements can be substituted in the place of any normal element and are useful for pages where an element becomes stale.
+
+Action chains allow you to perform some complex actions that are harder, or more verbose using the methods provided directly by `WebElement`.
+
+== Advanced forms
+
+In chapter 3 we looked at some of the basic interactions you can do with form elements. There are a couple of more advanced interactions that are useful to know about, and we'll look at them here.
+
+=== Selecting multiple options
+
+A select box usually allows you to choose only one option, but in some cases you can choose multiple options, as shown in figure <<select-boxes>>.
+
+[[select-boxes]]
+image::select-boxes.png[title=Select Boxes - http://localhost:8080/select-boxes.html]
+
+The HTML for the select box looks like this:
+
+[source,html]
+----
+            <select name="single" class="form-control">
+                <option>Calico</option>
+                <option>Ginger</option>
+            </select>
+----
+
+WebDriver's support library provides the `Select` class to make it easier to work with select boxes:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/select/MultipleSelectIT.java[MultipleSelectIT.java]
+------------------------------------------------------------------
+Select single = new Select(driver.findElement(By.name("single")));
+single.selectByVisibleText("Ginger");
+
+assertEquals("Ginger", single.getFirstSelectedOption().getText());
+------------------------------------------------------------------
+
+Multiple select boxes work in much the same way. The only point to note is that you cannot get the select text directly, but you can get the option text using a loop. Multiple select boxes have the `multiple` attribute, as per listing <<multiple-select-box>>.
+
+[[multiple-select-box]]
+[source,html]
+.Multiple select boxes
+----
+            <select name="multiple" multiple class="form-control">
+                <option>Labrador</option>
+                <option>Jack Russell</option>
+                <option>Sausage Dog</option>
+            </select>
+----
+
+If you want to select multiple options from this select list, you can do the following:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/select/MulipleSelectIT.java[MulipleSelectIT.java]
+----------------------------------------------------------------------
+driver.get("http://localhost:8080/select-boxes.html");
+
+Select multiple = new Select(driver.findElement(By.name("multiple")));
+
+multiple.deselectAll(); <1>
+multiple.selectByVisibleText("Labrador");
+multiple.selectByVisibleText("Sausage Dog");
+
+List<String> selectedOptions = new ArrayList<>();
+for (WebElement option : multiple.getAllSelectedOptions()) { <2>
+    selectedOptions.add(option.getText());
+}
+
+assertEquals(Arrays.asList("Labrador", "Sausage Dog"), selectedOptions);
+----------------------------------------------------------------------
+<1> If need be, make sure none are selected
+<2> Extract the text values
+
+Selecting multiple options in a select list is not something you'll need to do often, but if you need to do it, now you know how. We'll come back to select boxes in part 3 of this book. Next, let's look at uploading files.
+
+=== Uploading files
+
+Some forms require you to upload a file, as shown in figure <<file-upload>>. To do this the file needs to be transferred from the computer running the tests, to the computer running the browser (which is the same computer if you are using a local browser), and then to the server. You don't interact with the file upload using the mouse. This will result in a system pop-up appearing that you cannot dismiss. Instead, you use `sendKeys` method of `WebElement`  to enter the location of the file into the browser.
+
+[[file-upload]]
+image::file-upload.png[title=File Upload - http://localhost:8080/file-upload.html]
+
+File uploads can be recognized in HTML by the input type being `file`. The form is likely to have an action of `post` and may also have an `enctype`:
+
+[source,html]
+----
+<form class="form" method="post" enctype="multipart/form-data" action="/upload.html">
+  <input type="file" name="file"/>
+  <input type="submit" value="Upload"/>
+</form>
+----
+
+If you are running your test remotely (that is, you are using a `RemoteWebDriver`), then you need to set the file detector so that WebDriver knows to transfer the file. WebDriver will magically copy the file from your local machine to where the browser is running!
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/fileupload/FileUploadIT.java[FileUploadIT.java]
+----
+    if (driver instanceof RemoteWebDriver) { <1>
+        ((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
+    }
+
+    driver
+            .findElement(By.name("file"))
+            .sendKeys(theFile.toFile().getCanonicalPath()); <2>
+----
+<1> If the driver is remote, you need to tell it how to find the file
+<2> You can just send the location of the file -- you should use the canonical path
+
+I hope this is useful to you!
+
+== Examining HTTP cookies
+
+Om nom nom nom -- cookies!!! I'm afraid that HTTP cookies footnote:[https://en.wikipedia.org/wiki/HTTP_cookie] are not tasty snacks, though; they are in fact small pieces of information stored by the browser. They are typically used to remember users when they revisit your site, so that personalized, and often secure, content can be shown. Cookies can be restricted to just secure HTTPS requests, or only to certain domains or subdomains. While a user would not typically examine their cookies, it can be helpful to access and modify them; for example, when debugging an application.
+
+To delete all cookies:
+
+[source,java]
+---------------------------------
+driver.manage().deleteAllCookies();
+---------------------------------
+
+To ensure that cookies are saved:
+
+[source,java]
+-----------------------------------------------------------
+// perform action that results in cookie being saved
+assertNotNull(driver.manage().getCookieNamed("cookieName"));
+-----------------------------------------------------------
+
+To verify that cookies are not shared across domains:
+
+[source,java]
+-------------------------------------------------------
+driver.get(firstDomainUrl);
+
+// perform operation that results in cookie being saved
+
+driver.get(secondDomainUrl);
+
+assertNull(getCookieNamed("cookieName"));
+-------------------------------------------------------
+
+While WebDriver gives you access to cookies, how the web application you are testing uses them can change -- it is an implementation. Tests that rely on examining the cookies are likely to be brittle. Therefore, you should only use the methods for cookies to delete them all, or when you need to debug an application.
+
+Next, we'll look at an interesting feature of web pages -- tooltips.
+
+== Tooltips
+
+A *tooltip* is a message that appears to provide more information about how to use a control when the mouse hovers over the control for a few seconds. HTML provides a built-in mechanism to do this, the *title attribute tooltip*. This allows you to specify a short line of plain text that will appear next to the element. There are also two common JavaScript mechanisms: the *tooltip* and *pop-over*.
+
+A JavaScript tooltip is very similar to an HTML title tooltip, the primary difference being that the style can be changed (the built-in tooltip is styled by the operating system or browser). A pop-over is similar to a tooltip, but can provide more information and may have dynamic HTML content (such as links or images), and, whereas a tooltip can be expected to disappear when an element loses focus, a pop-over might stay on screen longer.
+
+[[title]]
+image::title.png[title=HTML Title Tooltip - http://localhost:8080/tooltips.html]
+
+The HTML for the tooltip in figure <<title>> looks like the following:
+
+[source,html]
+----
+<div title="I am the title">Title</div>
+----
+
+The text of a title-based tooltip can be extracted using `getAttribute("title")`.
+
+[source,java]
+-------------------------------------------
+String tip = element.getAttribute("title");
+-------------------------------------------
+
+[[tooltip]]
+image::tooltip.png[title=JavaScript Tooltip - http://localhost:8080/tooltips.html]
+
+This JavaScript tooltip in figure <<tooltip>> is an HTML `div` element:
+
+[source,html]
+----
+<div title="I am the tooltip"
+           data-toggle="tooltip" data-placement="bottom">Tooltip</div>
+----
+
+A JavaScript tooltip will require activating by moving the mouse over it. You can do this using the `Actions` class:
+
+[source,java]
+-------------------------------------------------------------------------
+WebElement element = driver.findElement(By.id("tooltip"));
+
+new Actions(driver).moveToElement(element).perform();
+
+String tip = driver.findElement(By.className("tooltip-inner")).getText();
+-------------------------------------------------------------------------
+
+[[popover]]
+image::popover.png[title=JavaScript Pop-over - http://localhost:8080/tooltips.html]
+
+The HTML to open the pop-over in figure <<popover>> is as follows:
+
+[source,html]
+----
+        <div title="I am the popover title"
+           data-content="I am the popover content"
+           data-toggle="popover" data-placement="bottom">Popover</div>
+----
+
+A JavaScript pop-over is a bit trickier. You can have more than one on the screen at a time. This means that selecting by the class name might give you the wrong result. In the case of the Bootstrap framework, you can use the attribute `aria-describedBy` to find out which `div` actually contains the pop-over's content. In the following listing, the link has the value "popover535426", and you can see that this is also the ID of the `div`.
+
+[source,java]
+----
+<a href="#" class="btn btn-default" id="popover" title=""
+	data-content="I am the popover content" data-toggle="popover"
+	data-placement="bottom" data-original-title="I am the popover title"
+	aria-describedby="popover535426">Popover</a>
+
+<div class="popover fade bottom in" role="tooltip"
+	id="popover535426" style="top: 103px; left: 107.5px; display: block;">
+		<div class="arrow" style="left: 50%;"></div>
+		<h3 class="popover-title">I am the popover title</h3>
+	<div class="popover-content">I am the popover content</div>
+</div>
+----
+
+[source,java]
+---------------------------------------------------------------------
+WebElement element = driver.findElement(By.id("popover"));
+element.click();
+
+String tip = driver
+        .findElement(By.id(element.getAttribute("aria-describedBy")))
+        .findElement(By.className("popover-content"))
+        .getText();
+---------------------------------------------------------------------
+
+You can see there are a few different kinds of tooltip. To simplify accessing tooltips, let's look at introducing a helper class to extract the tooltips from a page.
+
+=== Technique 26: Creating a tooltip extractor
+
+==== Problem
+
+There are multiple frameworks for tooltips. We would like one way to get all tooltips.
+
+==== Solution
+
+Create a `Tooltip` class that can find the tip for an element by trying different strategies. We'd like to be able to ask for the tip on an element. To do this we will need to:
+
+1.  Locate the element.
+2.  Determine if the tip is a tooltip or pop-over.
+3.  Activate the tooltip.
+4.  Get the tip.
+
+You can encapsulate this as in the following class:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/tooltips/Tooltip.java[Tooltip.java]
+----
+public static String tip(WebDriver driver, By by) {
+    WebElement element = driver.findElement(by);
+
+    String type = element.getAttribute("data-toggle");
+
+    if (type == null) {
+        type = "title"; <1>
+    }
+
+    switch (type) {
+        case "title":
+            return element.getAttribute("title");
+        case "tooltip":
+            new Actions(driver).moveToElement(element).perform();
+            return driver.findElement(By.className("tooltip-inner")).getText();
+        case "popover":
+            new Actions(driver).click(element).perform();
+            return driver
+                    .findElement(By.id(element.getAttribute("aria-describedBy")))
+                    .findElement(By.className("popover-content"))
+                    .getText();
+        default:
+            throw new AssertionError(type);
+    }
+}
+----
+<1> If this attribute is missing, then default to the "title" type
+
+The usage is as follows:
+
+[source,java]
+---------------------------------------------------
+String tip = Tooltip.tip(driver, By.id("tooltip"));
+---------------------------------------------------
+
+[NOTE]
+.Safari support
+====
+At the time of writing, the `moveToElement` method does not work in Safari.
+====
+
+==== Discussion
+
+This is another example of encapsulating behavior that may vary by implementation behind a method or interface that hides the details of whether you are talking to an HTML tooltip, a Bootstrap tooltip, or another type of tooltip.
+
+You can now write your test in a way where you don't need to consider how the tooltip is implemented, just what the text or value of the tooltip is.
+
+== Summary
+
+* Action chains allow you to complete complex keyboard and mouse actions.
+* Working with select boxes and file upload inputs requires additional work.
+* WebDriver can show you what the values of the browser's cookies are.
+* There are a variety of types of tooltip, and you can encapsulate them into a utility class.
+
+In the next chapter we will look at how to use JavaScript with web pages.

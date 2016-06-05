@@ -1,0 +1,43 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+ShoppingCartPage "1" *-- "1" CreditCardForm : contains
+ShoppingCartPage "1" *-- "1" BillingAddressForm : contains
+ShoppingCartPage "1" *--- "1" OtherInformationForm : contains
+
+CreditCardForm : Browser browser
+CreditCardForm : void setCreditCard(CreditCard card)
+note top : Used to handle step\n6 in Figure 15.2
+
+OtherInformationForm : Browser browser
+OtherInformationForm : void setOtherInformation(OtherInformation info)
+note top : Used to handle step\n7 in Figure 15.2
+
+BillingAddressForm : Browser browser
+BillingAddressForm : void setBillingAddress(BillingAddress address)
+note bottom : Used to handle step\n6 in Figure 15.2
+
+ShoppingCartPage : Browser browser
+ShoppingCartPage : CreditCardForm creditCardForm
+ShoppingCartPage : OtherInformationForm otherInformationForm
+ShoppingCartPage : BillingAddressForm billingAddressForm
+
+ShoppingCartPage : String getOrderNumber()
+ShoppingCartPage : void setCreditCardForm(CreditCardForm form)
+ShoppingCartPage : void setOtherInformationForm(OtherInformationForm form)
+ShoppingCartPage : void setBillingAddressForm(BillingAddressForm form)
+ShoppingCartPage : void continues()
+ShoppingCartPage : String getOrderNumber()
+
+note right : Used to handle step\n8,9 in Figure 15.2
+
+ShoppingCartPage "1" *-- "1" Browser
+
+BillingAddressForm "1" *-- "1" Browser
+CreditCardForm "1" *-- "1" Browser
+OtherInformationForm "1" *-- "1" Browser
+note right : Browser class is a wrapper\nto those browsers
+
+@enduml

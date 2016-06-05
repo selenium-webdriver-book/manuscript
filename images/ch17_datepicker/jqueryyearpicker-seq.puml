@@ -1,0 +1,49 @@
+@startuml
+
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+
+
+participant JQueryDatepicker
+participant JQueryYearPicker
+participant JQueryMonthPicker
+participant Browser
+participant Element
+
+activate JQueryDatepicker
+JQueryDatepicker -> JQueryYearPicker : pick(2018)
+activate JQueryYearPicker
+
+ loop (2018 - displayYear) times
+
+      JQueryYearPicker -> JQueryYearPicker: nextYear()
+      loop (12) times
+
+        JQueryYearPicker -> JQueryMonthPicker : nextMonth()
+        activate JQueryMonthPicker
+        JQueryMonthPicker -> Browser : await(CALENDAR)
+        activate Browser
+        Browser -> Element: <<create>>
+        activate Element
+        Element -> Browser
+        deactivate Element
+        Browser -> JQueryMonthPicker : Element
+
+        deactivate Browser
+
+        JQueryMonthPicker -> Element: click(NEXT_MONTH_BUTTON)
+        activate Element
+        Element --> JQueryMonthPicker :
+        deactivate Element
+        JQueryMonthPicker --> JQueryYearPicker
+        deactivate JQueryMonthPicker
+      end
+ end
+
+JQueryYearPicker --> JQueryDatepicker :
+deactivate JQueryYearPicker
+
+deactivate JQueryDatepicker
+
+@enduml

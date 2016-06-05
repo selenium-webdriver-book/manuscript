@@ -1,0 +1,1166 @@
+= Datepicker Framework
+
+:imagesdir: ../images/ch18_datepicker
+
+This chapter covers
+
+* Extracting general purpose datepicker framework
+* Automating other datepickers using the framework
+
+In this chapter, we will continue from where we left on last chapter, refactor the code into a Datepicker framework and apply the framework in automating datepickerd built on other major JavaScript libraries such as Bootstrap, ReactJS, Material-UI and JsDatePick.
+
+By the end of this chapter, not only you will learn the technique and apply it in your day to day work, you can also learn skills to apply the framework to many datepickers, as well as the principles and practices of developing an emergent framework and apply them in your career do develop frameworks to automate other web widgets that are not covered by this book.
+
+== Extracting general purpose datepicker framework
+
+In this section, we are going to show you a technique to introduce a framework so we don't need to repeat some classes when automating datepickers built using other JavaScript frameworks.
+
+=== Technique 52: Introducing a framework for multiple JavaScript implementations
+
+Besides detepicker built using JQuery, there are datepickers built using other JavaScript frameworks, it would be duplicate code if we just copy `JQueryDatepicker` into another class.
+
+==== Problem
+
+The previously demonstrated code are well formed and very concise, but there is jQuery specific code in the classes so they are not ready to be used to automate the datepickers built using other JavaScript frameworks.
+
+==== Solution
+
+We are going to move jQuery specific implementation out of main datepicker classes, so those classes can be used as framework code.
+
+We will rename Listing 17.23 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v3/Datepicker.java##L23-L29[JQueryDatepicker.java] to `Datepicker` to remove all jQuery specific implementation to accept general `Calendar`, `YearPicker`, `MonthPicker` and `DayPicker` classes as parameters.
+
+[[datepicker-source]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v2_5/Datepicker.java#L16-L57[Datepicker.java]
+----
+public class Datepicker {
+
+    private final Calendar calendar;         //<1>
+    private final YearPicker yearPicker;      //<2>
+    private final MonthPicker monthPicker;     //<3>
+    private final DayPicker dayPicker;        //<4>
+
+    public void pick(Month month, int day, int year) {...} <5>
+}
+----
+<1> This variable changed from JQueryCalendar to Calendar
+<2> This variable changed from JQueryYearPicker to YearPicker
+<3> This variable changed from JQueryMonthPicker to MonthPicker
+<4> This variable changed from JQueryDayPicker to DayPicker
+<5> The method body doesn't change from Listing 17.23
+
+==== Discussion
+
+You can see the `Datepicker` has several variables injected from its constructor, a `Calendar` class to display the calendar, a `YearPicker` class to pick year, a `MonthPicker` class to pick month and a `DayPicker` to click the day of the month.
+
+We extracted a common purpose `Datepicker` class. It will work with most of the single month calendar widget, no matter which library it is built upon because it doesn’t have dependency on those calendar widget. We then define how  `Calendar`, `YearPicker`, `MonthPicker` and `Datepicker` for the constructor of `Datepicker` class
+
+=== Adding collaborators for `Datepicker` class
+
+==== Provide a `Calendar` to display the calendar
+
+In Listing 17.18 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryCalendar.java#L7-18[JQueryCalendar.java], we can see `JQueryCalendar` class is used to trigger the display of the calendar. In its `show` method, `browser` clicks the trigger locator. But to click the trigger of calendar built using other JavaScript library, the locator may be different. So we need a parameter to pass in an instance of other class, and when `show` method is called, it will call a method of this instance, and in that method, we can specify the logic to click the trigger locator. After some research, we decide to use `Consumer` interface from Java 8, footnote:[https://docs.oracle.com/javase/8/docs/api/java/util/function/Consumer.html]. The reason to use `Consumer` is because its return type is `void` so you don't to add `return null` at the end of each method that implements this interface.
+
+[sidebar]
+.Pre-Java 8 alternative
+****
+If you don't use Java 8, you can simply create the following interface in your codebase, link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v2_5/Consumer.java#L3-5[v2_5/Consumer.java]
+
+[source,java]
+----
+public interface Consumer<T> {
+    void = accept(T t);
+}
+----
+
+It doesn't matter whether you use this one or the one from Java 8, the only difference is the import statements, you either import this home made class,
+
+[source,java]
+----
+import swip.ch18datepicker.jquery.v2_5.Consumer;
+----
+
+or import this one from Java 8,
+
+[source,java]
+----
+import java.util.function.Consumer;
+----
+
+****
+
+and the body part of `Calendar` is same,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/datepicker/Calendar.java#L14-L36[Calendar.java]
+----
+public class Calendar {
+
+    private final Browser browser;
+    private final Consumer<Browser> trigger;   //<1>
+
+    public void show() {  //<2>
+        trigger.accept(browser);      //<3>
+    }
+}
+----
+<1> The Consumer to trigger the display of the calendar
+<2> To display the calendar
+<3> Call the accept method to display the calendar
+
+We can define a `Trigger` class to implement `Consumer<Browser>` interface so it can be used as the parameter for the constructor of the `Calendar` class,
+
+[[Trigger-code]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v3/Trigger.java#L9-15[Trigger.java]
+----
+public class Trigger implements Consumer<Browser> {  <1>
+    @Override
+    public void accept(Browser browser) { <2>
+        browser.click(TRIGGER_BY);  <3>
+    }
+}
+----
+<1> Since `Trigger` class implements `Consumer<Browser>` interface, it can be used as the parameter for the constructor of `Calendar` class
+<2> Its `accept` method takes `Browser` as parameter, so we can invoke the `trigger.accept(browser);` in the `show` method of `Calendar` class
+<3> In turn, it calls `browser.click(TRIGGER_BY);`
+
+To create an instance of `Calendar`, we need to create an instance of `Trigger` class and pass it as the second parameter to the constructor of `Calendar` class, as shown in the following code snippet,
+
+[source,java]
+.Create Calendar instance
+----
+Calendar calendar = new Calendar(browser, new Trigger()); <1>
+calendar.show();   <2>
+----
+<1> Create an instance of the calendar
+<2> Call its `show` method and in term call the `accept` method of the `Trigger` class and call `browser.click(TRIGGER_BY);`
+
+A calendar will be displayed after this call.
+
+Here is the sequence diagram of how to trigger the display of the calendar
+
+image::calendar-seq.png[title=Sequence Diagram of Triggering the Display of Calendar]
+
+[sidebar]
+.Consumer vs Function
+****
+We did use `Function<Browser, Void>` at the beginning of the writing. At that time, the `Trigger` class was implemented as link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v2_5/Trigger.java#L9-16[v2_5/Trigger.java]
+
+[source,java]
+----
+public class Trigger implements Function<Browser,Void> {
+
+    @Override
+    public Void apply(Browser browser) {
+        browser.click(TRIGGER_BY);
+        return null;
+    }
+}
+----
+
+This `Trigger` class implements `Function<Browser, Void>` interface and return `Void` type, so it needs an extra line of `return null` at the end of the method.
+
+`Consumer` interface from Java 8 is better in this case.
+****
+
+==== Implementing `MonthPicker` class to pick month
+
+We then define a `MonthPicker` class in charge of flipping the calendar to the desired month. We learnt from Chapter 17 that `MonthPicker` class need to be able to read "Display Month" from calendar and click "Previous Month Button" or "Next Month Button", depending on the direction of the month it wants to pick. In Listing 17.20, those responsibility is handled by the methods inside `MonthPicker` class. We are going to treat the buttons the same way we treat the trigger, to let them be a `Consumer<Browser` interface and implement the logic inside `accept` method to click the button. Since we need to read the "Display Month" as an integer value, we define that as an `Function<Browser, Integer>`.
+
+These are the instance variables of `MonthPicker` class, they are passed by the constructor of the class.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v2_5/MonthPicker.java#L11-14[MonthPicker.java]
+----
+private final Browser browser;                       //<1>
+private final Consumer<Browser> previousMonth;         //<2>
+private final Consumer<Browser> nextMonth;                //<3>
+private final Function<Browser, Integer> displayMonth;      //<4>
+----
+<1> A `Browser` which provides access to `WebDriver`
+<2> A `Consumer<Browser>` to click previous month button
+<3> A `Consumer<Browser>` to click next month button
+<4> A `Function<Browser, Integer>` to read the display month on calendar
+
+And the `pick` method has the same logic as Listing 17.20, what has changed is that those original methods of `JQueryMonthPicker` are replaced by the methods from those instance variables `previousMonth`,`nextMonth` and `displayMonth`
+
+.Relocation of original JQueryDatepicker methods for month related operations
+[cols="3",options="header",]
+|=========================================
+|Original methods of JQueryMonthPicker
+|New methods in MonthPicker
+|Host Classes of the new methods
+
+|`displayMonth()`
+|`displayMonth .apply(browser)`
+|`DisplayMonth`
+
+|`nextMonth()`
+|`nextMonth .accept(browser)`
+|`NextMonth`
+
+|`previousMonth()`
+|`previousMonth .accept(browser)`
+|`PreviousMonth`
+|=========================================
+
+Here is the `pick` method of `MonthPicker`,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v2_5/MonthPicker.java#L26-L37[MonthPicker.java]
+----
+public void pick(int month) {
+    int difference =  displayMonth.apply(browser) - month;    //<1>
+    if (difference < 0) {                             //<2>
+        for (int i = difference; i < 0; i++) {
+            nextMonth.accept(browser);            //<3>
+        }
+    } else if (difference > 0) {                       //<4>
+        for (int i = 0; i < difference; i++) {              //<5>
+           previousMonth.accept(browser);
+        }
+    }
+}
+----
+<1> To calculate how many times it need to click, if displayMonth is 8 and month is 11, then the difference is -3
+<2> If the difference is negative, it means the target is in the future, so need to click next month button
+<3> Clicking next month button many times, according to the difference between displayMonth of month
+<4> If the difference is positive, it means the target is in the past, so need to click previous month button
+<5> Clicking previous month button many times, according to the difference between displayMonth of month
+
+And we can use the host class names in the column 3 of the table to define the classes to be used as parameters for the constructor of `MonthPicker` class.
+
+`PreviousMonth` class for the second parameter of the constructor of `MonthPicker` class,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v3/PreviousMonth.java#L10-16[PreviousMonth.java]
+----
+public class PreviousMonth implements Consumer<Browser> {  <1>
+    @Override
+    public void accept(Browser browser) {
+        browser.await(CALENDAR).click(PREV_MONTH_BUTTON); <2>
+    }
+}
+----
+<1> It implements `Consumer<Browser>`
+<2> This is same as `previousMonth` method in `JQueryMonthPicker` class
+
+`NextMonth` class for the third parameter of the constructor of `MonthPicker` class,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v3/NextMonth.java#L10-16[NextMonth.java]
+----
+public class NextMonth implements Consumer<Browser> {   <1>
+    @Override
+    public void accept(Browser browser) {     <2>
+        browser.await(CALENDAR).click(NEXT_MONTH_BUTTON);
+    }
+}
+----
+<1> It implements `Consumer<Browser>`
+<2> This is same as `nextMonth` method in `JQueryMonthPicker` class
+
+`DisplayMonth` class for the fourth parameter of the constructor of `MonthPicker` class,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v3/DisplayMonth.java#L11-18[DisplayMonth.java]
+----
+public class DisplayMonth implements Function<Browser, Integer> {  <1>
+   @Override
+   public Integer apply(Browser browser) {          <2>
+       String text = browser.await(CALENDAR).getUpperText(MONTH);
+       return Month.valueOf(text).ordinal();
+   }
+}
+----
+<1> It implements `Function<Browser, Integer>`
+<2> This is same as `displayMonth` method in `JQueryMonthPicker` class
+
+Then we can create an instance of `MonthPicker` class by calling its constructor with the required parameters, `browser`, `new PreviousMonth()`, `new NextMonth()` and `new DisplayMonth()`.
+
+[source,java]
+----
+new MonthPicker(browser,
+  new PreviousMonth(), new NextMonth(), new DisplayMonth());
+----
+
+And this instance of `MonthPicker` can use used as a parameter for the constructor of `DatePicker` class.
+
+==== Changing `MonthPicker` to `CalendarPicker` class to pick both month and year
+
+We are extracting a `YearPicker` class in charge of flipping the calendar to the desired year, but we notice it has exactly same type of variables as `MonthPicker` class. The logic of the `pick` method of `YearPicker` and `MonthPicker` are same except that use different variable names, so we decide to use one class `CalendarPicker`.
+
+[[CalendarPicker]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/datepicker/CalendarPicker.java#L8-L40[CalendarPicker.java]
+----
+public class CalendarPicker {
+
+    private final Browser browser;
+    private final Consumer<Browser> previous;      //<1>
+    private final Consumer<Browser> next;          //<2>
+    private final Function<Browser, Integer> displayValue; //<3>
+
+    void pick(int value) {...}  <4>
+}
+----
+<1> It can be previous month or previous year
+<2> It can be next month or next year
+<3> It can be display month or display year
+<4> The logic is same as before except the variable names changed accordingly
+
+Same as month picking classes, we need some year picking classes as well,
+
+.Relocation of original JQueryDatepicker methods for year related operations
+[cols="3",options="header",]
+|=========================================
+|Original methods of JQueryYearPicker
+|New methods in CalendarPicker
+|Host Classes of new methods
+
+|`displayYear()` |`displayValue.apply(browser)`|`DisplayYear`
+|`nextYear()`    |`next.accept(browser)`       |`NextYear`
+|`previousYear()`|`previous.accept(browser()`  |`PreviousYear`
+|=========================================
+
+And we can provide implementations for jQuery and use them as the parameters for the constructor of the `YearPicker`.
+
+`PreviousYear` class for the second parameter of the constructor of `YearPicker` class,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v3/PreviousYear.java#L7-17[PreviousYear.java]
+----
+public class PreviousYear implements Consumer<Browser> {  <1>
+
+    private final PreviousMonth previousMonth = new PreviousMonth();
+
+    @Override
+    public void accept(Browser browser) {       <2>
+        for (int i = 0; i < 12; i++) {      <3>
+            previousMonth.accept(browser);
+        }
+    }
+}
+----
+<1> It implements `Consumer<Browser>`
+<2> This method is the `previousYear` in `JQueryYearPicker` class
+<3> Same as `JQueryYearPicker` class, it uses `PreviousMonth` to click the previous month button 12 times.
+
+`NextYear` class for the third parameter of the constructor of `YearPicker` class,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v3/NextYear.java#L7-17[NextYear.java]
+----
+public class NextYear implements Consumer<Browser> {      <1>
+
+    private final NextMonth nextMonth = new NextMonth();
+
+    @Override
+    public void accept(Browser browser) {     <2>
+        for (int i = 0; i < 12; i++) {      <3>
+            nextMonth.accept(browser);
+        }
+    }
+}
+----
+<1> It implements `Consumer<Browser>`
+<2> This method is the `nextYear` in `JQueryYearPicker` class
+<3> Same as `JQueryYearPicker` class, it uses `NextMonth` to click the next month button 12 times.
+
+`DisplayYear` class for the fourth parameter of the constructor of `YearPicker` class,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v3/DisplayYear.java#L10-17[DisplayYear.java]
+----
+public class DisplayYear implements Function<Browser, Integer> { <1>
+    @Override
+    public Integer apply(Browser browser) {             <2>
+        String text = browser.await(CALENDAR).getText(YEAR);
+        return Integer.parseInt(text);
+    }
+}
+----
+<1> It implements `Function<Browser, Integer>`
+<2> This method is the `displayYear` in `JQueryYearPicker` class
+
+We can create an instance of `CalendarPicker` class by calling its constructor and pass the required parameters such as `browser`, `new PreviousYear()`, `new NextYear()` and `new DisplayYear()`,
+
+[source,java]
+.Create CalendarPicker instance to pick year
+----
+new CalendarPicker(browser, new PreviousYear(), new NextYear(), new DisplayYear()),
+----
+
+And this instance of `CalendarPicker` can use used as a parameter for the constructor of `DatePicker` class.
+
+Here is the sequence diagram of how `CalendarPicker` works,
+
+image::calendarpicker-seq.png[title=Sequence Diagram of how `CalendarPicker` works]
+
+==== Providing an interface for picking a day from the month
+
+We add this `DayPicker` interface to pick the day from the calendar month. Since we don't have a way to template the operations to pick a day, so we make it an interface.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v3/DayPicker.java#L3-5[DayPicker.java]
+----
+public interface DayPicker {
+    void pick(int day);
+}
+----
+
+And have the `JQueryDayPicker` implementing this interface and change its `pickDay` method to `pick`, link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v3/JQueryDayPicker.java##L10-L24[JQueryDayPicker.java]
+
+[source,java]
+----
+public class JQueryDayPicker implements DayPicker {...}
+----
+
+After these changes, `Datepicker` class evolves into the following form, but the body of `pick` method doesn't change from Listing [[datepicker-source]], what has changed is the types of the instance variables.
+
+[[datepicker-source]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/datepicker/Datepicker.java#L15-18[Datepicker.java]
+----
+private final Calendar calendar;           //<1>
+private final CalendarPicker yearPicker;                  //<2>
+private final CalendarPicker monthPicker;                 //<3>
+private final DayPicker dayPicker;        //<4>
+----
+<1> The Calendar
+<2> The control to pick the year from the calendar, it changed from YearPicker to CalendarPicker
+<3> The control to pick the month from the calendar, it changed from MonthPicker to CalendarPicker
+<4> The control to pick the day from the calendar
+
+Here is the class diagram of current `Datepicker`,
+
+image::Datepicker.v5.png[title=Class Diagram of Datepicker]
+
+You can see, it is simpler than the previous version and only have 4 framework classes.
+
+Then We use page object pattern to organize the responsibilities of the page.
+
+==== Adding a Page Object to create the `Datepicker` object
+
+Applying what we have learnt from Chapter 5, we create `JQueryDatepickerPage` class with the `pick` method to pick the date and `getDate` method to read the date it picks, and the `pick` method just delegates the call to the datepicker instance variable it creates during construction time. You can see how to create an instance of `Datepicker` class in the constructor of `JQueryDatepickerPage` class,
+
+[[JQueryDatepickerPage-code]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jquery/v3/JQueryDatepickerPage.java#L19-25[JQueryDatepickerPage.java]
+----
+this.datepicker = new Datepicker(  //<1>
+    new Calendar(browser, new Trigger()),
+    new CalendarPicker(browser,
+         new PreviousYear(), new NextYear(), new DisplayYear()),
+    new CalendarPicker(browser,
+         new PreviousMonth(), new NextMonth(), new DisplayMonth()),
+    new JQueryDayPicker(browser));
+----
+<1> Creating an instance of `Datepicker` and injecting its instance variables using constructor injection
+
+The it can tested by the test `JQueryDatepicker_v3_IT`. As of the writing, it flips the calendar towards the future direction.
+
+While extracting jQuery specific logic out of the framework classes, we have implemented many classes, for example, `Trigger`, `PreviousMonth`, `PreviousYear` and so on to represent the controls on calendar. This approach resulted in too many classes to be managed. One way to remove those classes is to use Lambda Expression from Java 8. When we automate other datepickers, we will replace those classes instantiation with lambda expression.
+
+== Automating other datepickers
+
+We then use the same framework to automate the datepicker built using Bootstrap.
+
+=== Automating Bootstrap datepicker
+
+Bootstrap is a very popular web framework, so we are going to use its datapicker to demonstrate the applicability of this Datepicker framework. We are going to use Web Developer Tool to inspect the elements of this datepicker.
+
+==== Identifying the elements of Bootstrap datepicker
+
+Most of the elements on Bootstrap calendar are similar to jQuery calendar except they use different `class` attributes. But there is a major difference, unlike jQuery, whose display year and display month are in two separate HTML `span` elements, on Bootstrap calendar, the month and year displayed are on same HTML `th` element.
+
+[source,html]
+----
+<th colspan="5" class="datepicker-switch">February 2016</th>  <1>
+----
+
+How to make it work with the framework we developed for jQuery datepicker? We are going to need a class to extract the month and year value from the same display element, but first we need to code to locate those elements.
+
+Once we identify all the important elements on the Bootstrap datepicker, we can define locator supplier enum `BootstrapByClassName` to implement `Supplier<By>`.
+
+[[BootstrapByClassName]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/bootstrap/BootstrapByClassName.java#L14-L32[BootstrapByClassName.java]
+----
+CALENDAR("datepicker-days"),            //<1>
+TRIGGER_BY("trigger"),                  //<2>
+NEXT_MONTH_BUTTON("next"),              //<3>
+PREV_MONTH_BUTTON("prev"),              //<4>
+DISPLAY_MONTH_YEAR("datepicker-switch");      //<5>
+----
+<1> Locator for the calendar
+<2> Locator for the calendar trigger
+<3> Locator for next month button
+<4> Locator for previous month button
+<5> Locator for display month and year
+
+Next, we are going to implement some function to click the elements to flip the calendar backwards or forwards.
+
+==== Implementing Bootstrap specific functions using lambda expression
+
+Unlike jQuery, we implemented many classes for the functions, we are going to use lambda expression to create the `Datepicker` instance. But this works only on Java 8.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/bootstrap/v1/BootstrapDatepickerPage.java#L21-34[BootstrapDatepickerPage.java]
+----
+this.datepicker = new Datepicker(
+    new Calendar(browser,       <6>
+        b -> browser.click(TRIGGER_BY)  <1>
+    ),
+    new CalendarPicker(browser,    <7>
+        b -> previousYear(),  <2>
+        b -> nextYear(),      <3>
+        b -> displayYear()    <4>
+    ),
+    new CalendarPicker(browser,     <8>
+        b -> previousMonth(),
+        b -> nextMonth(),
+        b -> displayMonth()
+    ), new BoostrapDayPicker(browser));      <5>
+----
+<1> Create a `Consumer<Browser>` object and when its `accept` method is called, call `broswer.click(TRIGGER_BY)` for the second parameter to `Calendar`
+<2> Create a `Consumer<Browser>` object and when its `accept` method is called, call `this.previousYear()` for the second parameter to `YearPicker`
+<3> Create a `Consumer<Browser>` object and when its `accept` method is called, call `this.nextYear()` for the third parameter to `YearPicker`
+<4> Create a `Function<Browser, Integer>` object and when its `apply` method is called, call `this.displayYear()` for the fourth parameter to `YearPicker`
+<5> Create a `BoostrapDayPicker` object for the fourth parameter to `Datepicker`
+<6> Create a `Calendar` object for the first parameter to `Datepicker`
+<7> Create a `CalendarPicker` object for the second parameter to `Datepicker`
+<8> Create a `CalendarPicker` object for the second parameter to `Datepicker`
+
+You use Lambda expression to create instance of those classes, so you don't need to define `Trigger`, `PreviousYear`, `NextYear`, `DisplayYear`, `PreviousMonth`, `NextMonth` and `DisplayMonth` classes. But you still need to add those methods inside `BootstrapDatepickerPage` to provide correspondent functions.
+
+Here are some methods used to pick month and the methods for pick year are quite similar.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/bootstrap/v1/BootstrapDatepickerPage.java#L62-77[BootstrapDatepickerPage.java]
+----
+private int displayMonth() {
+    return TO_MONTH.apply(extract(browser, 0)).ordinal();
+}
+
+private void previousMonth() {
+    browser.await(CALENDAR).click(PREV_MONTH_BUTTON);  //<3>
+}
+
+private void nextMonth() {
+    browser.await(CALENDAR).click(NEXT_MONTH_BUTTON);  //<4>
+}
+
+private String extract(Browser browser, int i) {  //<1>
+    return browser.await(CALENDAR)
+        .getText(DISPLAY_MONTH_YEAR).split(" ")[i];
+}
+----
+
+`BoostrapDayPicker` is the day picker for Bootstrap. And Bootstrap calendar behaves slightly different from jQuery calendar, it doesn't close after `WebDriver` clicks the day button, so we need to add logic to click outside the calendar to close it.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/bootstrap/v1/BootstrapDayPicker.java#L11-L29[BootstrapDayPicker.java]
+----
+public class BootstrapDayPicker implements DayPicker {
+
+    private Browser browser;
+
+    @Override
+    public void pick(int day) {
+      browser.await(CALENDAR).findElements(TD)       <2>
+          .filter(e -> e.getText().equals(String.valueOf(day)))  <3>
+          .findFirst()      <5>
+          .get()
+          .click();                           <4>
+      browser.click(FORM);              <1>
+      browser.await(new ElementVisible(CALENDAR).negate()); <6>
+    }
+}
+----
+<1> After clicking the day from the month, bootstrap doesn't closed the calendar so need to click outside the calendar to close it
+<2> Find the calendar and then find all td elements on the calendar
+<3> Find all td elements with the text same as the day string
+<4> Click it, that is the day we want to pick
+<5> The first td same as the day string is the only one we are looking for
+<6> Wait for the calendar become invisible
+
+You can run the following test to see how it works, and the style of this test is more concise than Listing <<jQueryDatePickerPage-V5>>,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/tests/BootstrapDatepicker_v1_IT.java#L27-L33[BootstrapDatepicker_v1_IT.java]
+----
+@Test
+public void pickADate() {
+    new BootstrapDatepickerPage(browser){{   <1>
+        pick(APRIL, 1, 2015);                    <2>
+        assertEquals("01-04-2015", getDate());    <3>
+    }};
+}
+----
+<1> Create an instance of anonymous subclass `BootstrapDatepickerPage` class and the code within the inner bracket is anonymous constructor
+<2> Call `pick` method of  `BootstrapDatepickerPage`
+<3> Call `getDate` method of  `BootstrapDatepickerPage`
+
+Now we can conclude that the framework can be used in the automation for two datepicker implementations.
+
+As of today, ReactJS became more and more popular, can we use this framework to automate the datepicker built upon ReactJS?
+
+=== Automating ReactJS Datepicker crafted by Hackerone
+
+ReactJS became more and more popular now, so we use this ReactJS Datapicker crafted by Hacherone to demonstrate the applicability of this Datepicker framework. But it is not the only datepicker available for ReactJS.
+
+==== Identifying the elements of ReactJS Datepicker
+
+Most of the elements on ReactJS calendar are also similar to jQuery and Bootstrap calendars except they use different `class` attributes. Similar as Bootstrap, the month and year displayed are on one `div` element.
+
+[source,html]
+----
+<div class="react-datepicker__current-month">April 2016</div>
+----
+
+So we also need to extract the month and year value from the `div` element, just like what we did for Bootstrap.
+
+We define locator supplier enum `ReactByClassName` to implement `Supplier<By>`,
+
+[[ReactByClassName]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/react/ReactByClassName.java#L14-L19[ReactByClassName.java]
+----
+TRIGGER_CONTAINER("react-datepicker__input-container"),
+TRIGGER_BY("ignore-react-onclickoutside"),
+CALENDAR("react-datepicker"),            //<1>
+NEXT_MONTH_BUTTON("react-datepicker__navigation--next"),              //<2>
+PREV_MONTH_BUTTON("react-datepicker__navigation--previous"),              //<3>
+DISPLAY_MONTH_YEAR("react-datepicker__current-month");      //<4>
+----
+<1> Locator for the calendar
+<2> Locator for next month button
+<3> Locator for previous month button
+<4> Locator for display month and year
+
+We learnt from Chapter 6 that we can't use its `class` attribute to locate input field. And we are going to use an Xpath alternative locating method to find the trigger,
+
+[[ReactByXpath]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/react/ReactByXpath.java#L14-L28[ReactByXpath.java]
+----
+TRIGGER_BY("//*[@id=\"app\"]/descendant::input");  <1>
+----
+<1> It means find something with id "app" and the first input field on that element
+
+We run this test and it displays the calendar.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/tests/FindByXpath_v2_IT.java#L27-L33[FindByXpath_v2_IT.java]
+----
+@Test
+public void trigger() {
+     browser.click(ReactByXpath.TRIGGER_BY);
+}
+----
+
+And you can see how clean the code becomes after using framework.
+
+Next, we are going to implement some function to click the elements to flip the calendar backwards or forwards.
+
+==== Implementing ReactJS specific functions
+
+Unlike jQuery, we used individual classes for each functions, and unlike Bootstrap, we used lambda expression to organize those functions, for ReactJS, we are going to use enum constants.
+
+First, implement the functions to read the year and month.
+
+===== Organizing functions to read year and month on calendar into integers
+
+We need to implement the functions to read the year and month information displayed on calendar, `ReactCalendarDisplayValue` implements `Function<Browser, Integer>` and we use its constants as the parameter for the constructor of `CalendarPicker` class in Listing <<CalendarPicker>>.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/react/ReactCalendarDisplayValue.java##L8-L38[ReactCalendarDisplayValue.java]
+----
+import static swip.locators.react.ReactByClassName.CALENDAR;          <5>
+import static swip.locators.react.ReactByClassName.DISPLAY_MONTH_YEAR;   <6>
+
+public enum ReactCalendarDisplayValue implements Function<Browser, Integer> {
+
+    DISPLAY_YEAR {
+        @Override
+        public Integer apply(Browser browser) {
+            return parseInt(extract(browser, 1));       //<1>
+        }
+    },
+    DISPLAY_MONTH {
+        @Override
+        public Integer apply(Browser browser) {
+            return TO_MONTH.apply(extract(browser, 0)).ordinal();       //<2>
+        }
+    };
+
+    private static String extract(Browser browser, int i) {  //<3>
+        return browser.await(CALENDAR)
+           .getText(DISPLAY_MONTH_YEAR).split(" ")[i];  <4>
+    }
+
+}
+----
+<1> Extract year from the display
+<2> Extract month from the display
+<3> On the ReactJS datepicker, the month and year are in the same element
+<4> We need to split it into two, display month and display year
+<5> The locator enum constant for the calendar
+<6> The locator enum constant for the display month and year
+
+And ReactJS calendar controls for various buttons.
+
+===== Organizing ReactJS Calendar Controls
+
+`ReactCalendarControls` implements `Consumer<Browser>` so its constants can be used as the parameter for the constructor of `CalendarPicker` class in Listing <<CalendarPicker>>. And `CalendarPicker` class is used as the parameters when constructing an instance of `Datepicker` class, as shown in Listing <<BoostrapDatepickerPage>>.
+
+[[ReactCalendarControls]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/react/ReactCalendarControls.java##L7-L47[ReactCalendarControls.java]
+----
+import static swip.locators.react.ReactByXpath.TRIGGER_BY;  <6>
+import static swip.locators.react.ReactByClassName.*;  <6>
+
+public enum ReactCalendarControls implements Consumer<Browser> {    //<6>
+    TRIGGER {
+        @Override
+        public void accept(Browser browser) {
+             browser.click(TRIGGER_BY);     <1>
+        }
+    },
+    NEXT_MONTH {
+        @Override
+        public void accept(Browser browser) {
+            browser.await(CALENDAR).click(NEXT_MONTH_BUTTON);          //<2>
+        }
+    },
+    PREVIOUS_MONTH {...}, <3>
+    NEXT_YEAR {
+        @Override
+        public void accept(Browser browser) {
+            for (int i = 0; i < 12; i++) {       //<4>
+                NEXT_MONTH.accept(browser);
+            }
+        }
+    },
+    PREVIOUS_YEAR {...}  <5>
+}
+----
+<1> Clicking the tigger to display the calendar
+<2> Clicking the next month button
+<3> Clicking the previous month button
+<4> Since there is no next year button, clicking the next month button 12 times
+<5> Similar to `NEXT_YEAR`
+<6> The locator enum constants for ReactJS calendar controls
+
+And day picker for ReactJS.
+
+===== Implementing ReactJS specific day picking class
+
+ReactJS calendar behaves same as jQuery calendar, it closes after `WebDriver` clicks the day button, so we don't need to do anything to close it.
+
+[[ReactDayPicker]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/react/ReactDayPicker.java#L10-L28[ReactDayPicker.java]
+----
+public class ReactDayPicker implements DayPicker {
+
+    private Browser browser;
+
+    @Override
+    public void pick(int day) {
+        browser.await(CALENDAR).findElements(DIV)       <1>
+            .filter(e -> e.getText().equals(String.valueOf(day)))  <2>
+            .findFirst()      <4>
+            .get()
+            .click();                           <3>
+        browser.await(new ElementVisible(CALENDAR).negate());  //<5>
+    }
+}
+----
+<1> Find the calendar and then find all div elements on the calendar
+<2> Find all td elements with the text same as the day string
+<3> Click it, that is the day we want to pick
+<4> The first td same as the day string is the only one we are looking for
+<5> Wait for the calendar become invisible
+
+We then add `ReactDatepickerPage` class, just like what we did for jQuery and Bootstrap.
+
+===== Using page class to apply the Page Object pattern
+
+We add `ReactDatepickerPage` class to encapsulate the `Datepicker` and logic to access elements on the page,
+
+[[ReactDatepickerPage]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/react/ReactDatepickerPage.java#L22-L27[ReactDatepickerPage.java]
+----
+this.datepicker = new Datepicker(
+    new Calendar(browser, TRIGGER),
+    new CalendarPicker(browser, PREVIOUS_YEAR, NEXT_YEAR, DISPLAY_YEAR),  <1>
+    new CalendarPicker(browser, PREVIOUS_MONTH, NEXT_MONTH, DISPLAY_MONTH),
+    new ReactDayPicker(browser)
+);
+----
+<1> These constants are from `ReactCalendarControls` and `ReactCalendarDisplayValue`
+
+You can run the following test to see how it works,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/tests/ReactDatepickerIT.java#L27-L33[ReactDatepickerIT.java]
+----
+@Test
+public void pickADate() {
+    new ReactDatepickerPage(browser){{
+        pick(APRIL, 1, 2015);
+        assertEquals("04/01/2015", super.getDate());
+    }};
+}
+----
+
+Similarly, we can just copy the structure of those enum from ReactJS package to other packages and modify them to automate other datepickers.
+
+=== Automating Material-UI datepicker
+
+We can use Web Developer Tool to gather the locators from Material-UI datepicker, unfortunately there is no id can be used so we have to use Xpath locators. We create `MaterialByXpath` enum can add following constants into it.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/material_ui/MaterialByXpath.java#L14-L19[MaterialByXpath.java]
+----
+TRIGGER_BY("//*[@id=\"mui-id-2\"]"),
+CALENDAR(
+"/html/body/div[2]/div/div[1]/div/div/div[1]"),
+OK_BUTTON(
+"/html/body/div[2]/div/div[1]/div/div/div[2]/button[2]/div/span"),
+NEXT_MONTH_BUTTON(
+"/html/body/div[2]/div/div[1]/div/div/div[1]/div/div[3]/div[1]/div[3]/button"),
+PREV_MONTH_BUTTON(
+"/html/body/div[2]/div/div[1]/div/div/div[1]/div/div[3]/div[1]/div[2]/button"),
+DISPLAY_MONTH_YEAR(
+"/html/body/div[2]/div/div[1]/div/div/div[1]/div/div[3]/div[1]/div[1]/div/div");
+----
+
+`MaterialCalendarControls`, `MaterialCalendarDisplayValue`, `MaterialDayPicker` and `MaterialDatepickerPage` look same as the ones for ReactJS implementation except importing the enum constants from `MaterialByXpath`.
+
+[source,java]
+----
+import static swip.locators.material_ui.MaterialByXpath.*;
+----
+
+`MaterialCalendarControls` is the enum with `TRIGGER`, `NEXT_MONTH` and so on.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/material_ui/MaterialCalendarControls.java#L14-L19[MaterialCalendarControls.java]
+----
+public enum MaterialCalendarControls implements Consumer<Browser> {    //<6>
+    TRIGGER {...},
+    NEXT_MONTH {...},
+    PREVIOUS_MONTH {...},
+    NEXT_YEAR {...},
+    PREVIOUS_YEAR {...}
+}
+----
+
+`MaterialCalendarDisplayValue` is the enum with `DISPLAY_YEAR` and `DISPLAY_MONTH`.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/material_ui/MaterialCalendarDisplayValue.java#L14-L19[MaterialCalendarDisplayValue.java]
+----
+public enum MaterialCalendarDisplayValue implements Function<Browser, Integer> {
+     DISPLAY_YEAR {...},
+     DISPLAY_MONTH {...};
+}
+----
+
+`MaterialDayPicker` is not an enum, it is a class and it is almost same as Listing <<ReactDayPicker>> expect it need to click "OK" button to close the calendar.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/material_ui/MaterialDayPicker.java#L14-L19[MaterialDayPicker.java]
+----
+public class MaterialDayPicker implements DayPicker {
+
+  @Override
+  public void pick(int day) {
+      browser.await(CALENDAR).findElements(BUTTON)
+          .filter(e -> e.getText().equals(String.valueOf(day)))
+          .findFirst()
+          .get()
+          .click();
+      browser.click(OK_BUTTON);                             <1>
+      browser.await(new ElementVisible(CALENDAR).negate());
+  }
+}
+----
+<1> You need to click the "OK" button to close the calendar
+
+And `MaterialDatepickerPage` is almost same as `ReactDatepickerPage` in Listing <<ReactDatepickerPage>> except the last parameter is an `MaterialDayPicker`.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/material_ui/MaterialDatepickerPage.java#L14-L19[MaterialDatepickerPage.java]
+----
+    this.datepicker = new Datepicker(
+        new Calendar(browser, MaterialCalendarControls.TRIGGER),
+        new CalendarPicker(browser, PREVIOUS_YEAR, NEXT_YEAR, DISPLAY_YEAR),
+        new CalendarPicker(browser, PREVIOUS_MONTH, NEXT_MONTH, DISPLAY_MONTH),
+        new MaterialDayPicker(browser)
+    );
+----
+
+Here is a test to run the datepicker,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/tests/MaterialDatepicker_v1_IT.java#L27-L33[MaterialDatepicker_v1_IT.java]
+----
+@Test
+public void pickADate() {
+    new MaterialDatepickerPage(browser) {{
+        pick(APRIL, 1, 2015);
+        assertEquals("4/1/2015", super.getDate());
+    }};
+}
+----
+
+But when you run `MaterialDatepicker_v1_IT` to verify it, it have intermittent error, as shown in following figure,
+
+image::Failure1.png[title=Intermittent assertion error]
+
+You observe that when Material-UI calendar flips, there is a transition effect so the display month and year flips like a real calendar and some click may misfire so the total flip is not enough even the count is right. And it stops before flipping to target month. So we need to modify `CalendarPicker` to check whether it has reached the month it wants to pick. If not, flip more until the display month is the month we want to pick. It is still like you flip calendar with eyes closed, and when you open eyes to check, you see it is not the month you want to pick, then you flip the calendar until they become same. This logic is still more efficient than checking for every flip.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/material_ui/MaterialByXpath.java#L14-L19[MaterialByXpath.java]
+----
+void pick(int value) {
+    int difference = displayValue.apply(browser) - value;
+    while (difference != 0) {        <2>
+        if (difference < 0) {
+            for (int i = difference; i < 0; i++) {
+                next.accept(browser);
+            }
+        } else if (difference > 0) {
+            for (int i = 0; i < difference; i++) {
+                previous.accept(browser);
+            }
+        }
+        int newDiff = displayValue.apply(browser) - value;  <1>
+        if (difference == newDiff) {
+            break;
+        }
+        difference = newDiff;
+    }
+}
+----
+<1> This means when it doesn't make any progress when the month or year to pick is out of supported boundary of the calendar
+<2> Use while loop to flip the calendar until the display month or year is the same as the one to pick
+
+We slightly change it from the previous version, add a `while` loop and another statement by the end of loop the read the calendar and calculate the difference between what's on calendar now and what is the value it needs to pick. If it is not 0, the `while` loop will continue. Normally, it is 0, but due to transition effect, it may not be 0, then the flip the calendar couple of times to reach the month it wants to select.
+
+But when we run the modified test, `MaterialDatepicker_v2_IT`. we get a different error,
+
+image::Failure2.png[title=Intermittent array out of bound exception]
+
+We trace the stack trace to this link of code, after split the text, we try to get the second element using index `1` since array starts from `0`.
+
+[source,java]
+----
+return browser.getText(DISPLAY_MONTH_YEAR).split(" ")[i];
+----
+
+Still due to the transition effect, when we split the text, it doesn't have two elements in the result, so it throws the exception,
+
+[source,java]
+----
+java.lang.ArrayIndexOutOfBoundsException: 1
+----
+
+We learnt that in Chapter 6, we can fix the problem by adding wait, so we add one more `await` method with `Function` as parameter to `ExplicitWait`, then the other two methods can just call this new method.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/ExplicitWait.java#L34-L42[ExplicitWait.java]
+----
+default Element await(Supplier<By> by) {
+    return await((SearchScope e) -> e.findElement(by)); <3>
+}
+
+default void await(Predicate<SearchScope> predicate) {
+    await((Function<SearchScope, Boolean>) predicate::test);  <2>
+}
+
+default <T> T await(Function<SearchScope, T> function) {
+    return new FluentWait<>(this)
+        .withTimeout(1, SECONDS)
+        .pollingEvery(10, MILLISECONDS)
+        .ignoring(Exception.class)
+        .until((SearchScope where) -> function.apply(where)); <1>
+}
+----
+<1> `await` method calls the `until` method from `FluentWait`
+<2> This is "method reference" since Java 8, if you don't cast it to `Function<SearchScope, Boolean>`, there is no compilation error but it will have a StackOverflow exception during runtime
+<3> Use a lambda expression to construct a `Function` object and call the `await` method which calls `FluentWait`
+
+This method will keep executing the function until it becomes successful or the given time is up. And we can call this method from the `extract` method.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/material_ui/v3/MaterialCalendarDisplayValue.java#L34-L38[MaterialCalendarDisplayValue.java]
+----
+private static String extract(Browser browser, int i) {
+    return browser.await(
+        (SearchScope s) ->
+            browser.getText(DISPLAY_MONTH_YEAR).split(" ")[i]); <1>
+}
+----
+<1> We wait for the split result having `i + 1` elements
+
+Now `MaterialDatepicker_v3_IT` always passes. You can see, there is extra effort in making Material-UI Date Picker to work, that's the reason we didn't use Material-UI as example in Chapter 17.
+
+[sidebar]
+.Pre-Java 8 alternative
+****
+We assume you already become familiar with lambda expression now, but if you don't, here is an example written using anonymous inner class, which is more verbose then the one using lambda expression.
+
+[source,java]
+----
+private static String extract(final Browser browser,
+                              final int i) {
+    return browser.await(new Function<SearchScope, String>() {
+       @Override
+       public String apply(SearchScope) {
+          return browser.getText(DISPLAY_MONTH_YEAR).split(" ")[i]);
+       }
+    }
+}
+----
+****
+
+Next let us look at JsDatePick datepicker.
+
+=== Automating JsDatePick datepicker
+
+We implement `JsDatepickByClassName` for all the locators used by the datepicker.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/jsdatepick/JsDatepickByClassName.java#L14-L19[JsDatepickByClassName.java]
+----
+CALENDAR("boxMainInner"),
+NEXT_MONTH_BUTTON("monthForwardButton"),
+PREV_MONTH_BUTTON("monthBackwardButton"),
+NEXT_YEAR_BUTTON("yearForwardButton"),
+PREV_YEAR_BUTTON("yearBackwardButton"),
+DISPLAY_MONTH_YEAR("controlsBarText");
+----
+
+As well as `JsDatepickById` for the trigger element.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/jsdatepick/JsDatepickById.java#L14-L28[JsDatepickById.java]
+----
+TRIGGER_BY("inputField");
+----
+
+Unlike other datepickers, JsDatePick actually has Previous Year and Next Buttons. So instead of clicking Next Month Button 12 times to make a next year equivalent, it can just click the Next Year Button,
+
+[[JsDatePickControls]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jsdatepick/JsDatepickControls.java#L30-L41[JsDatepickControls.java]
+----
+NEXT_YEAR {
+    @Override
+    public void accept(Browser browser) {
+        browser.await(CALENDAR).click(NEXT_YEAR_BUTTON);           //<1>
+    }
+},
+PREVIOUS_YEAR {
+    @Override
+    public void accept(Browser browser) {
+        browser.await(CALENDAR).click(PREV_YEAR_BUTTON);           //<2>
+    }
+}
+----
+<1> It clicks the `NEXT_YEAR_BUTTON` locator
+<2> It clicks the `PREV_YEAR_BUTTON` locator
+
+The rest of `JsDatepickControls` looks same as the one for ReactJS in Listing <<ReactCalendarControls>>. The other classes such as `JsDatepickDisplayValue`, `JsDatepickDayPicker` and `JsDatepickPage` look same as the ones for ReactJS except these classes import JsDatePick specific locators.
+
+[source,java]
+----
+import static swip.locators.jsdatepick.JsDatepickById.*;
+import static swip.locators.jsdatepick.JsDatepickByClassName.*;
+----
+
+But if you don't like the repeative method declaration in this enum, you can change the code to use the following style,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/jsdatepick/JsDatepickControlsLambda.java#L30-L41[JsDatepickControlsLambda.java]
+----
+public enum JsDatepickControlsLambda implements Consumer<Browser> {
+    TRIGGER(browser -> browser.click(TRIGGER_BY)),    <2>
+    NEXT_MONTH(browser -> browser.await(CALENDAR).click(NEXT_MONTH_BUTTON)),
+    PREVIOUS_MONTH(browser -> browser.await(CALENDAR).click(PREV_MONTH_BUTTON)),
+    NEXT_YEAR(browser -> browser.await(CALENDAR).click(NEXT_YEAR_BUTTON)),
+    PREVIOUS_YEAR(browser -> browser.await(CALENDAR).click(PREV_YEAR_BUTTON));
+
+    private Consumer<Browser> consumer;  <1>
+
+    JsDatepickControlsLambda(Consumer<Browser> consumer) {   <3>
+        this.consumer = consumer;
+    }
+
+    @Override
+    public void accept(Browser browser) {
+        consumer.accept(browser);  <4>
+    }
+}
+----
+<1> This enum has a `Consumer<Browser>` instance variable.
+<2> The lambda expression creates an instance of `Consumer<Browser>` and call the constructor of this enum `JsDatepickControlsLambda`
+<3> The constructor of this enum `JsDatepickControlsLambda`
+<4> Delegate the call to the `Consumer<Browser>` instance variable
+
+You can see it removed the duplicated method declaration `@Override public void accept(Browser browser)` from each constants in Listing <<JsDatePickControls>> and only have one enum level `accept` method. But it may not be worth to do the same thing for `JsDatepickDisplayValue`. The more constants in the enum, the more worthwhile to do it, otherwise, it is just a personal preference to use either way.
+
+Since it has year buttons, we actually can write some cool tests. footnote:[These dates used in the tests are the destination dates of the time travels set on Lorraine, the Time Machine, from movie trilogy Back to Future.]
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/tests/BackToFutureUsingJsDatepickIT.java#L27-L33[BackToFutureUsingJsDatepickIT.java]
+----
+@Test
+public void backToFuture1() {
+    new JsDatepickPage(browser) {{
+        pick(NOVEMBER, 5, 1955);                      <1>
+        assertEquals("05-NOV-1955", super.getDate());
+    }};
+}
+
+@Test
+public void backToFuture2() {
+    new JsDatepickPage(browser) {{
+        pick(OCTOBER, 21, 2015);                      <2>
+        assertEquals("21-OCT-2015", super.getDate());
+    }};
+}
+
+@Test
+public void backToFuture3() {
+    new JsDatepickPageLambda(browser) {{   <4>
+        pick(SEPTEMBER, 2, 1885);                    <3>
+        assertEquals("02-SEP-1885", super.getDate());
+    }};
+}
+----
+<1> This is the date Marty McFly met his parents, George and Lorraine while they were teenage.
+<2> This is the date Marty McFly met his future son, Marty Jr.
+<3> This is the date Marty McFly met his great-great-grandparents, Seamus and Maggie McFly
+<4> This test use the enum written with lambda expression
+
+Is it awesome? JsDatePick is one of earliest datepickers available for people to use and it is the only one in the example with the year buttons. You can see it takes you back to 1885 in 9 seconds. Material-UI Date Picker is the fanciest datepicker from UI perspective. But if they don't add year buttons, anyone plans to build a time machine, they should consider to choose JsDatePick.
+
+You have seen we use the same framework in the automation of 5 kinds of datepickers and they all work.
+
+== Summary
+
+// AC -- this would be even better if it detailed the "key takeaways"
+
+* Extracting general purpose datepicker framework from the single class
+* Provide a jQuery specific datepicking functions for the framework
+* Automating Bootstrap datepicker using the framework with Bootstrap specific datepicking implementation
+* Automating ReactJS, Material-UI and JsDatePick datepickers

@@ -1,0 +1,28 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+DomainBase : boolean equals(Object o)
+DomainBase : int nashCode()
+DomainBase : String toString()
+note left : City and Person extend\nit to inherit these methods
+
+
+Person : int id
+Person : String firstName
+Person : String lastName
+Person : int age
+Person : String toString()
+note left : Person overrides\ntoString method
+
+City : int id
+City : String name
+City : String stateName
+City : String toString()
+note left : City overrides\ntoString method
+
+DomainBase <|-- Person
+DomainBase <|-- City
+
+@enduml

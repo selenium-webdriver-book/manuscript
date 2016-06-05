@@ -1,0 +1,571 @@
+= Interacting with elements on a page
+
+:imagesdir: ../images/ch03_interacting_with_elements
+
+This chapter covers
+
+* Entering text into input fields, text areas
+* Working with the mouse to click on buttons and links
+* Working with touch
+
+When automating interactions with a page, you are taking on the role of the user. That means that you will want to be able to do everything the user can do, including entering text from the keyboard and selecting and interacting with individual elements on the page. WebDriver provides a number of ways to do this, but for most cases you'll only need to use a subset of them, so in this chapter we will first cover the most common, and therefore most useful, methods.
+
+In this chapter you'll learn how to:
+
+* Enter text using both the `WebElement` and `Keyboard` classes
+* Control the mouse using the `WebElement` and `Mouse` classes.
+* Perform specific techniques for working with forms.
+
+== Be the user
+
+When crafting a test to simulate the behavior of a user, it is worthwhile putting yourself in the place of the user, and then breaking down the steps you would take. I like to consider what goal that the user wants to achieve, and what operations I'd undertake to achieve that goal. For example:
+
+My goal would be to login to a site so I can send an email.
+
+The operations could be:
+
+1. Click on the input labeled “Username.”
+2. Enter the username.
+3. Click, or tab, to the input labeled “Password.”
+4. Enter password.
+5. Either, click the Login button, or press Return.
+
+[[login-form]]
+image::login-form-sketch.png[title=Login Form <http://localhost:8080/login.html>]
+
+It is worthwhile noting that the user may be doing a few things that are not immediately clear. For example, when entering a password, they might check that the password’s text is obscured, or they may check that the page is secure. We will cover the verifications that a user might do in chapter 7.
+
+One of the main things a user will be doing, when they complete forms, is entering text into those elements of the form.
+
+== Entering text
+
+Entering text is key to a number of common tasks when testing web pages. The most common would be completing a form. Think of the tasks the user might want to achieve:
+
+* Log in or register on a site.
+* Send a social network update.
+* Complete the purchase of an item with a credit card.
+* Compose an email.
+* Update a blog post.
+
+The text you might need to enter might be plain text, but you may need to enter rich-text, text that maybe contain bold or italics for example.
+
+WebDriver provides two ways to enter text. The first method is to directly send keys to an element on the page. This is convenient, as it is available as a method of the `WebElement` class. The second method, for drivers that implement the `HasInputDevices` interface, is to control the keyboard object. This is more powerful, allowing you to do more things, but is also more complex.
+
+Let's look at the two primary methods that WebDriver provides for keyboard interaction.
+
+[source,java]
+.WebElement.java
+----
+    public interface WebElement extends SearchContext {
+
+        void sendKeys(CharSequence... keysToSend);
+
+        void clear();
+
+        ...
+    }
+----
+
+And we can use this test to understand how `sendKey` and `clear` work. Without clearing the text first, `sendKey` will just append the text to the end of original text,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/LoginIT.java[LoginIT.java]
+----
+@Test
+public void login() throws Exception {
+    driver.get("/login.html");
+
+    WebElement email = driver.findElement(By.name("email"));  <1>
+    email.clear();                   <2>
+    email.sendKeys("john@doe.com");  <3>
+
+    WebElement password = driver.findElement(By.name("password"));
+    password.clear();
+    password.sendKeys("secret");
+
+    driver.findElement(By.cssSelector("input[type='submit']"))
+        .click();
+}
+----
+<1> We locate the element first
+<2> We need to clear the text inside the input, otherwise it will append the text to original text
+<3> Set the string "john@doe.com" to the "email" field
+
+Sending keys directly using the `WebElement` method has the advantage of being concise, and therefore is a good default choice for entering text in most cases. But, it lacks the precision of the `Keyboard` class. For example, you cannot control when a key is pressed and released.
+
+You use an element locating technique to find the element you want, and WebDriver will send the text you want directly to it, as if you had selected the element with a mouse click and started typing. Unfortunately, you can't do everything a user can do with the keyboard using send keys.
+
+You can also get a handle to the keyboard using the `getKeyboard` method of drivers that implement the `HasInputDevices` interface:
+
+[source,java,indent=0]
+.Keyboard.java
+----
+    public interface Keyboard {
+
+      void sendKeys(CharSequence... keysToSend);
+
+      void pressKey(CharSequence keyToPress);
+
+      void releaseKey(CharSequence keyToRelease);
+
+    }
+----
+
+The `Keyboard` interface allows you to simulate the exact actions of the user, down to the exact keys pressed. Using the `Keyboard` interface has the advantages of control and precision. You can do everything the user can do. Unlike the `sendKeys` method, you don't send key presses to a specific element. Instead they will be typed into the active element. You can easily type non-printable characters, including modifier keys (Alt, Ctrl, Command, and the Japanese Zeukauk-Hankaku), function keys (F1 to F12), Backspace, and arrow keys (Left, Right, Up, and Down). If you have a complicated application, such as a web-based game, then you may well need to use these. If you want to find out more information on printable and non-printable characters: <http://en.wikipedia.org/wiki/ASCII>. The `Keyboard` interfaces doesn't provide support for element location; the text you type is sent to the currently active element, this means you will need to focus the element.
+
+To focus an element either send and empty string to it:
+
+[source,java]
+----
+element.sendKeys("");
+----
+
+Use the actions class to move the mouse to it:
+
+[source,java]
+----
+new Actions(driver).moveToElement(element).perform();
+----
+
+And for an input element, click on it:
+
+[source,java]
+----
+new Actions(driver).moveToElement(element).click().perform();
+----
+
+One interesting thing about the keyboard is that typing a single letter can be broken down into two smaller actions: pressing a key down, and then releasing it. This is useful if find yourself needing to test a page where the user will need to hold down the arrow keys.
+
+On desktop browsers, it is possible to navigate the Internet using the keyboard alone. But it is usually slower than using a mixture of mouse and keyboard. This means that a user might use the mouse to select something that can have text entered into it, and then switch to the keyboard. On mobile devices, the keyboard may only appear when you tap on a text input.
+
+=== Technique 6: Using sendKeys and getKeyboard to enter text into a form
+
+Probably the most common reason to need to enter text is to complete a form. As mentioned before, users will often do this by using the Tab key to move between elements, colloquially known as __tabbing__. This following technique will show you how to enter text into a form on a page.
+
+==== Problem
+
+You want to test the behavior of a form on a page to make sure that it can be filled out primarily using the keyboard.
+
+==== Solution
+
+To demonstrate various methods, we will:
+
+1. Use `findElement` to find the first text input.
+2. Use `sendKeys` to enter text into the element.
+3. Use `getKeyboard` to get the keyboard.
+4. Enter Tab via the keyboard to tab to the next element.
+5. Ask WebDriver for the active element.
+6. Enter text using the keyboard.
+7. Finally submit the form by pressing, then releasing, Return.
+
+The example application contains a form for signing up to the mailing list, as you can see in figure <<sign-up-form>>.
+
+[[sign-up-form]]
+image::sign-up-form.png[title=A mailing list sign-up form (http://localhost:8080/mailing-list.html)]
+
+You can see that you need to enter your email address, check a box to accept the terms and conditions (which you will do using the spacebar), and submit the form (by pressing Return).
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/KeyboardInputIT.java[KeyboardInputIT.java]
+----
+    driver.get("http://localhost:8080/form.html");
+    driver
+            .findElement(By.name("email")) <1>
+            .sendKeys("john.doe@swip.com"); <2>
+
+    driver.getKeyboard().sendKeys(Keys.TAB); <3>
+    driver
+            .switchTo().activeElement() <4>
+            .sendKeys(" "); <5>
+
+    driver.getKeyboard().pressKey(Keys.ENTER); <6>
+    driver.getKeyboard().releaseKey(Keys.ENTER);
+----
+<1> Locate the email input.
+<2> Enter the text into the input.
+<3> Now tab to the check box.
+<4> Change to the currently active element, in this case the check box.
+<5> Press space to check the box.
+<6> Submit the form.
+
+This code demonstrates three ways you can interact with elements using the keyboard:
+
+1. You can act on an element you have already found using the sendKeys method.
+2. You can use the keyboard object using the `getKeyboard` method, pressing individual keys.
+3. You can use WebDriver to access the active element and type into it by using the `sendKeys` method. This is useful if you want to verify that the element tabbed to is the expected one.
+
+The hawk-eyed among you will have noticed that we have used __method chaining__ footnote:[https://en.wikipedia.org/wiki/Method_chaining] to reduce the amount of code. I find that, if there is one suitably indented method call per line, it makes code easier to read.
+
+==== Discussion
+
+To be able to effectively test web pages, you need to be able to complete the same actions a user would complete. WebDriver provides more than one method to do this, each of which are be suitable for different tasks, but all make it easy to enter text into a page.
+
+One final note is that, not all implementation of driver support the `Keyboard` class. Notable the classes `HtmlUnitDriver` and `SafariDriver` (two alternatives to `FirefoxDriver`) do not currently support it.
+
+In summary:
+
+Send Keys:
+
+* Single command.
+* Supported by all drivers.
+
+Keyboard:
+
+* Make element active then type.
+* Support for all keys.
+* Support for press then release.
+* Not supported by all drivers.
+
+=== Technique 7: Entering text into a WYSIWYG editor
+
+Many forms now allow you to enter text into inputs that allow the user to change the style of the text being entered. For example, you may be able to make text bold or italic. A good example of this is word processor that is part of Google Docs, and in fact most web based email client allow you to do it too. This is more complex than normal forms, as not only do you need to type the text, you also need to tell the WebDriver how to switch to the appropriate styling. WYSIWYG editors (like Tiny MCE, which we will be using in our example) are not normal form inputs. They are JavaScript applications that modify the page typically doing the following:
+
+1. Hide the original input.
+2. In the place of the original input, insert a div containing controls (such as bold or italic).
+3. In that div, insert an inline frame (iframe) into the page.
+
+In fact, unlike other page inputs, you don't modify the input within the form at all. Instead, the iframe contains a page that is marked as __content editable__. A page that is content editable can be modified by the user.
+
+==== Problem
+
+You want to enter styled text into a WYSIWYG editor similar to figure <<wyswyg-editor>>.
+
+[[wyswyg-editor]]
+image::wyswyg-editor.png[title=WYSWYG editor (http://localhost:8080/wyswyg-editor.html)]
+
+==== Solution
+
+To enter text into this WYSWYG form you will:
+
+1. Locate the frame that contains the editor.
+2. Switch to that frame.
+3. Locate the HTML body of the frame.
+4. Choose italic.
+5. Enter text.
+6. Switch back to the default frame.
+
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/WyswygInputIT.java[WyswygInputIT.java]
+----
+    driver.get("http://localhost:8080/wyswyg-editor.html");
+
+    WebElement editorFrame = driver.findElement(By.id("editor_ifr")); <1>
+
+    driver.switchTo().frame(editorFrame);
+
+    WebElement body = driver.findElement(By.tagName("body")); <2>
+
+    body.clear(); <3>
+    body.sendKeys("A paragraph of text, some of which is"); <4>
+
+    driver.switchTo().defaultContent(); <5>
+    driver.findElement(By.cssSelector(".mce-i-italic")).click(); <6>
+
+    driver.switchTo().frame(editorFrame); <7>
+    body.sendKeys(" italics."); <8>
+
+    driver.switchTo().defaultContent(); <9>
+    driver.findElement(By.cssSelector(".mce-i-italic")).click();  <10>
+----
+<1> Find the correct iframe.
+<2> Get the body element.
+<3> Clear the existing text.
+<4> Send our unformatted text.
+<5> Switch back to the original frame.
+<6> Click the bold button.
+<7> Switch back to the editor.
+<8> Type italic text.
+<9> Switch back to root window.
+<10> Deselect italics.
+
+==== Discussion
+
+Directly using WebDriver to interact with a WYSIWYG editor to complete even this basic task is complex. You have to deal with switching between frames, clicking a button to enable and disable italics, and coordinate both of these actions with entering text.  All the items have class name or IDs that might change if you upgrade your version of the editor. There is also a fair amount of repetition.
+
+== Simulating user behavior using the mouse
+
+While users can navigate and interact with a page using the keyboard, much of the time users will use the mouse instead. It's the most common way to interact with web pages. You will find yourself doing most of your automation by simulating the use of the mouse.
+
+A number of operations can be done with the mouse. Not only can you click, you can double-click, right-click to open the context menu, move the mouse, and drag-and-drop. A web application can listen to all these using JavaScript, and so WebDriver allows you to simulate them all.
+
+One great thing about the mouse is even though mobile devices don't have a mouse, mobile browsers will treat taps as if they were mouse clicks. This means you can use a lot of the testing methods you are familiar with on desktop for mobile testing.
+
+[sidebar]
+.A story from the trenches
+****
+While savvy users will happily navigate a page using the mouse, I've seen behaviors you might not expect from less experienced users. For example, I was showing a user how to submit a form on a new application. I said, “To finish your purchase, click the Buy button,” they replied, “Left or right click?” Later on the same day, another user attempted to complete the same purchase by double-clicking the Buy button, when you would expect most users to single-click.
+****
+
+Let's have a look at the WebDriver methods at your disposal:
+
+[source,java]
+.WebElement.java
+----
+    public interface WebElement extends SearchContext {
+
+        void click();
+
+        ...
+    }
+----
+
+That is only a single method. No problem. Web drivers that implement the `HasInputDevices` interface provide a `getMouse` method that returns a `Mouse` object. That object provides useful methods:
+
+[source,java]
+.Mouse.java
+----
+    public interface Mouse {
+
+      void click(Coordinates where);
+
+      void doubleClick(Coordinates where);
+
+      void mouseDown(Coordinates where);
+
+      void mouseUp(Coordinates where);
+
+      void mouseMove(Coordinates where);
+
+      void mouseMove(Coordinates where, long xOffset, long yOffset);
+
+      void contextClick(Coordinates where);
+    }
+----
+
+You can see that there are quite a variety of methods here. Note that they all require a page coordinate to use. If you want to use this directly, you need to phrase your tests as:
+
+1. Find coordinate of element.
+2. Execute an action to that coordinate.
+
+This is all rather laborious, when you just want simply click on an item. We will discus another approach shortly.
+
+=== Technique 8: Clicking and double-clicking with the mouse
+
+The second main way to interact with a page is by clicking on elements using the mouse. Is this technique you'll see the two main ways you can achieve this using WebDriver, and meet the `Actions` class.
+
+==== Problem
+
+You want to simulate the behavior of a user navigating a form using a mixture of keyboard and mouse. Specifically, you want to see what happens if the user double-clicks the Submit button: does the form get submitted twice?
+
+==== Solution
+
+WebDriver provides methods to click elements in a similar manner to sending key presses to an element. You will use the same mailing list form from figure <<sign-up-form>>, where you will single-click on the check box, using this method.
+Here is an example of clicking on an element:
+
+[source,java]
+.Clicking terms
+----
+    driver
+            .findElement(By.name("terms"))
+            .click();
+----
+
+To double-click the submit button, you could use the `Mouse` class (thought we'll show you a better way shortly):
+
+[source,java]
+.Double-clicking
+----
+    WebElement submitButton = driver.findElement(By.tagName("button"));
+
+    driver.getMouse().doubleClick(
+            ((Locatable) submitButton).getCoordinates()
+    );
+----
+
+There are a couple of problems with this approach. The first problem is the class cast to make the element Locatable. The second problem is that `Locatable` is an internal WebDriver class, so it may change, or even be removed, in future versions of the WebDriver API. If we want low-maintenance tests, then we need to avoid it.
+
+Good news! There is a special way for doing this kind of interaction: the `Actions` class. The `Actions` class allows you to create sequence of actions, which are then performed one after another. One of these possible actions is double-clicking, so you can create a sequence containing with that action.
+
+[source,java]
+.Actions
+----
+    new Actions(driver) <1>
+            .doubleClick(submitButton) <2>
+            .perform(); <3>
+----
+<1> Create actions object from the driver.
+<2> Add a double-click to the sequence.
+<3> Perform the sequence.
+
+Finally, here is the complete test:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/MouseInputIT.java[MouseInputIT.java]
+----
+    driver.get("http://localhost:8080/mailing-list.html");
+    driver
+            .findElement(By.name("email"))
+            .sendKeys("john.doe@swip.com");
+
+    driver
+            .findElement(By.name("terms"))
+            .click();
+
+    WebElement submitButton = driver.findElement(By.tagName("button"));
+
+    new Actions(driver)
+            .doubleClick(submitButton)
+            .perform();
+----
+
+Should you refactor this code by extracting a double-clicking method so you can reuse it elsewhere? Maybe. You should extract commonly used code, but as double-clicking is a less common action, perhaps wait until you have done it a few times.
+
+==== Discussion
+
+With WebDriver, there are two ways to simulate mouse clicks: either the click method, or using `Actions`. You will notice that both `sendKeys` and `click` are available for elements, though most elements can only accept text, or mouse clicks, not both.
+
+== Context menus
+
+On many applications you can use the right-mouse button to open a context menu. This menu will display a series of options related to the specific element you are clicking on. For example, in a word processor, right-clicking might open a series of formatting options. In a file management application, right-clicking on the icon for a file might provide options such as “move” or “new directory.”
+
+Figure <<context-menu>> shows our context menu from the test application.
+
+[[context-menu]]
+image::context-menu.png[title=Context menu http://localhost:8080/context-menu.html]
+
+=== Technique 9: Opening a context menu
+
+Context menus are rare is most modern web applications, perhaps because users expect the standard web browser menu to appear when the user right-clicks. However, you may still encounter them. This technique shows you how to open a context menu.
+
+==== Problem
+
+An application contains a context menu and you want to open it.
+
+==== Solution
+
+Locate the element and use `Actions` to perform a context click.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/ContextMenuIT.java[ContextMenuIT.java]
+----
+    driver.get("http://localhost:8080/context-menu.html");
+
+    new Actions(driver)
+            .contextClick(driver.findElement(By.id("hascontextmenu")))
+            .perform();
+----
+
+==== Discussion
+
+We can see that for complex operations, the `Actions` class comes in very useful. Context clicks are a bit of a rarity; you won't find them in many web pages, but web based applications such as email, word processors, or spreadsheets will have them.
+
+[sidebar]
+.Safari support
+****
+Currently, the Safari driver does not support context menus.
+****
+
+We'll look at the `Actions` class in much more detail in part 2 of the book.
+
+== Interacting with forms
+
+There are a number of challenges when interacting with a form. For example, entering text into a `textarea` is quite different to an `input`. Choosing a option from a select list is not a single operation. The form in figure <<registration-form>> shows most of the common elements that can be found in a form. They are, in order:
+
+1. A normal input.
+2. A password input.
+3. A select drop-down.
+4. A radio button group.
+5. A multi select drop-down.
+6. A check box.
+
+[[registration-form]]
+image::registration-form.png[title=Registration form http://localhost:8080/registration-form.html]
+
+To enter text into forms, you can use all the techniques you've learned earlier. Now, we'll look into the different types of form element, and what special problems you might need to deal with.
+
+=== Password
+
+Passwords are inputs where you can't see the text that is entered, and you can use the same techniques as entering text. One issue you're likely to encounter is that certain browsers, such as Safari, will ask you if you want to save the password.
+
+If you have access to the machine that the browser is running on, if it is your local machine for example, you can edit the setting to disable this.
+
+If you do not have access to the machine, then this won't work. We can only modify what we have access to-–the page. We can ask WebDriver to execute some JavaScript that modifies the page. The HTML standard has an attribute `autocomplete` that is intended to prevent auto-completion of forms (for example for sensitive data such as credit card numbers).
+
+[source,html]
+----
+<input type="password" autocomplete="off"/>
+----
+
+Unfortunately, several browsers have stopped honoring this attribute. The “Save Password” alert only appears if there is a password on the form. Instead, we can use JavaScript to convert all passwords to normal text inputs. We've not spoken about the `JavascriptExecutor` interface before. This interface allows you to execute JavaScript on the current page. It is useful if you want to do something that WebDriver does not support, such as modify the page it make it easier to test. To use it, you need to cast your WebDriver to it.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/FormIT.java[FormIT.java]
+----
+        ((JavascriptExecutor) driver).executeScript("Array.prototype.slice.call(" +
+                "document.getElementsByTagName('input')).forEach(function(e){" +
+                "   e.type=e.type=='password'?'text':e.type;" +
+                "});");
+----
+
+This will prevent the alert from appearing. But, don't forget--anyone who can access your computer will be able to see the password!
+
+Part 2 of the book contains a deep-dive into the `JavascriptExecutor` interface.
+
+=== Radio button
+
+If you have a group of radio buttons, each button will have the same name. This means that select the using `By.name(...)` won't find the correct element. Here are two ways around this. The first option is to use an XPath locator to select the element based on the text it is labelled with. This XPath locator finds a label that has the text “email”, and then finds the input within.
+
+[source,java]
+----
+    driver
+        .findElement(By.xpath("//label[contains(.,'email')]/input]"))
+        .click();
+----
+
+The second option is to locate the radio-button based on it's value:
+
+[source,java]
+----
+  driver
+    .findElement(By.cssSelector("input[name='contact'][value='email']"))
+    .click();
+----
+
+You'll probably find the second option most reliable.
+
+=== Single and multiple-choice select
+
+To working with a select, you wrap it in a `Select` object. The `Select` class in part of the WebDriver support library. This class provides a number of features for working with select boxes, and one useful one is `selectByVisibleText`. If we want to select "Friend" in the following HTML:
+
+[source,html]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/main/webapp/registration-form.html[registration-form.html]
+----
+                <select class="form-control" name="hearAbout">
+                    <option>-</option>
+                    <option>Friend</option>
+                    <option>Advert</option>
+                </select>
+----
+
+We can use the `Select` class as follows:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/FormIT.java[FormIT.java]
+----
+    new Select(driver.findElement(By.name("hearAbout")))
+        .selectByVisibleText("Friend");
+----
+
+`Select` can be used for single and multi-choice selects:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/FormIT.java[FormIT.java]
+----
+    Select interestsSelect = new Select(driver.findElement(By.name("interest")));
+    interestsSelect.selectByVisibleText("Movies");
+    interestsSelect.selectByVisibleText("Music");
+----
+
+A form is a great candidate for a __page object__, so later on we will look into extracting this.
+
+== Summary
+
+* You can use `sendKeys` method of `WebElement` to type into inputs. This is useful in the most common cases.
+* You can use `Keyboard` for more complex interactions, but it is not as well supported.
+* WYSIWYG editors require special techniques.
+* You can click on elements using the `click` method of `WebElement`, and this will cover most common cases.
+* If you want to double-click or right-click, you must use `Actions`.
+* There are some techniques that are helpful with form elements which contain either password inputs, or select lists. You've seen that you can wrap an element in a `Select` object.
+
+Now that you've read chapters 1 through 3, you have enough knowledge to find and interact with pages and the elements on them. In chapter 4 we will tie element location, and interaction, into verification so you not only can you automated interactions with the page, but verify that the actions worked correctly.

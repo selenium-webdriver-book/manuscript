@@ -1,0 +1,17 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+Browser : void setInputText(Supplier<By> by, Object value)
+Browser : String getInputText(Supplier<By> by)
+Browser : void setCheckboxValue(Supplier<By> by, boolean value)
+Browser : boolean isChecked(Supplier<By> by)
+Browser : void setRadio(Supplier<By> by, String value)
+Browser : String getRadio(Supplier<By> by)
+Browser : Select getSelect(Supplier<By> by)
+Browser : Select selectByVisibleText(Supplier<By> by)
+Browser : void doubleClick(Supplier<By> by)
+note right : These new methods are added\nin this chapter to handle the\n form elements
+
+@enduml

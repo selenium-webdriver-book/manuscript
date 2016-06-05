@@ -1,0 +1,46 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+namespace org.openqa.selenium  {
+
+    interface SearchContext
+    interface WebDriver
+
+    SearchContext <|-- WebDriver
+}
+
+namespace swip.framework {
+
+    interface SearchScope
+    SearchScope : Element findElement(Supplier<By> by)
+    SearchScope : Optional<Element> optionalElement(Supplier<By> by)
+    SearchScope : boolean isPresent(Supplier<By> by)
+
+    interface ExplicitWait
+    ExplicitWait : Element await(Supplier<By> by)
+    ExplicitWait : void await(Predicate<SearchScope> predicate)
+    ExplicitWait : click(Supplier<By> by)
+    ExplicitWait : getText(Supplier<By> by)
+    ExplicitWait : getUpperText(Supplier<By> by)
+
+    SearchScope <|-- ExplicitWait
+
+    class DelegatingSearchContext<WebDriver>
+
+    org.openqa.selenium.SearchContext <|..   DelegatingSearchContext
+    note right : It needs to implement all methods\ndefined in SearchContext interface\nWe omit them since we want you \nto use the ones in SearchScope and\nExplicitWait
+
+    ExplicitWait <|..  DelegatingSearchContext
+
+    DelegatingWebDriver <|-- Browser
+
+    DelegatingSearchContext <|--  DelegatingWebDriver
+    org.openqa.selenium.WebDriver <|..  DelegatingWebDriver
+    note right : It implements all methods\ndefined in WebDriver interface
+
+    DelegatingSearchContext : WebDriver delegate
+
+}
+@enduml

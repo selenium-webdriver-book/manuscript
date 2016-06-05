@@ -1,0 +1,35 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+interface SearchScope
+SearchScope : Element findElement(By by)
+SearchScope : Optional<Element> optionalElement(By by)
+SearchScope : boolean isPresent(Supplier<By> by)
+
+interface ExplicitWait
+ExplicitWait : Element await(By by)
+ExplicitWait : void await(Predicate<SearchScope> predicate)
+ExplicitWait : click(Supplier<By> by)
+ExplicitWait : getText(Supplier<By> by)
+ExplicitWait : getUpperText(Supplier<By> by)
+
+SearchScope  <|--    ExplicitWait
+
+class DelegatingSearchContext<T extends SearchContext>
+
+ExplicitWait <|..  DelegatingSearchContext
+
+DelegatingSearchContext <|-- DelegatingWebDriver
+DelegatingWebDriver <|-- Browser
+DelegatingWebDriver : ...(...)
+
+DelegatingSearchContext <|.. DelegatingWebElement
+DelegatingWebElement <|-- Element
+
+DelegatingWebElement : void clear()
+DelegatingWebElement : void sendKeys(CharSequence... keysToSend)
+DelegatingWebElement : ...(...)
+
+@enduml

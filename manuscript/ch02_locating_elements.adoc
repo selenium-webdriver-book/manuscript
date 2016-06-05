@@ -1,0 +1,973 @@
+= Locating elements on a page
+
+:imagesdir: ../images/ch02_locating_elements
+
+This chapter covers
+
+* Locating elements using the By locators
+* Writing your own locator factories
+* Best practices for choosing and organizing locators
+
+As a user, the first thing you do when opening a web page is try to find the part of the page you're interested in. If it is our social network, this might be the new messages icon; if it is our online banking, this might be our balance. You then use that information to consider your actions. In the same manner, WebDriver provides a wide variety of methods to locate elements on a page. This allows us to examine the page and enables us to check whether we see what we expect.
+
+Without the ability to find those elements, it's not possible to do any interaction with the page. This makes the techniques necessary to do so incredibly important.
+
+In this chapter we'll cover all the main methods for locating elements on pages. We will also look at how to compose those basic building blocks together into more complicated locators. Locating elements is only half the story. We will also cover ways to manage the different locating strategies you might want to use to make your code friendly and easy to work with.
+
+Unlike human perception, WebDriver's methods are very strict. If you're looking for the new messages icon, you might be looking for something that looks like an envelope, but if that envelope is one day bigger or smaller, or a different color than how you remember, you will adapt. WebDriver doesn't have that intelligence. If the icon changes from an envelope to something else, most users would quickly pick up on the change, but not every WebDriver invocation would. We will look at patterns you can use to make sure that your code remains robust to changes in the page that might otherwise break your code and create a maintenance issue.
+
+Not only will we introduce you to all the main element location methods, we'll cover what each one is more suited for, as well as organization practices. Finally, we will look at how to make the site you are automating easy to automate.
+
+As the end of the chapter you will have an excellent toolbox of robust strategies for locating elements of all types.
+
+== Locating one or more elements based on ID, class, or name
+
+WebDriver provides a number of ways to locate elements. We'll look at how this works, and the main ways you can achieve this.
+
+
+=== What is a search context?
+
+Locating elements on any page occurs within what WebDriver refers to as a __search context__. Let's quickly look at the `SearchContext` interface:
+
+[source,java]
+-----------------------------------------
+public interface SearchContext {
+    List<WebElement> findElements(By by);
+
+    WebElement findElement(By by);
+}
+-----------------------------------------
+
+This interface provides two methods: one that finds all the elements that match an instance of what is known as a locator, and a second that finds the first element that matches, or throws a `NoSuchElementException` if it is not found. That means the `findElements` method is useful for finding elements when you're not sure if they will be on the page, or if you want to make sure they're not on the page.
+
+Both the `WebElement` and `WebDriver` interfaces extend `SearchContext`, so all drivers and elements will have these methods.
+
+=== What is a locator?
+
+A locator describes what you want to find, and there is a  zoo of them. In Java, you create a locator using the `By` class. Let's look at an example of finding an `h1` heading element on the current page:
+
+[source,java]
+------------------------------------------------------------------
+WebElement heading1Element = driver.findElement(By.tagName("h1"));
+------------------------------------------------------------------
+
+And, for completeness, finding all the paragraph elements in the current page:
+
+[source,java]
+-------------------------------------------------------------------------
+List<WebElement> paragraphElement = driver.findElements(By.tagName("p"));
+-------------------------------------------------------------------------
+
+As discussed, there are a number of core locators you can use to find elements on a page.
+
+[cols=",",options="header",]
+|=======================================================================
+|Locator |Usage
+|Class Name |Locates elements by the value of the "class" attribute.
+
+|CSS Selector |Locates elements via the driver's underlying W3 CSS Selector engine. If the browser does not implement the Selector API, a best effort is made to emulate the API. In this case, it strives for at least CSS2 support, but it offer no guarantees.
+
+|ID |Locates elements by the value of their `id` attribute.
+
+|Link Text |Locates elements by the exact text it displays
+
+|Name |Locates elements by the value of their `name` attribute.
+
+|Partial Link Text |Locates elements that contain the given link text
+
+|Tag Name |Locates elements by their tag name
+
+|XPath |Locates elements via XPath
+|=======================================================================
+
+=== Locating by link text
+
+Link text is the preferred locator for links. Figure <<login-form>> shows the link on the test app's login page for forgotten passwords:
+
+[[login-form]]
+image::login-form.png[title=Login form http://localhost:8080/login.html]
+
+This is represented by the following HTML:
+
+[source,html]
+----
+<a href="#" id="change-password" class="btn">Forgotten Password</a>
+----
+
+And this can be located using the following:
+
+[source,java]
+----
+driver.findElement(By.linkText("Forgotten Password"));
+----
+
+Any part of the string “Forgotten Password” can be used as the parameter for this method:
+
+[source,java]
+----
+driver.findElement(By.partialLinkText("Forgotten Password"));
+driver.findElement(By.partialLinkText("Forgotten "));
+driver.findElement(By.partialLinkText("en Passwo"));
+----
+
+You should be cautious when using `findElement` with this locator. You may find other elements that contain the same partial text, so this should not be used to locate a single element on its own. Naturally, you can use it to locate a group of elements using the `findElements` method.
+
+==== Locating by class attribute
+
+This locates elements by the value of the `class` attribute. This can be used only for those elements having a `class` attribute, but it is not a good selector to use with the `findElement` method. Class is used for styling pages, and as a result many elements are likely to have the same class. As `findElement` always returns the first element it finds, if the element you want is not in the first place, you won't be able to use this to locate it. Even if it is the first element now, if a developer adds a new element with the same class earlier in the page, it will return the newly added element, instead of the element you're trying to locate. This makes for brittle code.
+
+In the login page in figure <<login-form>>, the “Forgotten Password” link has one CSS class: `btn`; you can use class name `btn` to locate it:
+
+[source,bash]
+----
+driver.findElement(By.className("btn"))
+----
+
+==== Locating by ID
+
+Locating an element by its `id` attribute can be expressed as the following:
+
+[source,java]
+----
+driver.findElement(By.id("change-password"))
+----
+
+If the site is built using JavaScript, ID is normally applied to important elements. IDs are meant to be unique, so if an element has an ID, it's usually the most accurate way to identify the element. While IDs can accidentally appear multiple times on a page (for example, due to a programming error), this is rare. Since they are often added to facilitate JavaScript code, if this mistake occurs, the JavaScript will usually be faulty too, and therefore this will be spotted early in development.
+
+If ID is available, make it your first choice.
+
+==== Locating by input name
+
+This a locator which locates elements by the value of the `name` attribute. Normally it can only be used to locate form elements built using: `<input>`, `<button>`, `<select>`, and `<textarea>`. Remember, if the same name is used for multiple elements on the same page, only the first encountered element will be returned. So before using this locator, you need to check whether the name is unique on the page. If it is, then it can be used; otherwise, other locators (or combination thereof) will need to be used.
+
+On the login page, there is an email input:
+
+[source,html]
+----
+<input name="email" class="form-control" placeholder="Email"/>
+----
+
+So the code you would need would be the following:
+
+[source,java]
+----
+driver.findElement(By.name("email"));
+----
+
+==== Locating by element tag name
+
+This locator finds elements by their HTML tag name. Since there are often many repeating uses of most tags, it is not often possible to use this method to locate a single element. But it can be combined with other locators to effectively locate elements. One time you will find it useful is for locating the page's heading, as there is usuall only one of these:
+
+[source,html]
+----
+<h1>Welcome to WebDriver!</h1>
+----
+
+[source,java]
+----
+driver.findElement(By.tagName("h1"));
+----
+
+==== Locating using CSS selectors
+
+Alongside XPath locators, the CSS selector locator is powerful. You can use the CSS selector approach to find by ID for example:
+
+[source,css3]
+----
+#change-password
+----
+
+CSS selectors can be used to locate most of the other selectors. You can infer that if you can't find the element using a CSS selector, you won't be able find the element using any of id, class name, or name attribute locator.
+
+[cols=",",options="header",]
+|=============================================================
+|Locator |CSS selector equivalent
+| By class name "the-class" |`.the-class`
+| By ID "the-id" |`#the-id`
+| By tag name "h1" |`h1`
+| By name "the-name" |`*[name='the-name']`
+|=============================================================
+
+The purpose of a CSS selector is to mark part of a page for formatting, not for automation. It is reasonable for a developer to change every CSS selector on a page, especially when a site gets a new coat of paint in the form of a re-skin. This means that CSS selectors, while powerful, can be a somewhat brittle.
+
+CSS selectors can be slower than other locators, and it is worthwhile bearing that is mind if you are thinking of using them. This book is focussed on teaching WebDriver, not on teaching CSS, so you can find out more about CSS on the Mozilla's web site: <https://developer.mozilla.org/en-US/docs/Web/CSS/Tutorials>.
+
+CSS is a good choice if you cannot locate an element by name or ID.
+
+==== Locating using XPath
+
+XPath locators are the most complex selector to use. It requires knowledge in XPath query language, so if you're not fluent in that query language, you will find it difficult to find elements using XPath queries.
+
+Let's look at an example usage of an XPath for this HTML:
+
+[source,html]
+----
+<a href="#" id="change-password">Change Password</a>
+----
+
+[source,java]
+----
+driver.findElement(By.xpath("//a[@id='change-password']"));
+----
+
+You can use the Web Developer Tools on Chrome to figure out the XPaths and CSS selectors. The XPath you get from the tool is `//*[@id="change-password"]`, which can be used directly, as in figure <<copy-xpath>>.
+
+[[copy-xpath]]
+image::copy-xpath.png[title=Copying an XPath]
+
+This finds any tag with an ID attribute of "change-password". As you know it is a link, so you can change it to `//a[@id='change-password']` and it will still work; this is also safer since it restricts the elements to tag `<a>`.
+
+XPath and CSS selectors can fulfill some of the same goals.
+
+[cols=",",options="header",]
+|=======================================================================
+|Locator |XPath Selector Equivalent
+| By class name "the-class"
+| `//*[contains(concat(' ',normalize-space(@class),' '),' the-class ')]`
+
+| By id "the-id" | `//*[@id='the-id']"`
+
+| By tag name "h1" | `//h1`
+
+| By name "the-name" |`//*[@name='the-name']`
+|=======================================================================
+
+I hope you can see from this that you have the same power as CSS selectors—-but the complexity is much higher.
+
+Let's have a look at a couple of useful XPaths, ones that are hard to do using other locators.
+
+==== `normalize-space(.)` versus `text(.)`
+
+`text(.)` matches only against the text of the element, whereas `normalize-space(.)` returns the text of the element, and of all the elements it contains. This useful if you want to locate a paragraph of text which contains some styling:
+
+[source,html]
+----
+<p>A paragraph with <b>this text in bold</b>.</p>
+----
+
+This will not be matched by the following XPath:
+
+[source,xpath]
+----
+//*[contains(text(), 'A paragraph with this text in bold')]
+----
+
+Whereas this XPath will match:
+
+
+[source,xpath]
+----
+//*[contains(normalize-space(.), 'A paragraph with this text in bold')]
+----
+
+Here we have combined `normalize-space` with `contains`. You can use this to locate an element within a parent element.
+
+[source,xpath]
+----
+//div[contains(., 'A visible paragraph')]/a
+----
+
+This is a powerful expression. It finds a link within a paragraph that contains the phrase "A visible paragraph." The main challenge with XPath expressions is their complexity. They take a while to learn, and as there is no type-safety, or auto-complete support in most IDEs, they can be costly to work with and maintain.
+
+It should be noted that XPath is the slowest of all the locators. If you want to learn more about XPath, then you can do so at Mozilla's web site <https://developer.mozilla.org/en-US/docs/Web/XPath>.
+
+Many modern browsers provide a tool to find the XPath or CSS selector of an element. Be careful about copying these verbatim into your tests. They are often quite specific, and can easily change the next time the page loads.
+
+XPath is good choice, but it's often better to try and solve locating problems using the CSS, name, or ID locators first, as these are easy for you and your team to understand.
+
+That's a great variety of locators! They are all orientated around the knowing the string that you need to pass to create it. For XPath and CSS locators, these can be long and complex. We can reduce the complexity of our code by encapsulating commonly used locators into small factories that we can then reuse. For example, rather than having a locator for finding inputs using an XPath, it might be easier to create a locator specifically for the task of locating inputs.
+
+=== Technique 1: Creating A Locator Factory For Complex Locators
+
+You may find yourself creating locators that are similar to one another. For these common ones, you can reduce the verbosity of your code by having factories to create them.
+
+==== Problem
+
+XPaths are complicated to write and costly to maintain.
+
+==== Solution
+
+Create locator factories, similar to the methods on the `By` class, for complicated locators. My recommendation would be that because `By` method are not specific to an element, create one generic factory for locating without a tag name, named `ElementBy`, and then create one each for any tag you want to locate. For example, for locating `input` elements by the text of the label they are annotated with:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/InputBy.java[InputBy.java]
+----
+public final class InputBy {
+    private InputBy() {
+    }
+
+    public static By label(String labelText) {
+        return By.xpath("//label[contains(., '" + labelText + "')]/input");
+    }
+}
+----
+
+You'll notice that the constructor is private to prevent instantiation of the class.
+
+For locating any element by the text it
+contains:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/ElementBy.java[ElementBy.java]
+----
+public final class ElementBy {
+    private ElementBy() {
+    }
+
+    public static By partialText(String text) {
+        return By.xpath("//*[contains(normalize-space(.), '" + text + "')]");
+    }
+}
+----
+
+==== Discussion
+
+The preceding factory classes allow you to encapsulate complex locators within a class and then reuse them at will. By following a naming scheme and style similar to the `By` factory, you can ensure that other developers will find them easy to pick up and ensure that adoption is easier.
+
+Later on we will talk about strategies for grouping locators together.
+
+== Fine-grained targeting using complex CSS selectors
+
+We discussed using CSS selectors earlier. Like XPath queries, CSS selectors are much more powerful than the basic locators. Let's look at a few ways to locate elements using CSS selectors.
+
+You can refine a locator using an attribute:
+
+[source,html]
+----
+<input name="email">
+----
+
+[source,css3]
+----
+input[name='email']
+----
+
+Or multiple attributes:
+
+[source,html]
+----
+<input name="email" type="text">
+----
+
+[source,css3]
+----
+input[type='text'][name='email']
+----
+
+Note that if the attribute is its default value, like `type` could be in this example, then its values will be  undefined. You will not be able to locate is this way.
+
+You can also refine a locator by the attributes prefix:
+
+[source,html]
+----
+<input name="password">
+----
+
+[source,css3]
+----
+input[name^='passw']
+----
+
+By the suffix:
+
+[source,html]
+----
+<input name="password">
+----
+
+[source,css3]
+----
+input[name$='sword']
+----
+
+By infix--containing a string:
+
+[source,html]
+----
+<input name="password">
+----
+
+[source,css3]
+----
+input[name*='sswor']
+----
+
+By the next element on the page:
+
+[source,html]
+----
+<input name="password">
+<input type="submit">
+----
+
+[source,css3]
+----
+input[name='password'] + input[type='submit']
+----
+
+Or more loosely, by any sibling element:
+
+[source,css3]
+----
+input[name='email'] ~ input[type='submit']
+----
+
+By a direct descendant:
+
+[source,html]
+----
+<div>
+  <input name="email">
+</div>
+----
+
+[source,css3]
+----
+div > input[name='email']
+----
+
+Or by any descendant:
+
+[source,html]
+----
+<form>
+  <div>
+    <input name="email">
+  </div>
+</form>
+----
+
+[source,css3]
+----
+form input[name='email']
+----
+
+You will notice that most of the examples here contains no more than two elements. This is deliberate. Think about this long selector:
+
+[source,css3]
+----
+div > #login > div > input.btn.btn-primary
+----
+
+If you were to remove one of those divs, it would make the selector invalid.
+Consider this one, suggested by Chrome:
+
+[source,css3]
+-------------------------------------------------
+#login > div:nth-child(1) > input.btn.btn-primary
+-------------------------------------------------
+
+If the divs were reordered, and this would no longer be valid. Optimal, easy to maintain selectors are concise and accurate.
+
+=== Technique 2: Locating table cells using CSS selectors
+
+HTML tables are a common way to layout data on a web page. As you may wish to locate cell by the heading of the cell's column, then you need to do a series of look ups. Lets look at a technique to make accessing them less complex.
+
+==== Problem
+
+You want to robustly locate elements within a table, but tables can change, and columns can be re-ordered.
+
+==== Solution
+
+Locate table cells using CSS selectors. You can access cells within a HTML table using CSS selectors. Consider the table of users in figure <<users-table>>.
+
+[[users-table]]
+image::users-table.png[title=Users Table http://localhost:8080/users-table.html]
+
+This is created by the following HTML:
+
+[[users-tale-html]]
+[source,html]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/main/webapp/users-table.html[users-table.html] - http://localhost:8080/users-table.html
+----
+<table class="table table-striped" id="users-table">
+  <caption>Users</caption>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Email</th>
+      <th>Name</th>
+    </tr>
+  </thead>
+  <tbody> <1>
+    <tr> <2>
+      <td>1</td>
+      <td>john@doe.com</td>
+      <td>John Doe</td> <3>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>jane@smith.com</td>
+      <td>Jane Smith</td>
+    </tr>
+  </tbody>
+</table>
+----
+<1> Within the table's `tbody`
+<2> 1st row
+<3> 3rd column
+
+Here is a selector that will find "John Doe" in the table from figure <<users-table>>:
+
+[source,css3]
+----
+table#users-table tbody tr:nth-child(1) td:nth-child(3)
+----
+
+[sidebar]
+.CSS3 And HTML Unit Driver
+****
+If you are using HTML Unit Driver, you may find that examples that use CSS3 selector syntax (like :nth-child) do not work.
+****
+
+This selector finds the third cell of the first row of the table with the ID `users-table` body. This is typical of table access: find the cell at x/y coordinates. Note that the indexing is 1 to N rather than 0 to N-1.
+This selector has an equivalent XPath query:
+
+[source,xpath]
+----
+//table[@id='users-table']/tbody/tr[1]/td[3]
+----
+
+Our first task is to find the column index of the column you want. Since
+you want to get a cell by the column title, you can do the following:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/TableIT.java[TableIT.java]
+----
+	int columnNumber = 1;
+        while (!driver
+                    .findElement(By.cssSelector(String.format("table#users-table th:nth-child(%d)", columnNumber)))
+                    .getText().equals("Name")) {
+            columnNumber++;
+        }
+----
+
+This loop will break when it finds the header; otherwise it will exit with a `NoSuchElementException` if it can't find it. You can find the row based on the returned number.
+
+[source,java]
+----
+By.cssSelector(
+    String.format("table#users-table tbody tr:nth-child(1) td:nth-child(%d)",
+        columnNumber))
+----
+
+==== Discussion
+
+This is a good first example of working with a section of a page's DOM, rather than with a single element. Certain page structures, such as forms and tables, are reasonably complex, and the relationships between the elements within them is important to locating the specific element you are interested in.
+
+This is also a great opportunity to create a __locator factory__:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/TdBy.java[TdBy.java]
+----
+public final class TdBy {
+    private TdBy() {
+    }
+
+    public static By cellLocation(int rowNumber, int columnNumber) {
+        return By.cssSelector(String.format("tbody tr:nth-child(%d) td:nth-child(%d)",
+            rowNumber, columnNumber));
+    }
+}
+----
+
+You'll notice that you can use XPath and CSS based locators interchangeably. But when should you use XPath, and when should you use CSS selector? There are no hard and fast rules, but as XPaths are oriented around the structure of the document you are looking at, and CSS around the styling, you can ask yourself the question: "Am I locating based on structure, or based on style?"
+
+Next, lets look at an example of chaining search context together.
+
+=== Technique 3: Narrowing down by locating within chained search contexts
+
+You can combine search contexts together. For example, if you can locate a form within a page, you can then easily find the submit button for that form by using the `findElement` method of the form. But if you need to search the whole page, you might have many buttons. Is this technique we will look at how we can chain searches together to find an element easily and accurately.
+
+==== Problem
+
+You have an element that is hard to find with a single locator.
+
+==== Solution
+
+`WebElement` implements `SearchContext`. This means you can chain calls together to narrow down the context until you find your element. Let's have a look at the raw HTML of the login page:
+
+[source,html]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/main/webapp/en/login.html[login.html] - <http://localhost:8080/login.html>
+----
+<div class="container">
+    <h1>Login</h1>
+
+    <form class="form-inline" id="login">
+        <div class="form-group">
+            <input name="email" class="form-control" placeholder="Email"/>
+            <input type="password" name="password" class="form-control"
+                placeholder="Password"/>
+            <input type="submit" value="Login" class="btn btn-primary"/>
+        </div>
+        <div class="form-group forgotten-password">
+            <a href="#" id="change-password" class="btn">
+                Forgotten Password</a>
+        </div>
+    </form>
+</div>
+----
+
+The `btn` class is used twice here. To find the "Forgotten Password" link, you can chain two `findElement` calls together to find the precise one you want:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/ChainedLocatorsIT.java[ChainedLocatorsIT.java]
+----
+driver
+    .findElement(By.className("forgotten-password")) // <1>
+    .findElement(By.tagName("a")); // <2>
+----
+<1> Find a form group for the forgotten password.
+<2> Find a link in that group.
+
+==== Discussion
+
+You have a number of ways to search for common elements. If the element is harder to find, then you can use a chain of `findElement` invocations to narrow down the search context until you have the element you want. This is really effective when working with forms. You can find the form with a carefully created locator, then be a bit looser finding the elements you want within the form:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/ChainedLocatorsIT.java[ChainedLocatorsIT.java]
+----
+WebElement loginForm = driver.findElement(By.id("login")); <1>
+WebElement emailInput = loginForm.findElement(By.name("email")); <2>
+WebElement passwordInput = loginForm.findElement(By.name("password"));
+WebElement submit = loginForm.findElement(By.className("btn-primary"));
+----
+<1> Locate the form itself.
+<2> Narrow down each element.
+
+This can resolve a number of issues with brittle location code.
+
+== Locator composition
+
+You have seen that we repeatedly perform the same operation: find an element within a page, then narrow down the scope to find another element. You have seen this with forms and tables. What you should try to do is to keep locators simple: find a cell within a table, or an input within a form. You can compose them together to provide more complex locating.
+
+WebDriver does not provide this out of the box, but the support library has a number of useful locators.
+
+[sidebar]
+.WebDriver Support Library
+****
+WebDriver provides a small support library. This contains a number of useful classes that are not part of the core library. These classes include support for (amongst other things) select lists, and Page Objects. These are well worthwhile including in your project.
+****
+
+=== Locating by ID or name
+
+This locator finds by the value of either ID or name attribute. This is useful for situations where you expect a page to change, and you want to be robust to that change. This is especially useful if the automation code doesn't live with the production code, and you can't guarantee they will get updated in step with one another. It is an example of __backward/forward__ compatibility. It means you can update you test before the change is made, and it will still pass both before and after the change has occured.
+
+Consider this password input:
+
+[source,html]
+----
+<input type="password" name="password" class="form-control"/>
+----
+
+It might be that the developers need to change the name to `j_password`. You can negotiate with them to add an ID to it:
+
+[source,html]
+---------------------------------------------------------------------------
+<input type="password" name="password" id="password" class="form-control"/>
+---------------------------------------------------------------------------
+
+Then you can use the following locator:
+
+[source,java]
+-----------------------------------------------
+driver.findElement(new ByIdOrName("password"));
+-----------------------------------------------
+
+This will work with before and after the change has been made. One thing to note is that if you use `ByIdOrName` with `findElements` (plural) you will get the super-set of elements that match: all elements that have the ID and name.
+
+=== Chained locators
+
+This locator performs a sequence of matches, drilling down into the DOM to find the element. It is probably best explained using an example of finding the email input within the registration form, but without using any major attribute of the email input:
+
+[source,html]
+----
+<form role="form" id="registration-form"> <1>
+    <div class="form-group">
+        <label> <2>
+            Email
+            <input type="email" name="email"  class="form-control"
+               placeholder="E.g. john.doe@swip.com"/> <3>
+        </label>
+    </div>
+  <!--- ... --->
+</form>
+----
+<1> Find form by ID "registration-form"
+<2> Find a label with the text "Email"
+<3> find an `input`
+
+[[by-chained]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/LocatorCompositionIT.java[LocatorCompositionIT.java]
+----
+driver.findElement(
+        new ByChained(
+                By.id("registration-form"),
+                By.xpath("//label[contains(.,'Email')]"),
+                By.tagName("input")
+        )
+);
+----
+
+The example in listing <<by-chained>> will first find the registration form by it's ID, then find the label within that form, and finally the input within that locator. Each locater is executed with the `WebElement` returned by the previous element. The preceding code is equivalent to this:
+
+[source,java]
+----
+driver.findElement(By.id("registration-form"))
+    .findElement(By.xpath("//label[contains(.,'Email')]"))
+    .findElement(By.tagName("input"));
+----
+
+Chained locators are useful when you want to mix and match different locators.
+
+=== Technique 4: Creating locator composers to provide backward/forward compatibility
+
+Imagine a new version of your web site is going to be released. But the HTML changed so that your locators no longer work -- frustrating! You could update the locator to the new version, but that might not be complete yet, or you could leave your tests "red" and make sure everyone knows that they need to be updated at some point in the future. Or, you could make sure your test pass with both the old and the new code. This technique will show you how.
+
+==== Problem
+
+You want to locate elements in a reliable and flexible fashion.
+
+==== Solution
+
+Create a locator factory that composes locators using matching operations such as `all`, `any` and `none`. For example, you can create an "all" locator as follows:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/AllBy.java[AllBy.java]
+----
+public class AllBy extends By {
+
+    private final By[] bys;
+
+    private AllBy(By... bys) {
+        this.bys = bys;
+    }
+
+    public static AllBy all(By... bys) { <1>
+        return new AllBy(bys);
+    }
+
+    @Override
+    public List<WebElement> findElements(SearchContext context) {
+        List<WebElement> elements = null;
+        for (By by : bys) {
+            List<WebElement> newElements = context.findElements(by);
+            if (elements == null) {
+                elements = newElements; <2>
+            } else {
+                elements.retainAll(newElements); <3>
+            }
+        }
+        return elements;
+    }
+}
+----
+<1> Static factory method.
+<2> If you have the first set of elements, initialize the list.
+<3> Otherwise, keep only the new elements.
+
+You can use this as follows:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/LocatorCompositionIT.java[LocatorCompositionIT.java]
+----
+driver.findElement(AllBy.all(By.tagName("input"), By.name("password")))
+----
+
+You can emulate the `IdOrName` locator with a `AnyBy`:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/AnyBy.java[AnyBy.java]
+----
+public class AnyBy extends By {
+    private final By[] bys;
+
+    private AnyBy(By... bys) {
+        this.bys = bys;
+    }
+
+    public static By any(By... bys) {
+        return new AnyBy(bys);
+    }
+
+    @Override
+    public List<WebElement> findElements(SearchContext context) {
+        List<WebElement> elements = new ArrayList<>();
+        for (By by : bys) {
+            elements.addAll(context.findElements(by)); <1>
+        }
+        return elements;
+    }
+}
+----
+<1> Add all the elements you find.
+
+This can be used as follows:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/LocatorCompositionIT.java[LocatorCompositionIT.java]
+----
+driver.findElement(AnyBy.any(By.id("email"), By.name("email")))
+----
+
+If you want to exclude matches, the code is straightforward:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/NotBy.java[NotBy.java]
+----
+public class NotBy extends By {
+
+    private final By by;
+
+    private NotBy(By by) {
+        this.by = by;
+    }
+
+    public static By not(By by) {
+        return new NotBy(by);
+    }
+
+    @Override
+    public List<WebElement> findElements(SearchContext context) {
+        List<WebElement> elements =
+            context.findElements(By.cssSelector("*")); <1>
+        elements.removeAll(context.findElements(by));
+        return elements;
+    }
+}
+----
+<1> Get every element on the page.
+
+For example, to find all contact check boxes on the registration page,
+but excluding the email box:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/LocatorCompositionIT.java[LocatorCompositionIT.java]
+----
+driver.findElements(
+        AllBy.all(
+                By.name("contact"),
+                NotBy.not(By.cssSelector("*[value='email']"))
+        )
+);
+----
+
+==== Discussion
+
+The hawk-eyed among you will have noticed the similarity to Hamcrest matchers. This is deliberate; it will make them easy to learn. The question you might want to ask is __"Why doesn't WebDriver come with these bundled?"__ Performance? Perhaps. The `NotBy` will need to return every element on the page.This might be quite slow, especially when working with a Selenium grid, or on pages with large numbers of elements.
+
+This is just one way to combine locating elements in a complex way.
+
+Next, we will look at a way to make pages easier to work with.
+
+== Making pages amenable to element locating
+
+One of the interesting challenges to page automation is that we are automating an application which we do not write ourselves. I think my biggest recommendation to automation is: if you can, get write-access to the source code of the application you're automating. If you find that there is an element that you can't locate without a complex selector, you can modify it to make it easier to work with.
+
+[cols=",",options="header",]
+|=================================
+|Item |Usage
+|ID attribute |JavaScript and CSS.
+|Name attribute |Form parameters.
+|Class attribute |Styling page.
+|CSS |Styling the page.
+|=================================
+
+Any one of these can be legitimately changed by their author. Nowhere in the list does it say "used for automation".
+
+=== Technique 5: Using a common CSS class prefix to create your own automation namespace
+
+The HTML of the web site is designed for making the web site look good and customers happy. But what about our test automation? We can please everyone! This technique will show you how to mark up the HTML in such a way that changes to the HTML needed to styling or anything else won't affect your tests.
+
+==== Problem
+
+Pages change causing automation code to break.
+
+==== Solution
+
+Get write access to the page source code. Add automation data to it. Revisiting the HTML for the shopping cart:
+
+[source,html]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/main/webapp/shopping-cart.html[shopping-cart.html]
+------------------------------------------------------------------------
+<input type="text"
+       name="cartDS.shoppingcart_ROW0_m_orderItemVector_ROW0_m_quantity"
+       class="form-control input-sm" value="1" size="2"/>
+------------------------------------------------------------------------
+
+The one aspect we can change without affecting the behavior of the page is the class name. We can append a new, special class to it, in this case `wd-cart-item-0`:
+
+[source,html]
+------------------------------------------------------------------------
+<input type="text"
+       name="cartDS.shoppingcart_ROW0_m_orderItemVector_ROW0_m_quantity"
+       class="form-control input-sm wd-cart-item-0" value="1" size="2"/>
+------------------------------------------------------------------------
+
+To break this down into its parts:
+
+`wd`:: An __automation prefix__ ("wd" for WebDriver, but you might want `auto` for automating).
+`cart-item-0`:: An __automation ID__ for us to access.
+
+We can use this as follows:
+
+[source,java]
+----
+driver.findElement(By.className(String.format("wd-cart-item-%d", 0)))
+----
+
+==== Discussion
+
+This technique relies on having access to the source code, and a clear and well-known agreement that classes prefixed with your automation prefix are only for automation, and can't be used for programming or other reasons. It would be easy for a new developer to accidentally undermine this technique if they don't know about it, so it's very important that everybody be aware of it.
+
+Rather than have the common prefix littered across your code, this technique can be combined with locator factories to produce more concise code, for example:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/ElementBy.java[ElementBy.java]
+----
+public final class ElementBy {
+    ...
+
+    public static By automationId(String id) {
+        return By.className("wd-" + id);
+    }
+}
+----
+
+Used as follows:
+
+[source,java]
+----
+driver.findElement(ElementBy.automationId(String.format("cart-item-%d", 0)))
+----
+
+
+== When to use each locator?
+
+We've covered both the built in locators, as well as some customized ones. But when to use each one? Here's a handy cheat-sheet to help you!
+
+[options="header,footer"]
+|=======================
+|Locator    |When to use it
+|ID         |When your element has a unique ID
+|Name       |When you're testing a form, and the input's name is unique
+|Class name |When the element has a unique class name
+|Tag name   |When you want to locate a page heading
+|Link text  |When you need to locate a link, and only care about one Language
+|CSS        |When you need a complex locator, or you have an automation prefix
+|XPath      |When you need a complex locator, and CSS will not work
+|Chained    |When you need a complex locator, but want to mix different types of locator
+|=======================
+
+== Summary
+
+* `SearchContext` is the main interface for locating elements, the methods `findElement` and `findElements` the primary methods.
+* You have several different methods of locating elements. These include by ID, name, class, CSS, and XPath.
+* Both XPath and CSS locators are powerful. This power can produce complexity, and therefore using patterns, such as composition and the strategy pattern, can greatly help to simplify their usage.
+* Creating __locator factories__ can make complex locators safe to create.
+* You can encapsulate complex page structures, such as tables, into helper classes. The Decorator Pattern is useful when you are doing this.
+* Hard to find elements can be located using the *navigational pattern*.
+* If you have access to the site you are automating, an __automation prefix__ can reduce the complexity of automating pages.
+
+Now that you understand how to locate elements within a page, it is time to move forward with covering the various methods of interacting with those elements. The focus of the next chapter will be working with the various methods that `WebDriver` and `WebElement` provide to interact with the page.

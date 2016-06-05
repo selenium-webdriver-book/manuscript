@@ -1,0 +1,862 @@
+= Encapsulating and Grouping elements
+
+:imagesdir: ../images/ch14_elements
+
+This chapter covers
+
+* Enriching `Browser` class to simplify the interaction of form elements
+* Encapsulating a retry mechanism to make tests robust
+* Organizing elements into logical groups
+
+In the last chapter we learnt that by encapsulating explicit wait into `ExplicitWait` interface, and having the `DelegateSearchContext` classes to implement it, so both `Browser` and `Element` classes also inherently implement it, we reduced the amount of code you need to complete some tasks.
+
+In this chapter you will see how to add more classes and methods which will enrich your framework and help you to support many of the common types of element you'll encounter when automating and testing your applications. For example, we are going to add method to allow you to set a value to an input field with only one method call, rather than going through a series steps: finding that element, clearing its text and sending keys. We will also show you how to add other methods to handle radio buttons, checkboxes and selects. This will make it easy and quicker to write tests and your tests will be more robust.
+
+By the end of the chapter you will have learned how to encapsulate common form elements, how to create a class that will automatically retry on failure, and how to break a page object down into simpler classes.
+
+== Enriching `Browser` class to simplify the interaction of form elements
+
+Part of the automation is dealing with various form elements, for example, `input`, `textarea`, `checkbox`, `select`, `radio` and `button`(or `input type=button`), as in the Registration Form from Chapter 3. It has all kinds of fields we need for a from,
+
+[[RegistrationForm.png]]
+image::RegistrationForm.png[title=Registration Form]
+
+In Chapter 3, Interacting with form elements on a page, we have shown you how to use the `sendKeys` and other methods to type in texts into an input field. There isn't a single way to set a form input's value. You always need these 3 steps,
+
+  1. Locate it as an instance of `Element` first
+  2. Clear its contents and
+  3. Then use the `sendKeys` method to type in the value.
+
+And we can review what we learnt from last chapter in the following figure, to see what methods we can use to improve the code from Chapter 3,
+
+image::Browser-in-ch13.png[title=Simplified class diagram of `Browser` and `Element`]
+
+.Steps used to enter text into an input field
+[width="80%",cols="3",options="header"]
+|======
+| Step                       | Method call                             | Defined in
+| Locating "email" `Element` | `browser.await (By.name("email"))` | `ExplicitWait`
+| Clearing old contents      | `email.clear()`                         | `DelegatingWebElement`
+| Typing in new value        | `email.sendKeys ("john@doe.com")`       | `DelegatingWebElement`
+|======
+
+And we can use the following code snippet to set a user name and password on the the registration form to register.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/RegistrationForm_v2_IT.java#L23-L37[RegistrationForm_v2_IT.java]
+----
+Element email = driver.await(EMAIL);  <1>
+email.clear();                   <2>
+email.sendKeys("john@doe.com");  <3>
+
+Element password = driver.await(PASSWORD);  <4>
+password.clear();
+password.sendKeys("secret");
+----
+<1> It uses 3 steps to set user name, `await` is a method from `ExplicitWait`
+<2> It clears the text in the input field, without this step, the value will be appended to the end of existing text
+<3> It sets the input field to "john@doe.com"
+<4> It uses 3 identical steps to set password
+
+And you can see the steps to set values into either input field or password field are identical, they both have 3 steps, first, call `browser.await(By.name("email"))` to locate the "email" input field, as you learnt from Chapter 13, `await` is a method from `ExplicitWait` and `Browser` inherits it since `Browser` extends `DelegatingWebDriver`, as shown in Figure 13.2 Class Diagram of `DelegatingWebDriver`. Then it clears the text in the input field. Finally it calls the `sendKeys` method of `Element` to set the value. This code looks almost same as Listing 3.2. What we did in Chapter 13 only improves the stability of the code, but haven't improved the cleanness of the code yet.
+
+There is still code duplication. The code is more verbose than necessary. What different are only the name of the field and value to be set. It is desirable to treat these steps as a unit of work.
+
+Besides input, there are other elements used in HTML forms, which are amongst the most complex standard HTML elements. Let us look at a `radio` button as another example.
+
+Unlike other form elements, a `radio` button will share its name with other elements within the same form. This means that we must find all the elements that match it using one locator, and then iterate over them to find which one is selected or the one we want to select.
+
+Using terms in WebDriver, when you want to see which radio button is selected, you need do the following 3 steps,
+1. Locating a list of `WebElement`.
+2. Making sure it is not empty.
+3. Looping through it to find the element with attribute `checked` being `true`.
+
+This code example demonstrate how to check which choice is checked for "Channel" and "Frequency" on __Radio Button__ form (Figure <<RegistrationForm.png>>)
+
+[[NaiveRadioIT]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/NaiveRadioIT.java#L29-L42[NaiveRadioIT.java]
+----
+@Test
+public void conact() throws Exception {
+    List<WebElement> radiobuttons =
+        browser.await(CONTACT); <1>
+
+    assert radiobuttons.size() >= 2;  <2>
+
+    for (WebElement e : radiobuttons) {  <3>
+        if (Boolean.valueOf(e.getAttribute("checked"))) {  <4>
+            value = e.getAttribute("value");  <5>
+            break;    <6>
+        }
+    }
+
+    assertEquals("email", value);  <7>
+}
+----
+<1> Find a list of elements with the name "contact"
+<2> Make sure it has at least two elements, otherwise it is not a proper use of radio buttons
+<3> Loop through the radio buttons
+<4> Find the one with the attribute "checked"
+<5> Get the value of radio button found from above
+<6> Break the loop, this is a good practice
+<7> You can see the checked item is "email"
+
+From the above examples, we can see it is necessary to refactor the common logic into methods to reduce duplicated code and provide clean interfaces to interact with form elements. We are going to introduce the following techniques to make tasks to interact with form elements easier and robust.
+
+=== Technique 44: Encapsulating form operations to reduce code complexity
+
+This technique will look at reducing the work needed to test pages containing forms.
+
+==== Problem
+
+From these two examples we demonstrated previously, you can see, there are duplicated code related to form operations, such as entering text and selecting radio buttons, as well as selecting drop-down and ticking checkboxes. As a professional developer, you may want to reduce the total number of lines of code you have to write to complete forms.
+
+==== Solution
+
+It's useful to encapsulate the locating and keying operations into one unit of work: find the element using a given locator, and then interact with the element. This interaction might be to type a value into the input field by entering text, clicking checkboxes, radio buttons, or selecting items from drop-down lists.
+
+===== Text and password inputs and textarea
+
+Adding a `setInputText` method to the `Browser` class to handle the text field input:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v4_5/Browser.java#L14-18[Browser.java]
+----
+public void setInputText(Supplier<By> by, String text) {   <4>
+    Element element = await(by);   <1>
+    element.clear();                    <2>
+    element.sendKeys(text);           <3>
+}
+----
+<1> Find the element using `await` method with a given locator `by`
+<2> Clear the text of that element
+<3> Set the value into the input field
+<4> This method is to set the input field found using `by` to given `text`
+
+We define the following enum constants in `Name` which implements `Supplier<By`.
+
+[source,java]
+----
+EMAIL("email"),
+PASSWORD("password"),
+----
+
+The earlier code can be rewritten in the following more concise form.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/RegistrationForm_v4_IT.java#L22-L23[RegistrationForm_v4_IT.java]
+----
+driver.setInputText(EMAIL "john@doe.com"); <1>
+driver.setInputText(PASSWORD, "secret");
+----
+<1> One line of code replaced 3 lines of code
+
+Currently, `setInputText` only accepts strings. You might want to accept other types of data, such as numbers. You can do this by changing the method to accept any object, and then use the object's `toString` method to convert it to a string.
+
+[source,java]
+----
+public void setInputText(Supplier<By> by, Object text) {
+    Element element = await(by);
+    element.clear();
+    element.sendKeys(text.toString());
+}
+----
+
+And you can just call the method with the parameter to indicate the name of the field to set and the value to be set, and the value can be any object and you don't need to explicitly convert it into string.
+
+[source,java]
+----
+    int value = 5;
+    ...
+    browser.setInputText(By.name("amount"), value);
+----
+
+Please compare it with the following code which convert integer value into a string explicitly before passing it as the parameter,
+
+[source,java]
+----
+browser.setInputText(By.name("amount"), String.valueOf(value));
+----
+
+You can also add a method to read the input's value and another method to convert the text to upper case,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L53-L55[Browser.java]
+----
+public String getInputText(Supplier<By> by) {
+    return await(by).getAttribute("value");
+}
+----
+
+You can see how simple it became to set values into input or password fields, this method can be used to set value to a text area HTML element as well.
+
+===== Radio buttons
+
+We can add a `getRadio(By by)` method into `Browser` class to handle the request to read the value from a radio group to see which one is selected, the logic can be copied from Listing <<NaiveRadioIT>>. Now this `getRadio` can be used to serve that purpose and don't need to repeat the same code again in other tests,
+
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L83-L94[Browser.java]
+----
+public String getRadio(Supplier<By> by) {
+    List<WebElement> radiobuttons = findElements(by);   <1>
+
+    assert radiobuttons.size() >= 2;
+
+    for (WebElement e : radiobuttons) {
+        if (Boolean.valueOf(e.getAttribute("checked"))) {
+            return e.getAttribute("value");
+        }
+    }
+    return null;
+}
+----
+<1> We copied logic from `NaiveRadioIT` here
+
+And we can rewrite the test in Listing <<NaiveRadioIT>> as following, you can see how simple it became,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/RadioIT.java#L25-L28[RadioIT.java]
+----
+@Test
+public void conact() throws Exception {  <2>
+    assertEquals("email",  browser.getRadio(CONTACT)); <1>
+}
+----
+<1> `Name.CONTACT` is a `Supplier<By>` enum constant
+<2> Now the test body is just one line of code
+
+Naturally, we'll want a method that will checked the desired element:
+
+[[set-radio]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L68-L81[Browser.java]
+----
+public void setRadio(Suppler<By> by, String value) {
+    List<WebElement> radiobuttons = findElements(by);  <1>
+
+    assert radiobuttons.size() >= 2 ;
+
+    for (WebElement e : radiobuttons) {
+        if (value.equals(e.getAttribute("value"))) { // <2>
+            e.click(); // <3>
+            return;
+        }
+    }
+    throw new IllegalArgumentException(
+         "unable to find element with value " + value); //<4>
+}
+----
+<1> Find a list of elements with the same locator.
+<2> Filter those radio buttons so we only have the ones with the correct value.
+<3> Click it and return.
+<4> If the elements was not found, throw an exception.
+
+This leads to only one line of code to set the value for each `radio` button group. Without using the framework, you need to repeat Listing <<set-radio>> for each `radio` group, which results in a lengthy test that is very difficult to maintain.
+
+[source,java]
+.Setting radio buttons
+----
+browser.setRadio(Name.CONTACT, "phone");
+browser.setRadio(Name.FREQUENCY, "weekly");  <2>
+
+browser.setRadio(Name.FREQUENCY, "monthly"); <1>
+----
+<1> This code will get an exception since "monthly" isn't a choice in the radio buttons and it is same if you don't use the framework
+<2> `Name.FREQUENCY` is a `Supplier<By>` enum constant
+
+These methods help make it easier to read or select a value from `radio` button group. Now, let's look at checkboxes.
+
+===== Checkbox
+
+[[select-html]]
+image::checkbox.png[title=A Checkbox and "Inspect Element" view]
+
+Similarly, we can reduce the complexity of checking checkboxes by adding a method to the `Browser` class,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L57-L62[Browser.java]
+----
+public void setCheckboxValue(Supplier<By> by, boolean value) {
+    Element checkbox = await(by);
+    if (checkbox.isSelected() != value) {  <1>
+        checkbox.click();
+    }
+}
+----
+<1> The condition is used to determine whether to do a click. If the checkbox is already checked and you want to set it to true, there will be no need to click.
+
+Why do we add these two methods to `Browser`? Why don't we just use the `click` method from `WebElement`? The framework will allow us to reduce the amount of code needed to reliably click checkboxes. Imagine that, if you don't have these two methods, you need to have the condition check in each place you need to check or uncheck a checkbox. Since whether you need to do a click depends on whether the checkbox is checked or not.
+
+[source,java]
+.How to use the method
+----
+browser.setCheckboxValue(Name.TERMS, <3>
+                                     true) <1>
+
+browser.setCheckboxValue(Name.TERMS, false) <2>
+----
+<1> check the checkbox
+<2> uncheck the checkbox
+<3> `Name.TERMS` is a `Supplier<By>` enum constant
+
+Some readers may ask, "why don't you have a method called `checkCheckbox` to check the checkbox and a method called `uncheckCheckbox` to uncheck it?" Normally you will use a variable to hold a boolean value, and use it to decide whether to check or uncheck the checkbox. If you have those two methods, you have to have code with conditional statement.
+
+[source,java]
+.Suboptimal API design
+----
+if (toCheck) {                              <1>
+   browser.checkCheckbox(Name.TERMS)
+} else {
+   browser.uncheckCheckbox(Name.TERMS)
+}
+----
+<1> You need to have a condition statement to decide to check or uncheck
+
+But `setCheckboxValue` is just one method call. It is clear the design we chose is terser and more robust, you can see the following code using `setCheckboxValue` is very straight forward. It saves you from adding `if` statement in the test code.
+
+[source,java]
+----
+browser.setCheckboxValue(Name.TERMS), toCheck)
+----
+
+That's the reason we only have one method `setCheckboxValue`, not having `checkCheckbox` and `uncheckCheckbox` and think this design is better.
+
+Also, we can add a method to get the checked value:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L64-L66[Browser.java]
+----
+    public boolean isChecked(Supplier<By> by) {
+        return await(by).isSelected();
+    }
+----
+
+Again, the interaction of checkboxes is simplified to one method call and the details are encapsulated into those methods and developers can just use that method to set to and read from checkboxes. This method greatly improves the productivity of the interaction with checkbox element.
+
+Now let us look at another common element, Select.
+
+===== Select and multiple select
+
+The Selenium support library provides a `Select` class to handle drop-down operations. But while this works well with static HTML element, it assumes the `option` elements are embedded inside the `select` element as per figure <<select-html>> below.
+
+[[select-html]]
+image::select.png[title=A select and "Inspect Element" view]
+
+In web applications built using AJAX, the select maybe empty when clicked on, and then populated asynchronously using JavaScript. the `Select` class does not work for these cases. But, we can add a framework method to handle this scenario. Using a `WebDriverWait` we click on the select and then wait until there are options to choose from:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L96-L121[Browser.java]
+----
+public Select getSelect(Supplier<By> by) {
+    final Element element = await(by);   <1>
+    await(new Predicate<ExplicitWait>() {   <2>
+        @Override
+        public boolean test(ExplicitWait driver) {
+            element.click();
+            return !element.findElements(TagName.OPTION).isEmpty(); <4>
+        }
+    });
+    return new Select(element);
+}
+
+public void selectByVisibleText(Supplier<By> by, String ... values) {  <3>
+    for (String v: values) {
+        getSelect(by).selectByVisibleText(v);
+    }
+}
+----
+<1> Find the select element.
+<2> Wait for options to be populated.
+<3> This can be used to select one or more options
+<4> `TagName.OPTION` is a `Supplier<By>` enum constant
+
+[sidebar]
+.Replace anonymous inner class with Lambda Expression
+****
+If you use Java 8, you can use lambda expression in above code, as in link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v4_6/Browser.java#L108-L115[Browser.java]
+
+[source,java]
+----
+public Select getSelectLambda(Supplier<By> by) {
+    Element element = await(by);
+    until((ExplicitWait driver) -> {
+        element.click();
+        return !element.findElements(By.tagName("option"))
+           .isEmpty();
+    });
+    return new Select(element);
+}
+----
+
+Also, in Java 8, keyword `final` is longer needed here but it is still a final variable
+****
+
+===== Click and DoubleClick Mouse Action
+
+Besides normal form elements, we can also encapsulate mouse action into `Browser`. Let us revisit Listing 3.11 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/MouseInputIT.java#L30-34[MouseInputIT.java]
+
+[source,java]
+----
+WebElement submitButton = driver.findElement(BUTTON);
+new Actions(driver)
+        .doubleClick(submitButton)
+        .perform();
+----
+
+We can move this logic of locating an element and creating an `Action` object and doubleClick it into `Browser` class as `doubleClick(by)` method.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java##L127-L130[Browser.java]
+----
+public void doubleClick(Supplier<By> by) {  <1>
+    Element element = await(by);
+    new Actions(delegate).doubleClick(element).perform();
+}
+----
+<1> Now you can just call `browser.doubleClick(by)`
+
+And then Listing 3.11 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/MouseInputIT.java[MouseInputIT.java] can be rewritten as following, which is cleaner and concise.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/MouseInputIT.java#L22[MouseInputIT.java]
+----
+driver.doubleClick(BUTTON);
+----
+
+Here is an updated class diagram of `Browser` and you can see these methods are in `Browser` class,
+
+image::Browser.png[title=Class diagram of `Browser` and its super classes and interfaces]
+
+And this table illustrates what method we can use to change the value or read the value for each HTML element,
+
+.Methods in `Browser` for form element manipulation
+[width="80%",cols="3",options="header"]
+|======
+| HTML Element          | Set value              | Read
+| input type="text"     | `setInputText`         | `getInputText`
+| input type="password" | `setInputText`         | `getInputText`
+| input type="email"    | `setInputText`         | `getInputText`
+| textarea              | `setInputText`         | `getInputText`
+| input type="checkbox" | `setCheckboxValue`     | `isChecked`
+| input type="radio"    | `setRadioValue`        | `getRadioValue`
+| select                | `selectByVisibleText`  | `getSelect(by) .getSelectedOptions`
+| input type="button"   | `doubleClick`, `click` | `getInputText`
+| button                | `doubleClick`, `click` | `getText`
+|======
+
+And the old registration form test can be written as following,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/RegistrationForm_v4_IT.java#L22-L29[RegistrationForm_v4_IT.java]
+----
+driver.setInputText(EMAIL, "john@doe.com");
+driver.setInputText(PASSWORD, "secret");
+driver.selectByVisibleText(HEAR_ABOUT, "Friend");       //<1>
+driver.setRadio(CONTACT, "email");
+driver.selectByVisibleText(INTEREST, "Movies", "Music");     //<2>
+driver.setInputText(TELLUS, "---");
+driver.setCheckboxValue(TERMS, true);
+driver.click(BUTTON);
+----
+<1> Select a value on single select
+<2> Select multiple values on a multiple select
+
+You can see it is very clean, but it may not still be clean if the fields become more and more. We will talk about this in this chapter how to handle the page with many input fields.
+
+==== Discussion
+
+You've seen some examples of how you can add useful methods to your automation framework. These will reduce the amount of code in your tests. You've also see how you can reduce the number of issues you have by adding error correction code into your framework.
+
+Until now, all form related operations can only be accessed from `Browser`, what if we want to have those methods available from `Element` as well?
+
+It is quite simple, just move those methods into an interface and have both `Browser` and `Element` implement that interface!
+
+Here is the class diagram which contains `FormElements`. You can see those methods are moved from `Browser` class and now become available for `Element`. They are helpful in understanding some classes introduced later.
+
+image::FormElements.png[title=Class diagram of `FormElements`]
+
+Of course you can move those methods into `DelegatingSearchContext` and they will still be available from both `Browser` and `Element`. But it is more cohesive to have them in their own place, a `FormElements` interface. This way, it is more compliant with *Interface segregation principle* footnote:[https://en.wikipedia.org/wiki/Interface_segregation_principle]
+
+[sidebar]
+.Interface segregation principle
+****
+The interface-segregation principle (ISP) states that no client should be forced to depend on methods it does not use.[1] ISP splits interfaces which are very large into smaller and more specific ones so that clients will only have to know about the methods that are of interest to them. Such shrunken interfaces are also called role interfaces.[2] ISP is intended to keep a system decoupled and thus easier to refactor, change, and redeploy. ISP is one of the five SOLID principles of Object-Oriented Design.
+
+
+https://en.wikipedia.org/wiki/SOLID_(object-oriented_design)
+****
+
+Next, we'll look at how we can create a retry mechanism that will help in situations where a page changes while you are testing it.
+
+== Handling flakiness with a retry
+
+If you have worked on web automation long enough, you will have known that sometimes the test could fail for no clear reason. 98% of time it passes, but fails for the 2% of time. You can't really debug it since it is difficult to reproduce.
+
+For example, we have created a framework which takes a screenshot whenever a button or link is clicked, so we knew what the input values had been set before submitting the form. we found strange behavior with the `sendKeys` method call of `WebElement`. When the test failed, we could see the input field was blank, which means the `sendKeys` method didn't execute correctly, but it also didn't give a stack trace to indicate a failure. So it failed silently and if we hadn't recorded the screenshot before the button was clicked, we wouldn't have noticed this behavior.
+
+[[billing-informaiton]]
+image::Empty.png[title=Input without value even the logic is executed]
+
+For example, we browsed screenshots for the failed test and we found this screenshot. It says "may not be empty" to one of the fields, but there is logic to set a value to that field in the test script. To make think more difficult, this test doesn't always fail. It just fails occasionally without any clue. And we are sure WebDriver has located that field, otherwise it would throw a `NoSuchElementExeception`, so we can logically deduct that the `sendKeys` method doesn't already work. But there is no easy way for us to find out why it doesn't work sometimes since when we spend time debugging the test, it always works. Maybe due to the delay caused by the pausing of the program, it gives browser sometime to do things differently than running on the CI server.
+
+Now we are going to show you how to handle this kind of problem by introducing the following technique.
+
+=== Technique 45: encapsulating retry
+
+Sometimes you may find that an operation on an element does not complete as you expect. You type into an input field, but then you find that the input does not have the text you expect. This technique will show you how to encapsulate a retry mechanism that checks that the action has completed correctly before continuing.
+
+==== Problem
+
+Tests fail as not enough time has passed for the page to be in the expected state, as stated in the beginning of this section, the `sendKeys` method doesn't work as expected but we can't figure out what caused problem.
+
+==== Solution
+
+Create a class that encapsulates retry.
+
+WebDriver cannot tell you when a page has changed. Instead, if the page is not as you expect then you must poll the page until it is. WebDriver provides a built in way to wait for elements to be in a certain state, but this does not easily allow you to click or type as part of that action.
+
+Add a retry mechanism into the logic of entering text into input fields. If the value of the input field is not the same as the value it tries to set, try to do it again until the maximum number of attempts has been reached.
+
+To achieve this goal, we need to create an interface `Attemptable` with only one method `attempt`, so we can provide an implementation for what need to be attempted inside that method body. If you already use Java 8, you may already know that you can use a lambda expression to provide that implementation. If you still use Java 7 or below, you have to use an anonymous inner class in the place of the Java 8 lambdas express.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/robust/Attemptable.java#L3-L5[Attemptable.java]
+----
+public interface Attemptable {
+    void attempt() throws Exception;
+}
+----
+
+And we can pass the implementation of `Attemptable` interface as a parameter into the `attempt` method of a `Retry` class. The `Retry` class has a constructor which specifies,
+ 1. How many times it will retry
+ 2. What the interval between each retry, this is achieve by the second and third parameters
+
+And in the `attempt` method of the `Retry` class, it simply execute the `attempt` method of the `Attemptable` and repeats it if any exception is caught, until the maximum count is reached.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/robust/Retry.java#L5-L33[Retry.java]
+----
+public class Retry {
+    private final long interval;
+    private final TimeUnit unit;
+    private long count;
+
+    public Retry(int count, int interval, TimeUnit unit) {...} //<1>
+
+    public void attempt(Attemptable attemptable)  {
+        for (int i = 0; i < count; i++) {
+            try {
+                attemptable.attempt(); // <2>
+                return;
+            } catch (Exception e) {
+                if (i == count - 1) { // <3>
+                    throw new IllegalStateException(e);
+                }
+            }
+            try {
+                unit.sleep(interval); // <4>
+            } catch (InterruptedException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+    }
+}
+----
+<1> You can specify how many times it retries and the interval between each retry.
+<2> Attempt the task, and return if successful.
+<3> If you have run out of attempts, throw the exception.
+<4> Otherwise, wait before trying again.
+
+You can see the relationship between `Retry` and `Attemptable` in the following class diagram.
+
+image::Retry.png[title=Class diagram of Retry]
+
+The `setInputText` method of the `Browser` class can be rewritten to retry until the value is what we were attempting to set it to:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L24-L38[Browser.java]
+----
+public void setInputText(Suppler<By> by, String value) throws Exception {
+    Retry retry = new Retry(5, 1, TimeUnit.SECONDS); // <1>
+
+    retry.attempt(
+        new Attemptable() {   <2>
+            @Override
+            public void attempt() throws Exception {
+                Element element = findElement(by);   <3>
+                element.clear();
+                element.sendKeys(value);   <4>
+                assert value. element.getAttribute("value"));  <5>
+            }
+        }
+    );
+}
+----
+<1> A `Retry` instance is created to retry 5 times at 1 second intervals.
+<2> Use an anonymous inner class to specify what needs to be retried.
+<3> Locate the input field.
+<4> Set the text.
+<5> Assert the text input is successful, if not we'll retry.
+
+We can use a sequence diagram to illustrate the interaction of these participants,
+
+image::Retry-seq.png[title=Sequence diagram of setInputText using Retry]
+
+
+[sidebar]
+.Replace anonymous inner class with Lambda Expression
+****
+If you use Java 8, you don't need anonymous inner classes in your code, here is part of the example written using lambda expression, link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L40-L51[Browser.java]
+
+[source,java]
+----
+retry.attempt(() -> {
+    Element element = findElement(by);
+    element.clear();
+    element.sendKeys(value);
+    assertEquals(value, element.getAttribute("value"));
+});
+----
+
+We will show you more examples in Lambda Expression later
+****
+
+==== Discussion
+
+We've only shown how to apply this to inputs, by this could easily be applied to any element. For example, a select that only loads when you click on it, as discussed earlier in the chapter.
+
+Some readers may ask, why don't you use WebDriverWait? It's because, there is no problem of finding the element and the sendKeys method call executes without any problem, but sometimes the text is not entered into the text field on web page. This causes the test passes most of times but fails sometimes. The exact reason is still unknown. Retry solves this problem nicely. So we use this pragmatic approach rather than spending rest of out life to figure out what's wrong with the sendKeys method call.
+
+If you ask us to give any suggestions for choosing how long to wait or how many times to retry, we don't have exact number to tell you, please start from 1 second internal and maximum 5 times as illustrated in the code example. And if that still causes problem, maybe you can increase the retry times or waiting time or combination of both. This is not rocket science, it is more experimental.
+
+Next, we are going to have a look how to manage a page with a lot of elements.
+
+== Grouping elements for clarity and maintainability
+
+Please start the web application we provide with the book, and go to this url, http://localhost:8080/bookstore/cart, you will see a Shopping Cart page with following form among the other forms.
+
+[[Other_Information_Form]]
+image::other-information.png[title=Other Information Form]
+
+As you can see from the screenshot of __Other Information Form__ illustrated in Figure <<Other_Information_Form>>, there are many fields, including input fields of "Redemption code",  "Billing email", checkboxes of "Send order messages to this address" and "would you like to rate this merchant?" and so on. If we expose all the fields as individual elements on the page object, the page object would be a very big class with many methods. And it is difficult to understand and maintain. So we introduce the next technique to ease the maintenance of page with many fields.
+
+=== Technique 46: Organizing elements into logical groups
+
+This next technique will show you how to simplify more complex page objects by breaking them down into smaller parts using logical groups.
+
+==== Problem
+
+On a page with many elements, a page object has become hard to understand because it is large.
+
+==== Solution
+
+In software development, there is a technique called *Delegate Pattern* footnote:[https://en.wikipedia.org/wiki/Delegation_pattern], instead of having one class that does everything, it breaks out some helper classes to manage the details. The master class just delegates the work to its helper classes. It is widely used to reduce the complexity of the code. We are going to create page objects by composing objects together by applying this principle.
+
+On some pages, there are many many elements that you need to interact with. If we expose all the elements via a page object, it will have many many methods. Lets consider the forms illustrated in Figure <<billing-information>> and <<Other_Information_Form>>, which are on the same page of bookstore application. To complete this form, you need complete over twenty fields, which could result in a page object with over twenty fields. Rather than have a single complex page object, this class could be broken up into two classes, one for the "billing information", and one for the "other information".
+
+For now, let us use the fields on __Other Information__ form (Figure <<Other Information Form>>) and write a `ShoppingCartPage` class to modify the value of those fields. We can see that it has the following fields:
+
+* An input for a coupon/promotional code.
+* An input for an email address.
+* Two check boxes: one to receive emails about the order, and a second one to receive emails to allow the buyer to rate the merchant.
+* A set of radio buttons to choose mailing options.
+* An input for comments.
+
+
+[sidebar]
+.Replace anonymous inner class with Lambda Expression
+****
+If you use Java 8, you can rewrite the for loop using Stream API, it is not necessarily cleaner than before, link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/domain/MailingOption.java#L38-L46[MailingOption.java]
+
+[source,java]
+----
+public static MailingOption fromLambda(String string) {
+    Optional<MailingOption> first = Arrays.stream(values())
+        .filter((o) -> string.equals(o.string))
+        .findFirst();
+     if (first.isPresent()) {
+         return first.get();
+     }
+    throw new IllegalArgumentException(
+        "Can't find an enum with this string " + string);
+}
+----
+
+If you are interested in learning more of Stream API, here are Java Docs and tutorial from Oracle,
+https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html
+https://docs.oracle.com/javase/tutorial/collections/streams/
+
+****
+
+Just like what we describe in the beginning of this section, if we put every fields into this class as individual element, the class will be very lengthy,
+
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/pages/NaiveShoppingCartPage.java#L6-L53[NaiveShoppingCartPage.java]
+----
+public class NaiveShoppingCartPage  {
+
+    private final Browser browser;
+
+    public void setCoupon(String coupon) throws Exception {
+        browser.setInputText(By.id("gc-redemption-code"), coupon);
+    }
+
+    public String getCoupon() {
+        return browser.getInputText(By.id("gc-redemption-code"));
+    }
+    ... //<1>
+}
+----
+<1> The rest of the methods are omitted, otherwise this listing will cover two pages
+
+And the test is lengthy too,
+
+[[longer_test]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/NaiveShoppingCartPageIT.java#L#L34-L47[NaiveShoppingCartPageIT.java]
+----
+@Test
+public void weShouldBeABleToCompleteOtherInformationIndividually() {
+    page.setComment("no comments");                                    //<1>
+    page.setCoupon("no code");     //<2>
+    page.setEmail("joe@email.com");
+    page.setRating(true);
+    page.setSendOrderMessages(true);
+
+    assertEquals("no comments", page.getComment());
+    assertEquals("no code", page.getCoupon());
+    assertEquals("joe@email.com", page.getEmail());
+    assertTrue(page.isSendRatingEmail());
+    assertTrue(page.isSendOrderMessages());
+}
+----
+<1> All these fields need to be set and read individually, imagine this page are used in many tests, how much duplicate code
+<2> page is an instance of `NaiveShoppingCartPage`
+
+Remember, right now it is just for __Other Information__ only. There are other forms on this page as well, With all the other fields for __Billing Address__ and __Credit Card Information__ added to the same class, the `NaiveShoppingCartPage` class will be even longer and the test will be longer too.
+
+We are going to show you a different way of doing things. What we can do is to create a Java Bean class, `OtherInformation`,
+
+[[OtherInformation]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/domain/OtherInformation.java#L8-L44[OtherInformation.java]
+----
+public class OtherInformation extends DomainBase {
+    public final String couponCode;    <3>
+    public final String email;
+    public final boolean sendOrdersToEmail;
+    public final boolean sendRatingEmail;
+    public final String mailingOption;
+    public final String comments;
+
+    public OtherInformation(String couponCode,...) { <2>
+        this.couponCode = couponCode;
+        ...  <1>
+    }
+}
+----
+<1> Just assign the parameters to instance variables.
+<2> The parameters are same as the instance variables
+<3> Since all instance variables are final, so no getters and setters are needed
+
+[sidebar]
+.Java Bean?
+****
+As a Java developer, you probably already noticed that this class is not a Java Bean. That's right. It is not a Java Bean, this class is immutable. So we can expose all fields as public final variables. You don't need any getter or setter methods. To create the instance of the `OtherInformation`, just call its constructor. This is not the approach of Java Bean, which allows change after creation. The instance of this class can't be modified once it is created. It fits perfectly for us to prepare for test data.
+****
+
+Here is the code to create instance of `OtherInformation` class
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/ShoppingCartPageIT.java#L26-L33[ShoppingCartPageIT.java]
+----
+new OtherInformation(                       //<1>
+        "no code",
+        "joe@email.com",
+        true,
+        true,
+        "Weekly newsletter--New books, updates, news, and special offers",
+        "no comments");
+----
+<1> Construct an instance of OtherInformation.
+
+You can access `sendRatingEmail` directly read this public immutable field. But you can't modify it. It saves from having many getter methods in `OtherInformation` class.
+
+[source,java]
+----
+other.sendRatingEmail;
+----
+
+Then we can use this in an `OtherInformationForm` class as the method parameter,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/pages/OtherInformationForm.java#L29-L39[OtherInformationForm.java]
+----
+public class OtherInformationForm {
+
+    public OtherInformation getOtherInformation() {...}
+
+    public void setOtherInformation(OtherInformation info) {     //<1>
+        browser.setInputText(COUPON_CODE, info.couponCode);
+        browser.setInputText(BILLING_EMAIL, info.email);
+        browser.setInputText(COMMENTS, info.comments);
+        browser.setCheckboxValue(CONFIRM_EMAIL, info.sendOrdersToEmail);
+        browser.setCheckboxValue(RATINGS, info.sendRatingEmail);     //<2>
+        browser.setRadio(MAILING_OPTION, info.mailingOption);
+    }
+}
+----
+<1> `OtherInformation` is used as a parameter here
+<2> Access `sendRatingEmail` directly using public immutable field.
+
+These two classes split the data and the operations into two classes. Then they can be used in the `ShoppingCartPage` class. Instead of having all the fields as separate setter methods, there is just one setter and one getter method on the `ShoppingCartPage` class.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/pages/ShoppingCartPage.java#L6-L21[ShoppingCartPage.java]
+----
+public class ShoppingCartPage  {
+
+    private final OtherInformationForm otherInformationForm;
+
+    public void setOtherInformation(OtherInformation otherInformation) {
+        otherInformationForm.setOtherInformation(otherInformation);  //<1>
+    }
+
+    public OtherInformation getOtherInformation() {
+        return otherInformationForm.getOtherInformation();   //<2>
+    }
+}
+----
+<1> It delegates the call to `otherInformationForm` variable's setter method
+<2> It delegates the call to `otherInformationForm` variable's getter method
+
+And the test can be as simple as this,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/ShoppingCartPageIT.java#L44-L48[ShoppingCartPageIT.java]
+----
+@Test
+public void weShouldBeABleToCompleteOtherInformation()  {
+    page.setOtherInformation(info);                   <1>
+    assertEquals(info, page.getOtherInformation());
+}
+----
+<1> page is an instance of `ShoppingCartPage` class and we use one method call to set other information.
+
+Please compare this test with only 2 lines of code with Listing <<longer_test>> which has 10 lines of code and you can see it improves the readability of test.
+
+==== Discussion
+
+You can see that splitting the code into small logical groups that we have made the code simpler and more cohesive. Instead of having the `ShoppingCartPage` class to handle all the individual form elements on __Other Information__ form, it only handles `OtherInformationForm` class and leaves all the details to the `OtherInformationForm` class.
+
+== Summary
+
+* Encapsulate the behavior related to different elements into their own classes to reduce duplicated code,
+* Simplify complex operations into methods for commonly used elements on forms such as text inputs, checkboxes, radio buttons and select drop-downs.
+* Retry using a retry mechanism to make tests more robust and less prone to failing.
+* Organize elements into logical groups rather than exposing them as individual fields to make your page object classes easier to understand and maintain.
+
+In the next chapter you will learn how to apply the techniques learnt prior to this chapter and use them to build an automation for a series of pages to automate a page flow which is essential in testing a web based application.

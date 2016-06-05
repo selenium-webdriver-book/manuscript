@@ -1,0 +1,847 @@
+= Automating a page flow
+
+:imagesdir: ../images/ch15_pageflow
+
+This chapter covers
+
+* Manually navigating the page flow to understand what to be automated
+* Creating domain classes to represent important data for the page flow
+* Creating page classes to represent important pages in the page flow
+* Automating the entire page flow using data for major page flows
+
+// (1) why should the reader care?
+
+So far in this book we have shown ideas and techniques that we hope will deal with problems you might encounter when you automate and test specific parts of web page. When writing a test, you'll often find yourself a test scenario that mean you need to work with several pages in a series of operations where you are locating, interacting and verifying. We call the act of automating a sequence of operations that span multiple pages **page flow**. Understanding page flow concepts, and being able to apply them, will help you become effective and efficient when testing web applications.
+
+// (2) this chapter will cover...
+
+This chapter will cover manually navigating the pages, so you can plan out how a test should be written. We'll look at how to create classes that represent the contents of a page, and introduce a technique for automatically retrying operations when problems occur.
+
+// (3) at the end of this chapter you will have learnt...
+
+At the end of this chapter you will have learnt how to easily and competently automate and test a page flow.
+
+== Manually navigate the page flow to understand what to be automated
+
+On shopping sites, users normally need to go through a series of pages to make a purchase.  For example, searching on a search page, selecting the product on product page, setting a quantity on shopping cart page, entering shipping and payment information on shipping and payment pages and finally making a decision to complete the transaction. The web site will also display a confirmation page to let the users know whether the transaction is processed successfully or not. As the quality control engineer for this kind of web site, your job requires writing quality automation scripts to make sure the application can handle navigation and data entry to fulfill the purchase processing. In order to write automation scripts, first you need to know how to navigate the page flow manually and define a sequence of steps which can be automated using Selenium WebDriver.
+
+Let us start by visiting this famous bookstore at http://localhost:8080/bookstore/.
+
+[[Manning_Homepage]]
+image::bookstore.png[title=Bookstore Homepage]
+
+We are going to go to home page, search for a book called "Selenium WebDriver in Practice" and click the link on search results to load that book. Then click "add to cart" button to go to shopping cart page and enter required information to make a purchase. We will enter wrong information so the transaction won't go through. (But if you really like the book, you can give correct information and make a purchase.) The purchase flow can be illustrated by this diagram in Figure <<Page_Flow>>
+
+[[Page_Flow]]
+image::page-flow.png[title=Page Flow]
+
+In general, here are the steps to complete the purchase:
+
+* Enter http://localhost:8080/bookstore/ in the address bar and hit enter, land on the bookstore's home page as illustrated by Figure <<Manning_Homepage>>.
+* Type "Selenium WebDriver in Practice" into the search box and click the search button and get some search results.
+* Click the first link on the page to go to the book details page.
+* Click "add to cart" button to add the book the the shopping cart.
+* Click the cart image button and it will take you to shopping cart page with these 3 forms.
+* Complete billing information form
+* Complete other information form
+* Click the continue button
+* And if you don't complete the form correctly, you will see some error messages displayed in red color
+
+In the next section, we are going to show you how to automate the page navigation and data entry tasks to accomplish a purchase flow, using the techniques we learnt from early chapters. Also, we are going to refactor the framework classes to expose a cleaner interface and enhance its robustness by adding an exception recovery mechanism.
+
+== Creating domain classes for the page flow
+
+In last chapter, when we introduced the technique to split the page into multiple forms and introduced `OtherInformation` and `OtherInformationForm` class, and use an instance of `OtherInformation` to hold the data and act as the parameter for the `setOtherInformation` method of `OtherInformationForm`.
+
+=== Technique 47: Create domain classes to represent reference data and form data
+
+When working on automation, we always need to enter data on the form and those data need to be validated by the web application before the page can transition to the next page. So it is critical to know what data can be used to enter the form. And those data may be used over and over again.
+
+==== Problem
+
+Normally, people just used string to hold data, but string is not a good candidate for structured or frequently used data. For example, the names of the all countries in the world and all the states in United States. If we use string to hold those data, it is not well organized and people may created different variables scattered across application.
+
+==== Solution
+
+Create domain package to hold all domain classes. So developers have a common place to store useful design ideas. For this particular bookstore application, since we need to ship the book to a place, so we need to create a class to hold address information, and it can be used for both billing and shipping address,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/Address.java#L3-L30[Address.java]
+----
+public class Address {
+    public final String firstName;   <1>
+    public final String lastName;
+    public final String street1;
+    public final String street2;
+    public final String city;
+    public final UnitedStates state;
+    public final String zipcode;
+    public final Countries country;
+
+    public Address(String firstName,...){  <2>
+       this.firstName = firstName;   <3>
+       ...
+    }
+}
+----
+<1> Since all instance variables are final, so no getters and setters are needed
+<2> Constructor parameters are the same as those variables
+<3> Use the parameters to populate the values in the instance of Address
+
+We can use string as the type for `country`, but it is more desirable to introduce an enum for that purpose. When you use string, people can create many variables in the test to hold those information, For example, one developer many add one variable in one class, but string is not type safe, if you accidentally modify a string, adding or removing a character, the compiler won't be able to notice that mistake. While if all country names are in one enum, it will be more cohesive and people don't need to define those variables in the classes they work on, they can just refer to the enum constants. And if it is changed accidentally, the compiler will tell you that it is not valid.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/Countries.java#L3-L19[Countries.java]
+----
+public enum Countries {
+    Australia,            //<1>
+    China,
+    India,
+    United_Kingdom,
+    United_States,
+    ...  //<2>
+}
+----
+<1> Not all capitalized
+<2> Some methods omitted here
+
+Same is `UnitedStates`, you can define all the states as constants inside `UnitedStates` enum,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/UnitedStates.java#L3-L70[UnitedStates.java]
+----
+public enum UnitedStates {
+    ...          //<1>
+    New_Jersey,
+    New_York,
+    ...
+}
+----
+<1> All of the states in US
+
+Then to refer US, you just use `Countries.United_States`. And to refer New Jersey, you just use `UnitedStates.New_Jersey`.
+
+[sidebar]
+.Java code convention
+****
+You may read from Java code convention that enum should be all capitalized, but this way it is more convenient to use so we don't follow the convention. If we followed the Java Code Convention, we would need to define the enum differently,
+
+[source,java]
+----
+public enum Countries {
+    AUSTRALIA("Australia"),
+    CHINA("China"),
+    INDIA("India"),
+    UNITED_KINDOM("United Kingdom"),
+    UNITED_STATES("United States"),
+    ...
+
+    String name;
+
+    Countries(String name) {
+       this.name = name;
+    }
+}
+----
+
+So there will be more code. We prefer the way we choose, but you can choose to follow Java Code Convention. It is not a topic worth debating.
+****
+
+And `CreditCard` class to hold the data for credit card information.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/CreditCard.java#L5-L26[CreditCard.java]
+----
+public class CreditCard {
+
+    public final String cardNumber;
+    public final String cardCvv;
+    public final String expirationMonth;
+    public final int expirationYear;
+    public final CreditCardType cardType;
+
+    public CreditCard(...) {...}  //<1>
+}
+----
+<1> Constructor of the CreditCard class
+
+Where `CreditCardType` class is another enum with some major credit cards,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/CreditCardType.java##L3-L20[CreditCardType.java]
+----
+public enum CreditCardType {
+
+    American_Express,
+    JCB,
+    MasterCard,
+    Visa,
+    Discover;
+    ...  //<1>
+}
+----
+<1> Some methods omitted here
+
+One thing you may notice is that there are a number of mailing list options. And when we use string as parameter, the code is very verbose, as in Chapter 14,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/ShoppingCartPageIT.java#L26-L33[ShoppingCartPageIT.java]
+----
+new OtherInformation(
+        "no code",
+        "joe@email.com",
+        true,
+        true,
+        "Weekly newsletter--New books, updates, news, and special offers", <1>
+        "no comments");
+----
+<1> The value of this parameter is extremely long
+
+Since each one of them has a long text name, we can also encapsulate them into an enum link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/MailingOption.java#L6-L47[MailingOption.java]
+
+[source,java]
+----
+    WEEKLY_NEWSLETTER("Weekly newsletter--" +
+            "New books, updates, news, and special offers"),
+    DEAL_OF_THE_DAY("Deal of the Day--" +
+            "These amazing special offers last just 24 hours!"),
+    BOTH("Both"),
+    NO_PROMOTION_MAILERS("No promotional mailers. " +
+            "I will still receive updates on my MEAPs and other books."),
+    KEEP_ME("Keep me on the lists I'm already on.");
+
+    private final String string;
+
+    MailingOption(String string) {
+        this.string = string;
+    }
+----
+
+We need to define a `toString` method for this enum to return the `string` variable.
+
+[source,java]
+----
+    @Override
+    public String toString() {
+       return string;
+    }
+----
+
+Optionally, we can define a method to resolve the enum instance for the give string. There are not many of them, we just loop through all of the enum constants and find the one with same string.
+
+[source,java]
+----
+public static MailingOption from(String string) {
+    for (MailingOption o : values()) {
+        if (o.string.equals(string)) {
+            return o;
+        }
+    }
+    throw new IllegalArgumentException(
+        "Can't find an enum with this string " + string);
+}
+----
+
+We already have `OtherInformation` in Listing 14.20 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/domain/OtherInformation.java[OtherInformation.java]. Since we added this enum for mailing option, we need to change the type for variable `mailingOption` from `String` to `MailingOption` in `OtherInformation` class.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/OtherInformation.java[OtherInformation.java]
+----
+public class OtherInformation extends DomainBase {
+    ...
+    public final MailingOption mailingOption;
+    ...
+}
+----
+
+In above code. we changed `mailingOption` from `String` to `MailingOption` enum type.
+
+==== Discussion
+
+Now that we created package for domain classes, we can use them for the project. And the parameter passing become easier comparing the code in this chapter to some earlier chapters, due to the application of enum in organizing domain information such as the name of the countries, name of the states and type of the credit cards.
+
+Next, we are going to create some page classes to use these domain classes to manage the data entry on each page of the page flow.
+
+== Creating page classes to represent important pages in the page flow
+
+From Figure <<Page_Flow>>, we can see, the page flow starts from visiting the bookstore's homepage, searching on a book, choosing that book, adding that book to cart, going to cart, entering credit cart, billing address and other information and confirm the purchase. We are going to create some classes to be responsible for some of the activities. First, let us create `BookstoreHomepage` class.
+
+=== Creating a `BookstoreHomepage` class for Bookstore's Homepage
+
+We now have enough information to start, we will create page class `BookstoreHomepage` to represent Bookstore's home page, to be in charge of the step 1, 2, 3 in the page flow diagram. We use Web Developer Tool on the browser to examine the elements we need to locate and manipulate, these activities are as following.
+
+1. Enter book name on the input field with `class` attribute "navbar-search"
+2. Click the search button with `class` attribute "btn-default" on an element with `id` "secondary-navbar"
+
+By using Technique 37 and 38, we can define this `ClassName` enum for all the `By.ByClassName` locators we are going to use to locate the elements,
+
+[[xpath-enum]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/ClassName.java#L9-L30[ClassName.java]
+----
+SEARCH_INPUT("navbar-search"),      <3>
+CART_BUTTON("cart-button"),         <1>
+SEARCH_BUTTON("btn-default");       <2>
+----
+<1> Locator for Cart button on home page
+<2> Locator for Search button on home page
+<3> Locator for search input field
+
+Add the following constant into `Id` enum for the element containing search button.
+
+[source,java]
+----
+SECOND_NAVBAR("secondary-navbar"),
+----
+
+And we can use this enum without calling `.get()`, as shown in the following `searchBook` method of `BookstoreHomepage` class, which represents the page illustrated in Figure <<Manning_Homepage>>.
+
+[[BookstoreHomepage]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/BookstoreHomepage.java#L10-L27[BookstoreHomepage.java]
+----
+public class BookstoreHomepage {
+
+    private Browser browser; <6>
+
+    public BookstoreHomepage(Browser browser) { //<1>
+        this.browser = browser;
+    }
+
+    public void searchBook(String bookname) {     //<2>
+        browser.setInputText(SEARCH_INPUT, bookname);      //<3>
+        browser.await(SECOND_NAVBAR)                  //<5>
+            .click(SEARCH_BUTTON);        //<4>
+    }
+}
+----
+<1> Inject the `Browser` through constructor, we are going to omit this constructor in the other listings.
+<2> Search book by its name
+<3> `Name.SEARCH_INPUT` is another enum
+<4> `SEARCH_BUTTON` is from listing <<xpath-enum>> and `await` method is `findElement` with wait
+<5> Since SEARCH_BUTTON is a class name, it may not be unique on the page, so we find its container first.
+<6> We are going to omit it in other listings.
+
+After clicking the search button, the browser displays a list of books,
+
+[[Search_Result]]
+image::search-result.png[title=Search Result]
+
+And we can create a test to run, it simply creates an instance of `BookstoreHompage` and calls the `searchBook` method with a book name. The test is very short and explains what the test does, to search a book.
+
+[[BookStoreShoppingIT]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/tests/BookstoreSearchIT.java#L11-L23[BookstoreSearchIT.java]
+----
+@Test
+public void searchBook() {
+    homePage = new BookstoreHomepage(browser);
+    homePage.searchBook("Selenium WebDriver in Practice");  <1>
+}
+----
+<1> Search this book
+
+This style is much cleaner than exposing all the details in the test. Imagine we inline the details from `searchBook` method into this test method, the developer who need to understand the purpose of the test need go through a mind mapping before understanding the test. Now it is just one meaningful method name, 'searchBook'.
+
+Now we can add a `BookListPage` to continue the page flow.
+
+=== Creating `BookListPage` for the page with a list of books
+
+This page has two responsibilities,
+
+1. List of the books in the search result.
+2. Choose the book you are looking for and go to book details page by clicking the link with the book name.
+
+We want to simplify it so ignore the first responsibility and only code `BookListPage` to allow `chooseBook`, as in the following class.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/BookListPage.java#L10-L27[BookListPage.java]
+----
+public class BookListPage {
+    ...
+    public void chooseBook(String bookname) {
+        browser.click(() -> By.partialLinkText(bookname)); <1>
+    }
+}
+----
+<1> Since `bookname` is a variable, we can only construct a new `Supplier<By>` using Lambda and pass it to `await`
+
+The `chooseBook` method will click the link in the search results illustrated by Figure <<Search_Result>>, and the browser will transit into a page with the details of the book.
+
+[sidebar]
+.Whether to define `BookListPage`
+****
+We create `BookListPage` in the page flow, purely to illustrate the idea of using page object to represent the web pages in a page flow. On a big project, if we define a page object for each page in the application, we may end up with too many page objects. So it is reasonable to combine some page object into another. For example, since the responsibility of the `BookListPage` is only to provide `chooseBook` method to take the page flow to book detail page, we may not need it at all, just move the method body of `chooseBook` into the `searchBook` method of `BookstoreHomepage` class so let `BookstoreHomepage` go directly to `BookPage`.
+
+[source,java]
+----
+public class BookstoreHomepage {
+
+    public void searchBook(String bookname) {
+        browser.setInputText(SEARCH_INPUT, bookname);
+        browser.await(SECOND_NAVBAR).click(SEARCH_BUTTON);
+        browser.click(() -> By.partialLinkText(bookname));
+    }
+}
+----
+
+So we no longer need `BookListPage` under this change so it can be deleted. This approach is commonly used in test automation.
+
+But we still need to define this `BookListPage` if we are required to check the correctness of the search result.
+****
+
+And now we can create a `BookPage` class in the page flow.
+
+=== Creating a `BookPage` class for Book page
+
+We can create a `BookPage` class to represent the responsibilities on book page, to simulate buyer clicking "add to cart" and "go to cart" buttons to take the book and go to shopping cart page. So it has two methods,
+
+1. `addToCard` - find all elements whose `TagName` is `input` and find the first one with value attribute "add to cart" and click it, in short, click the "add to cart" button.
+2. `gotoCart` - find top nav bar and click the cart image button.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/BookPage.java#L9-L29[BookPage.java]
+----
+public class BookPage {
+    ...
+    public void addToCart() {
+        browser.findElements(INPUT)     //<1>
+            .filter(
+              e -> e.getValue().equals("add to cart")   <6>
+             )  //<2>
+            .findFirst()            //<3>
+            .get()                  //<4>
+            .click();
+    }
+
+    public void gotoCart() {
+        browser.await(TOP_NAV).click(CART_BUTTON); <5>
+    }
+}
+----
+<1> Find all input fields
+<2> Find the ones with value "add to cart", which is a Stream
+<3> Get the first one from the results in Stream, which is a Optional
+<4> Get the value from the Optional
+<5> Since CART_BUTTON is class name, so it may not be unique, we find its container first
+<6> This lambda means if the input element has "add to cart" as attribute return true
+
+Once buyer clicks the shopping cart image button to top of the page, it takes the buyer to shopping cart page, which we will define next.
+
+=== Creating a `ShoppingCartPage` class for Shopping cart page
+
+In Chapter 14, we already designed a `ShoppingCartPage` class with one `OtherInformationForm` variable. In this chapter, since we need to automate the entire page flow, we will add some new variables to the page to populate the all forms on the page. Those forms are
+
+1. Credit card form, in charge of credit card information.
+2. Billing address form, in charge of billing address.
+3. Other information form, in charge of the other information.
+
+And we are going to create one class for each form and add as instance variable to `ShoppingCartPage`.
+
+==== An instance of `CreditCardForm` class
+
+Here is the credit cart form section on the page.
+
+[[Credit_Card_Form]]
+image::credit-card.png[title=Credit Card Form]
+
+We can create a `CreditCardForm` class and use its `setCreditCard` method to set the input values represented by an instance of `CreditCard` class to the areas for credit card information as illustrated in Figure <<Credit_Card_Form>>.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/CreditCardForm.java#L10-L24[CreditCardForm.java]
+----
+public void setCreditCard(CreditCard card) {
+    browser.selectByVisibleText(CARD_TYPE, card.cardType);   <1>
+    browser.setInputText(CARD_NUMBER, card.cardNumber);               <2>
+    browser.selectByVisibleText(CARD_EXP_MONTH, card.expirationMonth);<3>
+    browser.selectByVisibleText(CARD_EXP_YEAR, card.expirationYear);  <4>
+    browser.setInputText(CARD_CVV, card.cardCvv);        <5>
+}
+----
+<1> Select "Credit Card Type"
+<2> Type "Credit Card Number"
+<3> Select "Expiry Month"
+<4> Select "Expiry Year"
+<5> Type "Card Verification Number"
+
+And create a `BillingAddressForm` to enter the billing address.
+
+==== An instance of BillingAddressForm
+
+This is billing address section on the shopping cart page,
+
+[[Billing_Address_Form]]
+image::billing-address.png[title=Billing Address]
+
+We use `setBillingAddress` method from `BillingAddressForm` class to set the input values of `Address` to the areas for billing address information as illustrated in Figure <<Billing_Address_Form>>
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/BillingAddressForm.java#L10-L29[BillingAddressForm.java]
+----
+public void setBillingAddress(Address address) {   <1>
+    browser.setInputText(BILLING_FIRST_NAME, address.firstName);  <2>
+    browser.setInputText(BILLING_LAST_NAME, address.lastName);
+    browser.setInputText(BILLING_ADDRESS1, address.street1);
+    browser.setInputText(BILLING_ADDRESS2, address.street2);
+    browser.setInputText(BILLING_CITY, address.city);
+    browser.setInputText(BILLING_STATE, address.state);
+    browser.setInputText(BILLING_ZIP, address.zipcode);
+    browser.selectByVisibleText(BILLING_COUNTRY, address.country);
+}
+----
+<1> This is a billing address
+<2> All the first parameters inside this method are `Supplier<By>` enum constants
+It is used to type or select these fields on the form, "First Name","Last Name", "Street Address 1", "Street Address 2", "City","State","Zip" and "Country".
+
+Of course, the other information we introduced in last chapter.
+
+==== An Instance of `OtherInformationForm`
+
+Other Information form is used for collecting coupon code, billing email and comments, allowing buyer to check the checkboxes for "Send order messages to this address" and
+"would you like to rate this merchant", as well as click the radio button for mailing option in the following Figure.
+
+[[Other_Information_Form]]
+image::other-information.png[title=Other Information]
+
+We use `setOtherInformation` method of `OtherInformationForm` class to set the input values of `OtherInformation` to the areas for other information as illustrated in Figure <<Other_Information_Form>>.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/OtherInformationForm.java#L9-L25[OtherInformationForm.java]
+----
+public void setOtherInformation(OtherInformation info) {  <1>
+    browser.setInputText(COUPON_CODE, info.couponCode);     <2>
+    browser.setInputText(BILLING_EMAIL, info.email);
+    browser.setInputText(COMMENTS, info.comments);
+    browser.setCheckboxValue(CONFIRM_EMAIL, info.sendOrdersToEmail);
+    browser.setCheckboxValue(RATINGS, info.sendRatingEmail);
+    browser.setRadio(MAILING_OPTION, info.mailingOption);
+}
+----
+<1> Set the value on other information section of the page.
+<2> All the first parameters inside this method are `Supplier<By>` enum constants
+
+Then we can see how these form classes are used in the page class.
+
+==== And putting things together in `ShoppingCartPage`
+
+And we add these variables to `ShoppingCartPage` class we created in Chapter 14, and now it becomes,
+
+[[ShoppingCartPage]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/ShoppingCartPage.java#L12-L45[ShoppingCartPage.java]
+----
+public class ShoppingCartPage {
+
+    private final BillingAddressForm billingAddressForm;
+    private final CreditCardForm creditCardForm;
+    private final OtherInformationForm otherInformationForm;
+    ...
+    public void setOtherInformation(OtherInformation otherInformation) {...}
+
+    public void setBillingAddress(Address address) {...}
+
+    public void setCreditCard(CreditCard card) {
+        creditCardForm.setCreditCard(card);
+    }
+
+    public void confirm() {   //<1>
+        browser.click(CONFIRM);    //<2>
+    }
+}
+----
+<1> Since `continue` is a Java key word, so we call this method `continues`
+<2> We can click Continue button by passing `CONTINUE` enum constant
+
+And it is now ready be used for taking inputs. It represents everything in this url, http://localhost:8080/bookstore/cart. Once buyer completes all the mandatory information on the form and an order is placed, the bookstore displays a confirmation page with the order number, last page in the page flow.
+
+=== Creating `ConfirmationPage` class to represent the confirmation page.
+
+The confirmation page displays an order number, so the page class will have this responsibility.
+
+image::ConfirmationPage.png[title=Confirmation page]
+
+And we can see the order number "#00008" is on a `span` with `class` attribute "order-number" on a containter with `id` attribute `orderNumber`, so we can find the container using `By.id("orderNumber")` first and narrow down the search using `By.className("order-number")` and put the logic inside the `getOrderNumber` method of `ConfirmationPage` class.
+
+[[ConfirmationPage]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/ConfirmationPage.java#L12-L45[ConfirmationPage.java]
+----
+public class ConfirmationPage {
+    ...
+    public String getOrderNumber() {
+        return browser.await(ORDER_NUMBER_ID) <2>
+            .getText(ORDER_NUMBER); //<1>
+    }
+}
+----
+<1> We can get the order number by passing `ORDER_NUMBER` enum constant
+<2> We find the container using `ORDER_NUMBER_ID` enum constant
+
+Now we complete defining all the page classes in the page flow, let us review them using class diagrams. Because the page is not big enough to have them in one diagram, we use two diagrams to display them. That's the only reason they are in two diagrams.
+
+Here are the class diagrams of `BookstoreHomepage`, `BookListPage` and `BookPage`, they all wrap a `Browser` class and act as facade to `Browser`.
+
+image::BookPage.png[title=Class diagram of `BookstoreHomepage`, `BookListPage` and `BookPage`]
+
+And here are the class diagrams of `ShoppingCartPage`, both of they also wrap `Browser` class.
+
+image::Shopping.png[title=Class diagram of `ShoppingCartPage` and `ConfirmationPage`]
+
+These page classes wrap `Browser` class and expose the functionalities as methods to reduce the verbosity in the tests. You can review Chapter 5 for more information about *page object*, besides *page object*, we also introduced Technique 46: Organizing elements into logical groups. `ShoppingCartPage` is the application of that technique and you can see it improves the modularity of the *page object*.
+
+== Automating the entire page flow using data for major page flows
+
+When automating a page flow, we normally need to design the test data carefully in order to be able to move from one page to another. Because in the web applications, there are complex validation rules, the data must pass the validation, otherwise, the page will stay on the same page with the error messages. So we need to test both cases, one is to test the page stays when entering invalid data and the page moved to next page when the data pass validation.
+
+=== Designing test data to fulfill the end to end transaction processing
+
+How to design the test data, the topic alone can be put into one separate book, so we don't want to spend too much time here for this purpose, we simply create some variables in the test so they can used for the page flow navigation.
+
+First some constants for the expected results,
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/tests/BookstoreShoppingIT.java#L24-L26[BookstoreShoppingIT.java]
+----
+public static final String EXPECTED_ERROR_MESSAGE =
+    "The cardNumber must be between 19 and 19 characters long";   //<1>
+public static final String EXPECTED_ORDER_NUMBER = "#00008";    //<2>
+----
+<1> Define an expected error message
+<2> Define an oder number for confirmation
+
+And some variables for the data to be used to fill out the forms in link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/tests/BookstoreShoppingIT.java#L31-L61[BookstoreShoppingIT.java]
+
+An instance of `Address`, used to fill out Billing Address using `BillingAddressForm`,
+
+[source,java]
+----
+private Address billingAddress = new Address(   //<1>
+    "1111 Mountain Dr",
+    "14052014",
+    "Edison",
+    "08820",
+    UnitedStates.New_Jersey,
+    Countries.United_States,
+    "Sanjay",
+    "Rao");
+----
+
+An instance of `CreditCard`, used to fill out Credit Card for happy path using `CreditCardForm`.
+
+[source,java]
+----
+private CreditCard creditCard = new CreditCard(  //<2>
+    CreditCardType.MasterCard,
+    "4111-1111-1111-1111",
+    "123",
+    Month.DECEMBER, 2020);
+----
+
+Another instance of `CreditCard`, used to fill out Credit Card for invalid input using `CreditCardForm`.
+
+[source,java]
+----
+
+private CreditCard invalidCreditCard = new CreditCard(     //<3>
+    CreditCardType.MasterCard,
+    "4111-1111-1111",
+    "123",
+    Month.DECEMBER, 2020);
+----
+
+An instance of `OtherInformation`, used to fill out Other Information using `OtherInformationForm`
+
+[source,java]
+----
+private OtherInformation otherInformation = new OtherInformation(    //<4>
+    "no code",
+    "joe@email.com",
+    true,
+    true,
+    MailingOption.WEEKLY_NEWSLETTER,
+    "no comments"
+);
+----
+
+And then writing some tests to automate these two page flows.
+
+=== Adding tests to run the entire page flows
+
+Now we can finish the test by wiring all the page classes we created in the following test. First let us put common path inside another method so it doesn't repeat.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/tests/BookstoreShoppingIT.java#L63-L82[BookstoreShoppingIT.java]
+----
+@Before   <6>
+public void addToCartAndSetSomeInformation() {
+    BookstoreHomepage homePage = new BookstoreHomepage(browser);   //<1>
+    homePage.searchBook("Selenium WebDriver in Practice");         //<2>
+
+    BookPage bookPage = new BookPage(browser);                    //<3>
+    bookPage.addToCart();                                         //<4>
+    bookPage.gotoCart();                                          //<5>
+}
+----
+<1> Open Bookstore home page
+<2> Search a book called "Selenium WebDriver in Practice"
+<3> Transit to book page on the same browser
+<4> Click "add to cart" button
+<5> Click the cart image on top
+<6> In junit, method annotated with `@Before` is executed before each test method
+
+Then the exception flow in this method.
+
+[[invalid-purchase]]
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/tests/BookstoreShoppingIT.java#L63-L82[BookstoreShoppingIT.java]
+----
+@Test
+public void invalidCreditCard() {
+    cartPage = new ShoppingCartPage(browser);                     //<1>
+    cartPage.setBillingAddress(billingAddress);                   //<2>
+    cartPage.setOtherInformation(otherInformation);               //<3>
+    cartPage.setCreditCard(invalidCreditCard);          //<4>
+    cartPage.confirm();                               //<5>
+
+    assertEquals(EXPECTED_ERROR_MESSAGE,  //<6>
+       browser.getText(CARDNUMBER_ERROR));  //<7>
+}
+----
+<1> Transit to shopping cart page on the same browser
+<2> Enter billing address
+<3> Enter other information
+<4> Enter an invalid credit card
+<5> Click the 'continue' button
+<6> To check the error message is same as `EXPECTED_ERROR_MESSAGE`
+<7> `ERROR_MESSAGE` is a locator enum implementing `Supplier<By>`
+
+We can see it runs and page transits from home page to search result page and then book page, shopping cart page and stays on shopping cart page with error messages. Note, we create one page for each page on the page flow. But we don't have to create a class to represent the search result page in Figure <<Search_Result>>, since we only click a link on it. We can merge the link click into the `searchBook` method. This test case is to automate a purchase flow so it can be omitted.
+
+We also add a test case for successful purchase, you can see by the end an order number has been created. Unlike what we did in Listing <<invalid-purchase>>, where we just use the `getText` method of the `browser` object to read the text for error message, in Listing <<ConfirmationPage>>, we use the `getOrderNumber` method in `ConfirmationPage` for the responsibility of getting order number. And the test uses `getOrderNumber` to get order number/
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/tests/BookstoreShoppingIT.java#L84-L93[BookstoreShoppingIT.java]
+----
+@Test
+public void purchaseSuccessful() {
+    new ShoppingCartPage(browser) {{    <3>
+        setBillingAddress(billingAddress);
+        setOtherInformation(otherInformation);
+        setCreditCard(creditCard);    //<1>
+        confirm();
+    }};
+    new ConfirmationPage(browser) {{   <4>
+        assertEquals(EXPECTED_ORDER_NUMBER, this.getOrderNumber());  //<2>
+    }};
+}
+----
+<1> To set a valid credit card
+<2> To check "#00008" which is the value of EXPECTED_ORDER_NUMBER will be displayed on page.
+<3> To create an instance of an anonymous inner class of `ShoppingCartPage` and what inside the inner bracket is an anonymous constructor block
+<4> Please note, this is 2 curly brackets.
+
+The following sequence diagram illustrates this test,
+
+image::Shopping-seq.png[title=Sequence diagram of the purchase flow.]
+
+[sidebar]
+.Anonymous inner class
+****
+You may already be familiar with creating an anonymous inner class using an interface, such as
+
+[source,java]
+----
+new Function<WebElement, WebElement>() {
+    @Override
+    public WebElement apply(WebElement webElement) {
+        return webElement.findElement(
+            By.className("ignore-react-onclickoutside"));
+    }
+}
+----
+
+You can create anonymous inner class using non final class or abstract class as well. For example, in Listing 15.19, we created two anonymous inner classes. For `new ConfromationPage(browser) {{...}}`, what the compiler does is to create an anonymous inner class `BookstoreShoppingIT$2` that extends `ConfirmationPage` class and put the code inside the curly bracket as an anonymous constructor block inside `BookstoreShoppingIT$2` class, as illustrated in the following code snippet,
+
+[source,java]
+----
+private class BookstoreShoppingIT$2 extends ConfirmationPage {
+   BookstoreShoppingIT$2(Browser browser) {
+      super(browser);
+      assertEquals(EXPECTED_ORDER_NUMBER, this.getOrderNumber());
+   }
+}
+----
+
+So the original code will be compiled to code using the anonymous inner class.
+
+Original source code
+
+[source,java]
+----
+new ConfromationPage(browser) {{...}}
+----
+
+Compiled code.
+
+[source,java]
+----
+new BookstoreShoppingIT$2(browser);
+----
+
+This coding style makes test code more concise. But you don't have to use it if you don't like it. And It is not specific to Selenium WebDriver, so if you like it, you can use in other Java project as well.
+****
+
+Normally we don't include import statement for classes in the book, but we are going to show you all the import statements of this test. It doesn't import any classes or interfaces from Selenium Library, which mean we wrap WebDriver inside page object so the test code even doesn't have knowledge of Selenium WebDriver.
+
+Among the classes we import in this test, these are junit classes and static method.
+
+[source,java]
+----
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import static org.junit.Assert.assertEquals;
+----
+
+These two classes are from Java JDK.
+
+[source,java]
+----
+import javax.inject.Inject;
+import java.time.Month;
+----
+
+These are the domain classes defined for the pages.
+
+[source,java]
+----
+import swip.ch15pageflow.domain.*;
+----
+
+These are all the page classes and a supplier locator
+
+[source,java]
+----
+import swip.ch15pageflow.pages.*;
+import static swip.locators.Id.CARDNUMBER_ERROR;
+----
+
+And `Browser` and `BrowserRunner` to start the test.
+[source,java]
+----
+import swip.framework.Browser;
+import swip.framework.BrowserRunner;
+----
+
+With this design, you don't need to import Selenium WebDriver classes in the test at all. This is a commonly used pattern in enterprise software development, to have an in-framework to prevent the direct access to third party libraries. Either to attach more responsibility or increase the consistency of the application.
+
+
+== Summary
+
+* We always need to navigate from one page to another manually to understand the page flow, which gives us a good idea about what you are going to automate using WebDriver.
+* Create domain classes for the form sections on complex page.
+* Define different page classes to represent different pages in the page flow.
+* Remember you don't need to write one class for each page, especially if the page is just used to transition into another page.
+* You can organize page classes in one test method to carry out the navigation and data entry to complete the transaction of buying a book from an online bookstore.
+
+In the next chapter you will learn how to automate the access to a complex table element.

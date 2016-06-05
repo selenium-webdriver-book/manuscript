@@ -1,0 +1,63 @@
+@startuml
+
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+
+activate PageObject
+
+PageObject -> ExplicitWait : await(by)
+activate ExplicitWait
+
+ExplicitWait --> FluentWait : <<create>>
+activate FluentWait
+FluentWait --> ExplicitWait
+deactivate FluentWait
+
+ExplicitWait -> Function : <<create>>
+activate Function
+
+Function -> ExplicitWait : function
+deactivate Function
+
+ExplicitWait -> FluentWait : until(function)
+activate FluentWait
+
+FluentWait -> Function : apply(SearchScope)
+activate Function
+
+group function
+Function -> SearchScope : findElement(by)
+activate SearchScope
+
+SearchScope -> SearchContext : findElement(by)
+activate SearchContext
+
+SearchContext -> SearchScope : WebElement
+deactivate SearchContext
+
+SearchScope -> Element : <<create>>
+activate Element
+Element -> SearchScope
+deactivate Element
+
+SearchScope -> Function : Element
+
+
+deactivate SearchScope
+
+end
+Function -> FluentWait : Element
+deactivate Function
+
+FluentWait -> ExplicitWait : Element
+deactivate FluentWait
+
+deactivate Element
+
+ExplicitWait -> PageObject : Element
+deactivate ExplicitWait
+
+deactivate PageObject
+
+@enduml

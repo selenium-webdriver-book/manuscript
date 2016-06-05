@@ -1,0 +1,46 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+DomainBase : boolean equals(Object o)
+DomainBase : int nashCode()
+DomainBase : String toString()
+note right : CityTableContents\nand\nPersonTableContents\nextend DomainBase\nto get these methods
+
+abstract class AbstractTable
+abstract class AbstractTableContents
+
+AbstractTable : List<String> getHeaders()
+note right : CityTable and\nPersonTable extend\nAbstractTable to get\nthe getHeaders method
+
+AbstractTable <|-- PersonTable
+AbstractTable <|-- CityTable
+
+DomainBase <|-- AbstractTableContents
+
+AbstractTableContents <|-- PersonTableContents
+AbstractTableContents <|-- CityTableContents
+
+PersonTable "1" *-- "1"  PersonTableContents : create
+
+CityTable "1" *-- "1"  CityTableContents : create
+
+PersonTableContents : List<Person> rows
+PersonTableContents : String describeDiff(PersonTableContents other)
+
+AbstractTableContents : List<String> headers
+AbstractTableContents : String diffHeaders(AbstractTableContents other)
+AbstractTableContents : <T> String diff(List<T> row1,\n                   List<T> row2,\n                   String message)
+note bottom : PersonTableContents and\n CityTableContents extend\n it so they inherit diffHeaders method
+
+CityTableContents : List<City> rows
+CityTableContents : String describeDiff(CityTableContents other)
+
+PersonTable : Element table
+PersonTable : PersonTableContents getTableContents()
+
+CityTable : Element table
+CityTable : CityTableContents getTableContents()
+
+@enduml

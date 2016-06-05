@@ -1,0 +1,250 @@
+= Appendix A -- Selenium Grid
+
+:imagesdir: ../images/apA_selenium_grid
+
+This appendix covers
+
+* An overview of the architecture of the grid
+* Local, vs *on premise* vs *Selenium as a service*
+* Using the `RemoteWebDriver` class
+* Using Vagrant to learn about Selenium Grid
+
+*Selenium Grid* is a way to run test using browsers you do not have installed on your local machine, or on other operating systems. Instead of starting the browser on your local machine, the browser is started on a remote machine  that is part of the grid. Your tests run on your local machine, but connect to a process on the remote machine. That process opens the browser, which in turn opens pages on the web application you are testing.
+
+The key components for running a test script on a grid are:
+
+* A test script -- of course! This might run on your local machine, or a CI server.
+* A number of **Nodes**, each running on different operating systems and with different browsers.
+* The **Hub** application running on a single **hub machine**. This keeps a track of the nodes, and proxies requests to them.
+* The web application you are testing.
+
+image::selenium-grid.png[title="Selenium Grid"]
+
+There's a number of pros and cons to using a grid.
+
+Pros:
+
+* It will give you a much wider range of browsers and operating systems to test on.
+* Problems with your local machine, or the browser install won't affect your test.
+* You can run tests in parallel, so your test suite will finish quicker and you can get faster feedback.
+* If the browser or the remote machine crash, it will not affect your machine, or other tests.
+
+Cons:
+
+* As the browser is on another machine, you cannot see the test running to help you understand the cause of any problems with the tests.
+* The machines within the grid must be able to access your web application.
+* You need someone skilled to run and maintain the grid.
+
+You've two options if you want to use a grid. You can use a *Selenium as a service* solution, such as Saucelabs (https://saucelabs.com), or BrowserStack (https://www.browserstack.com), or you can build an *on premise solution*. The are different costs associated with each, and we'll talk about this shortly.
+
+By the end of this appendix you will have learnt about the architecture of a grid; some of the differences between local, on premise, and Selenium as a service solutions; and how to run a local grid using Vagrant that will help you learn about Grid.
+
+== Locally vs "Selenium as a service" vs on premise solutions
+
+There are various pros and cons of using each way of running testing using WebDriver.
+
+You can have you browser running locally on your local machine. This is good for:
+
+* Getting started quickly
+* Writing new tests
+* Debugging failing tests
+* Experimenting, or trying new features out
+* When you are only working on a single platform, browser, or device
+* If you only have small suite, that can be run in sequence
+
+You can have your browsers running on an on premise grid. To do this, you would set up and run the grid on your company's premises. This is good for:
+
+* Learning about Selenium Grid
+* When you have a large test suite
+* If you have some special browser or devices that third-party solutions do not support
+* When you do not wish to expose your application to third-parties, e.g. due to security requirements
+* When you and your team are experienced at running networks of machines similar to a grid
+
+You can have you browser running on a grid maintained by an external company -- Selenium as a service. This is good for:
+
+* When you have a large test suite
+* If you need to test on browsers and devices your company doesn't own
+* Saving time and effort maintaining software and hardware needed for a grid
+* When you don't want to have to purchase licenses
+* Having features set-up for you
+* Clearly set out costs
+
+This is not to say you can't use a combination of each of these solutions. You'll probably find yourself developing your tests on your local machine, and using a grid for running the test suites on your CI system.
+
+== Architecture
+
+A *Selenium Grid* contains a number of machines. Most of the machines undertake the role of *nodes* (their job is to run the browser), and one machine who undertakes the role of the *hub* (who's job it is to keep track of the nodes). You'll also need a machine to run your tests on (this might be your CI server), and one or more machines where the *web applications* you are testing are running (Web Application Under Test or WAUT).
+
+[sidebar]
+.Hub Failure
+****
+You hub maybe a single point of failure within your grid. Make sure it's easy to replace, and you have a process in place to do this.
+****
+
+When a node starts up, it connect to the hub to tell the hub that it is available to run tests. It also tells the hub what browsers are installed and what operating system it is. Finally, it tells the hub to send traffic to a certain port (5555 by default). The hub keeps a list of nodes attached to it. When a test script connects to the hub, the script can request a browser based on the desired capabilities. The hub then chooses a node based on the request. For example, if you need an Internet Explorer node, then only nodes with IE installed would be used.
+
+Each node may only run a limited number of browsers at once. For example, they may only be able to run 5 Firefox browsers. This means up to five tests can run in parallel. The hub locks the browser to your test, so no one else can use it.
+
+Then, when your test script sends a request to the hub to open a page, click on an element, etc, the request is forwarded to the appropriate node which then executes them and returns the results. The hub acts as a proxy for your requests.
+
+Finally, when your test closes the browser, the node will close the browser, and the lock is released so that other tests can use it.
+
+image::selenium-grid-sequence.png[title="Selenium Grid Sequence"]
+
+== Using the `RemoteWebDriver` class
+
+To use a grid, rather than use `FirefoxDriver` (or whichever driver you normally use), you must use `RemoteWebDriver`. This driver takes two arguments. The first argument is a URL to the grid's hub, the second is capabilities you want your browser to have, such as which browser it is (e.g. Chrome) or which operating system (e.g. Windows or OS-X).
+
+[source,java]
+----
+new RemoteWebDriver(remoteUrl, desiredCapabilities)
+----
+
+The `remoteUrl` is usually in the form of `http://yoursername:yourpassword@yourhub/wd/hub`. For the capabilities, you can specify the browser, version and OS.
+
+[source,java]
+----
+DesiredCapabilities desiredCapabilities = DesiredCapabilities.firefox();
+desiredCapabilities.setCapability("version", "7");
+desiredCapabilities.setCapability("platform", Platform.XP);
+----
+
+When running a `RemoteDriver`, you almost certainly want to want to wrap the driver in an `Augmenter` object. An `Augmenter` adds the ability to take screenshots to the driver, very useful if you cannot see the browser!
+
+[source,java]
+----
+new Augmenter().augment(webDriver)
+----
+
+If your test use a specific concrete browser class (e.g. `ChromeDriver`) in your test, this will need to change your tests to use the `WebDriver` interface.
+
+=== Running the code in the book on a grid
+
+The code that comes with this book supports remote driver out of the box. You can run against a remote driver by setting these system properties:
+
+* `webdriver.remote=true`
+* `webdriver.remote.url=http://hub:4444/wd/hub`
+
+And optionally, capabilities:
+
+* `webdriver.capabilities.browserName=firefox`
+* `webdriver.capabilities.platform=windows`
+* `webdriver.capabilities.version=7`
+
+For example:
+
+[source,bash]
+----
+mvn install -Dwebdriver.remote=true
+  -Dwebdriver.remote.url=http://hub:444/wd/hub
+  -Debdriver.capabilities.browserName=chrome
+----
+
+You can run all tests in the book any any browser or operating system, locally or remotely.
+
+If you are running a test application locally, you cannot use `http://localhost:8080` or `http://127.0.0.1:8080` as the base URL. You should use the host name (or IP address) of your machine.
+
+You can find out the hostname on Linux and OS-X by running the `hostname` command.
+
+== Running a Selenium Grid
+
+We've provided a sample of running a small grid using Vagrant on your local machine with this book's code. This will give you a chance to experiment with a grid and learn the concepts.
+
+Vagrant is a tool for managing virtual machines. It's useful with grid, as you can run several virtual machines on your local machine. This is perfect for learning how grids work.
+
+If you've not used Vagrant before, we strongly recommend you take some time to learn more about it on their web site (https://www.vagrantup.com) before reading the rest of this section. Naturally, you'll need to install it as well.
+
+[sidebar]
+****
+We've provided a `Vagrantfile` with the book's source code. This file can be used to start-up a local grid that includes:
+
+* A hub.
+* An Ubuntu node with Firefox.
+* Another Ubuntu node with Chrome.
+* A Windows 8 node running Internet Explorer.
+
+[source,sh]
+----
+cd vagrant
+vagrant up
+----
+
+The Ubuntu nodes have a set-up script, you will (of course) have to set-up the Windows node manually as detailed below.
+****
+
+To start with you need a computer to run the hub machine.
+
+On your hub machine, to start the hub application you need to do the following:
+
+1. Install Java.
+2. Download the standalone server JAR (e.g. `selenium-server-standalone-2.48.2.jar`) from <http://www.seleniumhq.org/download/>.
+3. In a command prompt, run:
+
+[source,bash]
+.Starting Selenium Hub
+----
+java -jar selenium-server-standalone-2.48.2.jar -role hub
+----
+
+Naturally, you should use the latest version number. You should then check the hub is working. Your should see something similar to the following printed on the console:
+
+[source,bash]
+.Logs Of A Successful Hub Start-up
+----
+13:04:39.077 INFO - Launching Selenium Grid hub
+...
+13:04:40.087 INFO - Nodes should register to http://192.168.10.2:4444/grid/register/
+13:04:40.087 INFO - Selenium Grid hub is up and running
+----
+
+The URL logged is useful, it is the URL you must configure your nodes to connect to. The IP might change if you reboot your hub. You should check is it visible at link:http://192.168.10.2:4444/[]. You should the homepage as per figure <<homepage>>:
+
+[[homepage]]
+image::hub-homepage.png[title="Homepage"]
+
+To start a node you need to follow steps 1 and 2 above. Install any browsers you need, and as your command run:
+
+[source,bash]
+.Starting A Selenium Node
+----
+java -jar selenium-server-standalone-2.48.2.jar -role node -hub http://192.168.10.2:4444/grid/register
+----
+
+You'll need to set the IP to your hub's IP. You should check this is working, the console should show the following:
+
+[source,bash]
+.Logs Of A Successfully Started Node
+----
+13:18:46.841 INFO - Launching a Selenium Grid node
+13:18:47.608 INFO - Java: Oracle Corporation 24.91-b01
+13:18:47.608 INFO - OS: Linux 3.2.0-23-generic amd64
+...
+13:18:47.734 INFO - Selenium Grid node is up and ready to register to the hub
+13:18:47.773 INFO - Starting auto registration thread. Will try to register every 5000 ms.
+13:18:47.774 INFO - Registering the node to the hub: http://192.168.10.2:4444/grid/register
+13:18:47.814 INFO - The node is registered to the hub and ready to use
+----
+
+You can also look in the hub logs to see if a node has registered with it:
+
+[source,bash]
+.Node Being Registered In Hub Logs
+----
+13:18:47.842 INFO - Registered a node http://192.168.10.3:5555
+----
+
+The IP listed is that of the node.
+
+If you return to the hub web application, and open the console link:http://192.168.10.2:4444/grid/console[], you should see the following:
+
+image::hub-console.png[title="Hub Console"]
+
+If you see `Connect to 192.168.10.5:5555 [/10.0.2.15] failed: Connection refused` then you might have to modify the machine's firewall to allow the hub to connect to the node. You can test if is working by opening link:http://192.168.10.5:555/wd/hub[], you should seen information about the node.
+
+Finally, you should then configure your tests to use the hub's URL, for example link:http://192.168.10.2:444/wd/hub[]
+
+Now, your grid is set-up to run.
+
+== Summary
+
+In this appendix you have learnt about Selenium Grid. A grid will allow you to test faster, on a greater variety of browsers and operating systems. We looked at running a grid locally, on premises or using a third-party's "Selenium as a service". Each of these has some benefits and some trade offs, and you may find yourself using a combination of them. Setting up a grid can be a time consuming task, so you may want to have a discussion with your team to make sure that the benefits are greater than the costs.

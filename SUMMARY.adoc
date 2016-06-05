@@ -1,0 +1,144 @@
+*Preface*
+
+a. What this book covers
+b. Who it is for
+c. Acknowledgments
+d. About the cover illustration
+
+*Part 1 – Fundamentals*
+
+In this section we will introduce you to Selenium WebDriver. We’ll teach common techniques that are useful in writing tests, such as locating, interacting and verifying  elements. We’ll also show you how to make your code more maintainable using Page Objects and how to deal with errors* You’ll be able to write code for many common web pages by the end of it.
+
+* Chapter 1:  Introduction
+    -  What is WebDriver?
+    -  How WebDriver works
+    -  Why choose WebDriver?
+    -  What WebDriver cannot do
+    -  The history of Selenium
+    -  The tools you need to get started
+    -  The test project
+    -  “Hello WebDriver!”
+    -  Summary
+* Chapter 2:  Locating elements on a page
+    -  Locating one or more elements based on ID, class, or name
+    -  Fine-grained targeting using complex CSS selectors
+    -  Locator composition
+    -  Making pages amenable to element locating
+    -  When to use each locator?
+    -  Summary
+* Chapter 3:  Interacting with elements on a page
+    -  Be the user
+    -  Entering text
+    -  Simulating user behavior using the mouse
+    -  Context menus
+    -  Interacting with forms
+    -  Summary
+* Chapter 4:  Examining a page
+    -  Checking whether an element is present
+    -  Verifying whether an element is visible (or not)
+    -  Verify the page title
+    -  Verifying that text is on the page
+    -  Examining an element's styling
+    -  Summary
+* Chapter 5:  Making maintainable tests using the Page Object pattern
+    -  What is a page object?
+    -  Creating a page object for a login form
+    -  Fluent page objects using method chaining
+    -  Creating a page object for a whole page
+    -  What makes a great page object?
+    -  Using PageFactory and annotations to simplify your page objects
+    -  Using LoadableComponent to make your page objects robust
+    -  Summary
+* Chapter 6:  What To Do When Something Goes Wrong
+    -  Exceptions
+    -  Retrying when you can't find a slippery element
+    -  Understanding implicit waiting
+    -  Explicitly waiting for elements to load
+    -  Looking for alternative locators
+    -  Internationalization
+    -  Summary
+
+*Part 2 – WebDriver APIs In Depth*
+
+In this section we will dive into how to use the WebDriver APIs for automating more complex page elements. We’ll also look at automating JavaScript web applications. Finally, we’ll introduce you to each of the main drivers, such as the Firefox Driver, as well as mobile drivers for iOS and Android.
+
+* Chapter 7:  Managing WebDriver
+    -  Quitting the driver, even if the Java Virtual Machine crashes
+    -  Having a single place to supply drivers
+    -  Making code run using base URLs
+    -  Taking a screenshot when a test finishes
+    -  Summary
+* Chapter 8:  Windows, pop-ups, and frames
+    -  Finding the window a page opens
+    -  Modal pop-ups
+    -  Inline frames
+    -  Summary
+* Chapter 9:  Unicorns and other beasts: Exotic features of web pages
+    -  Advanced user interaction with action chains
+    -  Advanced forms
+    -  Examining HTTP cookies
+    -  Tooltips
+    -  Summary
+* Chapter 10:  Executing JavaScript using the `JavascriptExecutor` interface
+    -  Introduction to executing JavaScript
+    -  Using JavaScript to examine a page
+    -  Overriding built-in JavaScript APIs
+    -  Using JavaScript to test geolocation
+    -  Automating web notifications
+    -  Summary
+* Chapter 11:  What you need to know about different browsers
+    -  Comparing drivers
+    -  Self-signed certificates
+    -  Desktop browsers
+    -  Firefox
+    -  Chrome
+    -  Internet Explorer
+    -  Microsoft Edge
+    -  Safari
+    -  Headless browsers
+    -  iPhone, iPad and Android -- Appium
+    -  Summary
+* Chapter 12:  Wrapping WebDriver and WebElement
+    -  Event firing web driver
+    -  Base URL driver
+    -  How to find out a page’s HTTP status code
+    -  Wrapping `WebElement` for HTML table with a `Table` interface
+    -  Wrapping `By` locators inside enum constants
+    -  Summary
+
+*Part 3 - Page Based Automation Framework*
+
+We are going to use the technique we learnt from previous part of the book to write a wrapper framework around WebDriver. This framework is written by experienced enterprise developers based upon lessons learned on the development of many web automation projects. It encapsulates much of the complexity of WebDriver and exposes a clean API to boost productivity and make code easy to understand.
+
+The part of the book will explain the principles behind the evolution of a framework, and use it to show you how you can reduce the complexity of your code by developing an in-house framework.
+
+* Chapter 13:  Forming a Framework
+    -  Problems with using `WebDriver` and `WebElement` directly
+    -  Adding more functionality to wrapped `WebDriver` and `WebElement`
+    -  Making framework backwards compatible with existing codebase
+    -  Summary
+* Chapter 14:  Encapsulating and Grouping elements
+    -  Enriching `Browser` class to simplify the interaction of form elements
+    -  Handling flakiness with a retry
+    -  Grouping elements for clarity and maintainability
+    -  Summary
+* Chapter 15:  Automating a page flow
+    -  Manually navigate the page flow to understand what to be automated
+    -  Creating page classes to represent important pages in the page flow
+    -  Designing test data to fulfill the end to end transaction processing
+    -  Summary
+* Chapter 16:  Handling HTML Tables
+    -  Extracting heading into a list of strings
+    -  Creating domain classes representing table rows
+    -  Validating a table using customized result comparator
+    -  Using Java Generics to remove duplicated code
+    -  Summary
+* Chapter 17:  Automating jQuery Datepicker
+    -  Understanding datepickers
+    -  Implementing the jQuery datepicker class
+    -  Introducing delegate classes to split responsibilities
+    -  Summary
+* Chapter 18:  Datepicker Framework
+    -  Extracting general purpose datepicker framework
+    -  Automating other datepickers
+    -  Summary

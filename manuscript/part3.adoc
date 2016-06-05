@@ -1,0 +1,3 @@
+= Part 3
+
+:imagesdir: ../images/part3

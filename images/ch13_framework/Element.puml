@@ -1,0 +1,39 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+namespace org.openqa.selenium  {
+
+    interface SearchContext
+    interface WebElement
+
+    SearchContext <|-- WebElement
+}
+
+namespace swip.framework {
+
+    interface SearchScope
+
+    interface ExplicitWait
+
+    SearchScope <|-- ExplicitWait
+
+    class DelegatingSearchContext<WebElement>
+
+    ExplicitWait <|.. DelegatingSearchContext
+
+    org.openqa.selenium.SearchContext <|. DelegatingSearchContext
+    note right : It needs to implement all methods\ndefined in SearchContext interface\nWe omit them since we want you \nto use the ones in SearchScope and\nExplicitWait
+
+    DelegatingSearchContext <|--  DelegatingWebElement
+    note right : It implements all methods\ndefined in WebElement interface
+
+    DelegatingWebElement <|-- Element
+
+    org.openqa.selenium.WebElement <|.  DelegatingWebElement
+
+    DelegatingSearchContext : WebElement delegate
+
+}
+@enduml

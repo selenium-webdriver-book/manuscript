@@ -1,0 +1,854 @@
+= Making maintainable tests using the Page Object pattern
+
+:imagesdir: ../images/ch05_page_objects
+
+The chapter covers
+
+* Using the Page Object pattern
+* Understanding best practices for page objects
+* Working with classes for creating page objects
+
+The _Page Object pattern_ is almost certainly the best known pattern when it comes to page automation. There's a good reason for this—it's incredibly effective at reducing the duplication and complexity, and increasing reusability and robustness, of automation code. This is especially true as your application grows.
+
+A page object wraps up a page, or part of a page, into a single object, and that object can be reused in multiple places. For example, you might want to wrap a login form or page navigation into a page object. That way, you can reuse that object, rather than having to repeat yourself. If the login form or navigation changes, you only need to change your code in one place—the page object.
+
+In this chapter, we'll visit the fundamentals of page objects, look at some examples of their use, and discuss what makes a good page object and what makes a bad one. Finally we'll look at provided libraries that can help reduce the complexity of your page objects.
+
+== What is a page object?
+
+Before we start with techniques and best practices, let's look at the fundamentals.
+
+A page object is an object that encapsulates the behavior of a part, or whole, of a single page. It abstracts away the details of interacting with the HTML of a page, and replaces it with an API that talks in terms of the functionality the pages provides.
+
+For example, a login form might have several form inputs and buttons. To log in using WebDriver, you'd need to set the value of the username and password, and then click the "Login" button. If you use a page object, you might instead only need to ask the object to "login". If the login form changes, the page object's implementation might need to change, but its API won't. This means that any code that uses the object doesn't need to change.
+
+There are several benefits of using page objects:
+
+- By refactoring code into classes that represent pages, the code that uses these classes can be much easier to understand.
+- By reducing duplication, page objects can make code cheaper to maintain.
+- Because the concept of a page object is well understood, they can make your code easier for others to work with.
+
+== Creating a page object for a login form
+
+Let's consider a login form (see figure <<Login_form>>).
+
+[[Login_form]]
+image::login-form.png[title=Login form - http://localhost:8080/login.html]
+
+There are a few elements on this form:
+
+* An email input
+* A password input
+* A submit button
+* A "forgotten password" link
+
+The actual HTML looks like this:
+
+[source,html]
+.login.html - http://localhost:8080/login.html
+----
+    <form class="form-inline" id="login">
+        <div class="form-group">
+            <input type="text" name="email" class="form-control" placeholder="Email">
+            <input type="password" name="password" class="form-control"
+                placeholder="Password">
+            <input type="submit" value="Login" class="btn btn-primary">
+        </div>
+        <div class="form-group forgotten-password">
+            <a href="#" id="change-password" class="btn">Forgotten Password</a>
+        </div>
+    </form>
+----
+
+Consider how this HTML might translate into an object that encapsulates the behavior of the HTML. Ask yourself -- what is the user trying to do when they interact with this part of the page? You might want an API to the form that looks like this:
+
+[source,java]
+----
+    public class LoginForm {
+        public void loginAs(String email, String password) {...}
+        public void openForgottenPasswordPage() {...}
+    }
+----
+
+Page objects are usually constructed from a single `WebElement` or from the `WebDriver` itself (both of which implement the `SearchContext` interface). This allows the object to find the elements it needs. Using a `WebElement` narrows down the scope of the search and makes sure that you don't accidentally include elements that aren't part of your form.
+
+For a login form, a great choice would be the HTML form element itself, as it contains only elements related to login. By reducing the scope of the object, you reduce the chance that something else on the page changing can impact your object. For example:
+
+[source,java]
+----
+    LoginForm loginForm = new LoginForm(driver.findElement(By.id("login")));
+    loginForm.loginAs("foo@bar.com", "secret");
+----
+
+Our final login form object might look like this:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/LoginForm.java[LoginForm.java]
+----
+    public class LoginForm {
+        private final WebElement loginForm;
+
+        public LoginForm(WebElement loginForm) {
+            this.loginForm = loginForm;
+        }
+
+        public void loginAs(String email, String password) {
+            loginForm.findElement(By.cssSelector("input[name='email']"))
+                    .sendKeys(email);
+            loginForm.findElement(By.cssSelector("input[name='password']"))
+                    .sendKeys(password);
+            loginForm.findElement(By.cssSelector("input[type='submit']"))
+                    .click();
+        }
+    }
+----
+
+This object is "lazy". It doesn't search for the input elements when it's constructed. Instead, it searches for them when the login method is called. We'll come back to why you might prefer to be "lazy" later on in this chapter.
+
+The page objects in our examples are either constructed from a `WebElement`, or from the `WebDriver`. Both these classes implement the `SearchContext`. All three can be used, but when should you use one and when should you use another?
+
+* `WebDriver`—Use this when you think there will only be one instance of that page object per page. It can also encapsulate the locating of the element into a single place. For example, a navigation menu might be a good choice because you'll only have one of these on a page.
+
+* `WebElement`—Use this when there may be many items on a page, or when the locator you need might change depending on the page you're looking at. For example, a single product in a product listing page (such as on Amazon or eBay) would be a good example, as you may have many of these on a single page.
+
+* `SearchContext`—This can be used in either situation, but it shouldn't be used if the object should only be passed an element.
+
+What might be a good part of a page to make into page objects? Here's a set of examples:
+
+* The navigation menu
+* A calendar or date-picker
+* Thumbnail images
+* A product listing on a shopping site
+* The shopping basket
+* Almost any form
+** A user-registration from
+** A login form
+** A payment-method registration form, such as for a credit card registration
+** A payment form, such as for a card deposit
+* Tables
+* An article on a news website or blog
+* A search result on a search engine, such as Google
+* A user's profile on a social network
+
+
+== Fluent page objects using method chaining
+
+It's said that there's more than one way to skin a cat. One alternative to encapsulating the behavior in a single method is to make the login form a _fluent interface_ footnote:[See the "Fluent Interface" article on Wikipedia: https://en.wikipedia.org/wiki/Fluent_interface]. The use of fluent interfaces typically starts with an initial initiation step, followed by one or more construction steps, followed by a final execution step. In our example, it would look something like this:
+
+. Create the page object.
+. Set the username.
+. Set the password.
+. Submit the form.
+
+These steps might result the following code.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/fluentbuilder/LoginFormIT.java[fluentbuilder/LoginFormIT.java]
+----
+    new LoginForm(driver.findElement(By.id("login")))
+            .username("foo@bar.com")
+            .password("secret")
+            .submit();
+----
+
+This is easier to read for many people than the first version of the login form we looked at. The primary downside to this approach is that although it makes for more readable tests, it makes for more verbose page objects:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/fluentbuilder/LoginForm.java[fluentbuilder/LoginForm.java]
+----
+    public class LoginForm {
+        private final WebElement loginForm;
+
+        public LoginForm(WebElement loginForm) {
+            this.loginForm = loginForm;
+        }
+
+        public void submit() {
+            loginForm.findElement(By.cssSelector("input[type='submit']"))
+                    .click();
+        }
+
+        public LoginForm username(String email) {
+            loginForm.findElement(By.cssSelector("input[name='email']"))
+                    .sendKeys(email);
+            return this;
+        }
+
+        public LoginForm password(String password) {
+            loginForm.findElement(By.cssSelector("input[name='password']"))
+                    .sendKeys(password);
+            return this;
+        }
+    }
+----
+
+== Creating a page object for a whole page
+
+A page object can represent the whole, or just a part, of a page. This makes a lot of sense if you think about all the parts of a page that might be common within a website:
+
+* Navigation header
+* Login form
+* Sidebar
+* Basket
+
+Each of these can be modeled as a single object, which you can then compose together into an object that represents the whole page. This allows you to reuse those objects in multiple places.
+
+Designing a good generic page object can be a challenge. For example, does the nav bar really appear on every page of the website? Presumably the login form is replaced by a logout form once you're logged in? Does the basket (or shopping cart) appear on the account pages as well as the pages for browsing products?
+
+An alternative approach to generic page objects comes from applying the _You Aren't Gonna Need It_ (YAGNI) principle footnote:["You aren't gonna need it" on Wikipedia: https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it]. YAGNI says, in a nutshell, that you only do work when you know for sure you'll need it. Rather than have a generic base class that every page object extends, you should instead focus on automating just the part of the page you're interested in.
+
+== What makes a great page object?
+
+Some page objects are badly behaved. They are hard to work with, don't fully encapsulate the abstraction, require constant attention and create great costs. Other page objects are well behaved, easy to work with and inexpensive to maintain, and bring value to your team. To get the best out of page objects, you can follow some best practices. Let's look at some of them.
+
+=== Don't expose WebDriver methods via public methods or fields
+
+This should probably go without saying. Code that uses a good page object shouldn't need to be changed if the HTML that page object encapsulates changes—its public API should be stable. This can't happen if the object exposes its internal working.
+
+The login example is a good demonstration of this. None of its methods expose `WebElement` or `WebDriver` as either a method parameter or return type. Instead, they represent the operations you might want to achieve with the form—logging in.
+
+=== Model behavior rather than the underlying HTML
+
+Page objects that closely follow the underlying HTML tend to require more lines of code to use. Take a look at the search form in figure <<Search_form>>:
+
+[[Search_form]]
+image::search.png[title=Search form]
+
+You could model a search form as a page object by sticking closely to the form's HTML structure:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/a/SearchForm.java[a/SearchForm.java]
+----
+    public class SearchForm {
+        private final WebDriver driver;
+
+        public SearchForm(WebDriver driver) {
+            this.driver = driver;
+        }
+
+        public void setQuery(String query) {
+            driver.findElement(By.cssSelector("input[name='q']"))
+                    .sendKeys(query);
+        }
+
+        public void submit() {
+            driver.findElement(By.cssSelector("input[type='submit']"))
+                    .click();
+        }
+    }
+----
+
+This has a somewhat verbose usage:
+
+[source,java]
+----
+    SearchForm searchPage = new SearchForm(driver);
+
+    searchPage.setQuery("funny cats");
+    searchPage.submit();
+----
+
+But what are you trying to do? Search for something. You could create a class focused on searching:
+
+[source,java]
+----
+    public class SearchPage {
+        private final WebDriver driver;
+
+        public SearchPage(WebDriver driver) {
+            this.driver = driver;
+        }
+
+        public void searchFor(String query) {
+            driver.findElement(By.cssSelector("input[name='q']"))
+                    .sendKeys(query);
+            driver.findElement(By.cssSelector("input[type='submit']"))
+                    .click();
+        }
+    }
+----
+The usage here is straightforward:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/a/SearchFormIT.java[a/SearchFormIT.java]
+----
+    SearchPage searchPage = new SearchPage(driver);
+
+    searchPage.searchFor("funny cats");
+----
+
+The key takeaway here is that you shouldn't be constrained by the HTML. Think about what the HTML helps the user to achieve, and create a page object with an API that matches that.
+
+=== Be highly cohesive
+
+Imagine what would happen if you created a page object that represented two parts of a page.
+
+[source,java]
+----
+public void TopBar {
+    ...
+    public void loginAs(String username, String password) {...}
+    public void searchFor(String searchQuery) {...}
+    public void openHomePage() {...}
+}
+----
+
+If either the login form, the search page, or the home page changes, you'll need to change this object. Any code that uses this page object could be affected, resulting in more work to maintain your tests. If an object models both the login form and the search form, any changes to the login form will risk impacting the search form, and vice versa.
+
+Instead, model only one aspect of a page's functionality in a page object. A cohesive object reduces the object's complexity and increases its reusability.
+
+=== Be lazy
+
+I don't mean you should go and have a nap! I'm talking about _lazy loading_ footnote:[See the "Lazy loading" Wikipedia article: https://en.wikipedia.org/wiki/Lazy_loading].
+
+You may be encouraged to create immutable objects—functional programming is all the rage, and immutable objects are one of its cornerstones. In Java, you can create an immutable object by creating it in a fixed state when you construct it. But here we're modeling something mutable, a web page, which may change.
+
+Consider this page object:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/c/SearchPage.java[c/SearchPage.java]
+----
+    public class SearchPage {
+        private final WebElement queryInput;
+        private final WebElement submitInput;
+
+        public SearchPage(WebDriver driver) {
+            queryInput = driver.findElement(By.cssSelector("input[name='q']"));
+            submitInput = driver.findElement(By.cssSelector("input[type='submit']"));
+        }
+
+        public void searchFor(String query) {
+            queryInput.sendKeys(query);  <1>
+            submitInput.click();
+        }
+    }
+----
+<1> By this time, `queryInput` may already be modified by JavaScript and causes a `StaleElementReferenceException`
+
+The page may not have loaded the HTML that makes up the search when the object is constructed, so the elements might not be accessible. More than that, each time you create this object you make calls to `WebDriver` that you don't need. Doing this unnecessarily will slow down your tests. Also it increases the chance of getting an intermittent  `StaleElementReferenceException` during runtime.
+
+Instead, try to find the elements when you need them:
+
+[source,java]
+----
+    public class SearchPage {
+        private final WebDriver driver;
+
+        public SearchPage(WebDriver driver) {
+            this.driver = driver;
+        }
+
+        public void searchFor(String query) {
+            driver.findElement(By.cssSelector("input[name='q']"))
+                .sendKeys(query);
+             driver.findElement(By.cssSelector("input[type='submit']"))
+                .click();
+        }
+    }
+----
+
+This can dramatically reduce the chance of getting a `StaleElementReferenceException`.
+
+[sidebar]
+.Stale Element Reference Exception
+****
+This is commonly encountered exception so Selenium WebDriver website has a detailed document on this exception, please take a look at the following url.
+
+http://docs.seleniumhq.org/exceptions/stale_element_reference.jsp
+
+We will cover this exception in chapter 6.
+
+****
+
+=== Throw an error for the wrong page
+
+Typically, it's bad practice to create any object with an invalid state. This applies to page objects just as much as to any other objects. If you create a page object from the wrong page, you might find that your test fails, but when it fails it's hard to diagnose. It might look like you've created a working and valid page object, but that object may not be representing the HTML it should.
+
+When creating a page object, you might want to check that you've got the correct page. Making sure the correct page is loaded, ideally with an inexpensive test, can prevent hard-to-diagnose problems in your code.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/d/SearchPage.java[d/SearchPage.java]
+----
+    public SearchPage(WebDriver driver) {
+        String pageTitle = driver.getTitle();
+        if (!pageTitle.equals("Search")) {
+            throw new IllegalArgumentException(String.format("page is not search page, it has un-expected title %s", pageTitle)); // <1>
+        }
+        // ...
+    }
+----
+<1> You might want to include some diagnostics—if it's not the search page, how will you know what page it actually is?
+
+=== Don't provide methods that assert
+
+It might be tempting to take your page object and add convenience methods that throw assertion errors under certain conditions.
+
+[source,java]
+----
+    public void assertPageTitleIs(String expectedTitle) {
+        assertEquals(expectedTitle, driver.getTitle());
+    }
+----
+
+This couples the page object with your testing framework. You'll typically start to find it hard to change the page objects, because tests are relying on these methods.
+
+Why wouldn't you want to couple your page objects with your testing framework? After all, you're using them in your tests.
+
+* There is more than one framework that a project may use. If you want to share page objects between two projects, you might find that one uses JUnit and the other TestNG, and the page object needs to be changed to be used.
+* An assertion is a statement a test makes about the behavior of the application it's testing. A page object is intended to represent the page. Excluding assertions from page objects makes it clear which code is responsible for which.
+
+Instead, you can provide a method that achieves the same thing without the assertion:
+
+[source,java]
+----
+    public void verifyPageTitleIs(String expectedTitle) {
+        String actualTitle = driver.getTitle();
+        if (!expectedTitle.equals(actualTitle)) {
+            throw new IllegalStateException("expected " + expectedTitle + " but got " + actualTitle);
+        }
+    }
+----
+
+== Using PageFactory and annotations to simplify your page objects
+
+The `PageFactory` class is provided by WebDriver to make writing page objects less verbose and more robust. Let's look at our `SearchForm` again:
+
+[source,java]
+----
+    public class SearchForm {
+        private final WebDriver driver;
+
+        public SearchForm(WebDriver driver) {
+            this.driver = driver;
+        }
+
+        public void searchFor(String query) {
+            driver.findElement(By.cssSelector("input[name='q']"))
+                    .sendKeys(query);
+            driver.findElement(By.cssSelector("input[type='submit']"))
+                    .click();
+        }
+    }
+----
+
+The `searchFor` method is doing more things than you might like it to. Specifically, it contains code to identify the elements when you want to use them. What if you add this new method:
+
+[source,java]
+----
+    public void clearQuery() {
+        driver.findElement(By.cssSelector("input[name='q']")).clear();
+    }
+----
+
+If you're anything like us, you'll immediately notice some code duplication, and you'll probably want to refactor it out to a method like this:
+
+[source,java]
+----
+    public void searchFor(String query) {
+        findQuery()
+                .sendKeys(query);
+        driver.findElement(By.cssSelector("input[type='submit']"))
+                .click();
+    }
+
+    private WebElement findQuery() {
+        return driver.findElement(By.cssSelector("input[name='q']"));
+    }
+
+    public void clearQuery() {
+        findQuery().clear();
+    }
+----
+
+You may decide to extract the locator into a constant:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/pagefactory/whybad/SearchForm.java[pagefactory/whybad/SearchForm.java]
+----
+    public class SearchForm {
+        private static final By QUERY_SELECTOR = By.cssSelector("input[name='q']");
+        private final WebDriver driver;
+
+        public SearchForm(WebDriver driver) {
+            this.driver = driver;
+        }
+
+        public void searchFor(String query) {
+            driver.findElement(QUERY_SELECTOR)
+                    .sendKeys(query);
+            driver.findElement(By.cssSelector("input[type='submit']"))
+                    .click();
+        }
+
+        public void clearQuery() {
+            driver.findElement(QUERY_SELECTOR).clear();
+        }
+    }
+----
+
+Another solution would be to have a field containing the query input, but you'd would lose the benefits of lazy loading for the element. There's no ideal solution ... or is there?
+
+=== Technique 14: Using `PageFactory` to simplify code
+
+==== Problem
+
+The locating of elements in page objects is done with explicit calls to `WebDriver`, and it results in verbose code.
+
+==== Solution
+
+Use `PageFactory` to create page objects with fields that are populated automatically.
+
+`PageFactory` is provided as part of WebDriver's support library.
+
+So that it doesn't look like magic, lets talk a bit about how `PageFactory` works.
+
+[[page-factory]]
+image::page-factory.png[title=Page Factory]
+
+Firstly, you'll call `PageFactory.initElements(driver, YourPageObject.class)`. This creates an instance of your object.
+
+[sidebar]
+****
+Page objects that use `PageFactory` must be created using `initElements` If this not used, the the object will have null fields and will not work as expected.
+****
+
+Then, for each field in your object that is a `WebElement`, `PageFactory` determines the correct locator to find it. If it is annotated with the `@FindBy` annotation, then the `PageFactory` will use that to determine the locator. Otherwise, it assumes there is an element on the page who ID, or name is the same as the field's name.
+
+Lets have a look at our search form:
+
+[source,html]
+.http://localhost:8080/search.html
+----
+    <form class="form-inline" role="search">
+        <div class="form-group">
+            <input type="text" name="q" class="form-control" placeholder="Search"/>
+            <input type="submit" value="Search" class="btn btn-primary"/>
+        </div>
+    </form>
+----
+
+For this form, we'll want to find the query input, and the submit input. The query input could be located by its name `q`. As we know that if the name of the field matches either the ID or name of the element, then we can use that. So lets start with a basic page object:
+
+[source,java]
+----
+public class SearchForm {
+    private WebElement q;
+}
+----
+
+The submit input does not have an ID or name, but we could use its type attribute: `submit`. This can be done using a CSS locator, so we can add a `@FindBy` annotation with it `css` property set to `input[type='submit']`:
+
+[source,java]
+----
+public class SearchForm {
+    private WebElement q;
+    @FindBy(css = "input[type='submit']")
+    private WebElement submit;
+}
+----
+
+Next, lets add a `searchFor` method:
+
+[source,java]
+----
+public class SearchForm {
+    private WebElement q;
+    @FindBy(css = "input[type='submit']")
+    private WebElement submit;
+
+    public void searchFor(String query) {
+        this.q.sendKeys(query);
+        this.submit.click();
+    }
+}
+----
+
+Finally, I'd like to rename the variable `q` to something more descriptive. I'd like to rename it to `query`. But the input is not named `query`, so I'll need to add a `@FindBy` annotation with it's `name` property set:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/pagefactory/SearchForm.java[pagefactory/SearchForm.java]
+----
+public class SearchForm {
+    @FindBy(name = "q")
+    private WebElement query;
+    @FindBy(css = "input[type='submit']")
+    private WebElement submit;
+
+    public void searchFor(String query) {
+        this.query.sendKeys(query);
+        this.submit.click();
+    }
+}
+----
+
+ To create this page object, you must invoke the `PageFactory.initElements` method:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/pagefactory/SearchFormIT.java[pagefactory/SearchFormIT.java]
+----
+    SearchForm searchForm = PageFactory.initElements(driver, SearchForm.class);
+    searchForm.searchFor("funny cats");
+----
+
+When you create a page object in this way, `PageFactory` populates each of the fields. One of the best practices we talked about earlier was lazy loading, and this might seem to be opposite of this-eager loading, but there's some magic!
+
+For each of the fields, instead of a real, concrete element, `PageFactory` creates a _dynamic proxy_ footnote:[See "Dynamic Proxy Classes" in Oracle's Java documentation: https://docs.oracle.com/javase/8/docs/technotes/guides/reflection/proxy.html]. The proxy holds a reference to the original driver instance the object was created from, and the locator it decided to use. Each time a method is called on the proxy, it locates the element afresh, making sure you can't have a stale element.
+
+Creating elements lazily is great for most cases, because every invocation makes sure the element is available. But if your code is slow, and you know the element is always available on the page, and you are using it repeatedly, then annotate the field with the `@CacheLookup` annotation. The element will only be looked up once.
+
+==== Discussion
+
+`PageFactory` can help reduce the verbosity of code by changing how you define a page object. Instead of explicitly getting elements when you use them, `PageFactory` will populate them dynamically based on the locators you've configured them with.
+
+This is great for most cases, but you should be aware of a couple of things.
+
+First, as mentioned before, the fields are populated with proxies rather than concrete elements. This can be seen in figure <<Debugging_page_object>>, where the fields are of type `com.sun.proxy.$Proxy` rather than `WebElement`.
+
+[[Debugging_page_object]]
+image::debug-page-factory-object.png[title=Debugging a page object created by `PageFactory`]
+
+This means that even if you know the type of the element produced by a specific driver, the actual object you get might not be an instance of the class you expect. You shouldn't write code that makes this assumption.
+
+Second, it's possible to create an instance of a page object using the standard `new` command. This object will not have its fields set—they will be null. Finally, because `PageFactory` requires a public constructor, it's not possible to make the object constructor private.
+
+== Using LoadableComponent to make your page objects robust
+
+When writing automation code, you are likely to find yourself doing the following on a regular basis:
+
+1. Execute an operation that you expect to load a page.
+2. Verify the page loaded correctly.
+3. Create a page object for the loaded page.
+
+=== Technique 15: Using LoadableComponent to make your page object robust
+
+==== Problem
+
+Page objects are loaded, but you don't know if they've loaded from the correct page. This results in tests that may fail unexpectedly.
+
+==== Solution
+
+Use `LoadableComponent`.
+
+`LoadableComponent` is provided as part of WebDriver's support library, and its goal is to support the writing of page objects and reduce the amount of code you need to write.
+
+To utilize it, you need to provide two pieces of code on your page object:
+
+. Code to load the page.
+. Code to verify that the page is loaded.
+
+`LoadableComponent` then uses those two blocks of code to load and then verify the page in a single step.
+
+Let's redo our search page in this style:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadable/SearchForm.java[loadable/SearchForm.java]
+----
+    public class SearchPage extends LoadableComponent<SearchPage> {
+        private final WebDriver driver;
+
+        public LoadableSearchPage(WebDriver driver) {
+            this.driver = driver;
+        }
+        @Override
+        protected void load() {
+            driver.get("/search.html");
+        }
+
+        @Override
+        protected void isLoaded() throws Error {
+            assertEquals("Search", driver.getTitle()); // <1>
+        }
+
+        public void searchFor(String query) {
+            driver.findElement(By.cssSelector("input[name='q']")).sendKeys(query);
+            driver.findElement(By.cssSelector("input[type='submit']")).click();
+        }
+    }
+----
+<1> This is a violation of early advice -- don't use assert in a page object -- but this is an exception as this is how this class is designed to be used.
+
+The usage is straightforward:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadable/SearchFormIT.java[loadable/SearchFormIT.java]
+----
+    LoadableSearchPage page = new LoadableSearchPage(driver).get();
+    page.searchFor("funny cats");
+----
+
+==== Discussion
+
+There are unattractive issues with using `LoadableComponent`:
+
+* You can create an unloaded version of the page, effectively creating an object in an invalid state.
+* It encapsulates the logic within methods that can be overridden. If there are many subclasses, it makes them hard to reason about.
+* The contract of the method `isLoaded` states you must throw an `Error` "when the page is not loaded". In Java, an `Error` "indicates serious problems that a reasonable application should not try to catch". This is not (IMHO) the most appropriate exception. Perhaps returning a boolean would be preferable?
+
+What we're trying to do with `LoadableComponent` is an excellent idea. In the next section, we'll look at bringing `LoadableComponent` and `PageFactory` together, so we can get the benefits of both.
+
+=== Technique 16: Creating a loading page factory
+
+We'd like to get the benefits of loadable components and page object factories at the same time. This technique shows how to combine the two.
+
+==== Problem
+
+We'd like a unified approach to loading, populating, and verifying page objects.
+
+==== Solution
+
+Create a `LoadingPageFactory` class to do these operations.
+
+Let's quickly review the benefits of page objects, `PageFactory`, and `LoadableComponent` and create some requirements for our new factory:
+
+* Encapsulating page logic and enabling reuse
+* Simplifying the definition of a page object
+* Enabling lazy loading of elements
+* Preventing the creation of invalid page objects
+
+To do this we need three things:
+
+* A strategy for loading the page
+* A strategy for verifying that the page has loaded
+* A strategy for locating elements
+
+You can do this all using annotations. We're going to create some new annotations: `@Path` and `@Verify` to work with `@FindBy`. Lets look at how we would use them:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadablepagefactory/SearchForm.java[loadablepagefactory/SearchForm.java]
+----
+    @Path("http://localhost:8080/search.html")
+    @Verify(title = "Search")
+    public class SearchForm {
+
+        @FindBy(css = "input[name='q']")
+        private WebElement query;
+        @FindBy(css = "input[type='submit']")
+        private WebElement submit;
+
+        public void searchFor(String text) {
+            query.sendKeys(text);
+            submit.click();
+        }
+    }
+----
+
+We want a terse way to load these pages, so borrowing from `PageFactory` gives us the following:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadablepagefactory/SearchFormIT.java[loadablepagefactory/SearchFormIT.java]
+----
+    SearchForm page = LoadingPageFactory.get(driver, SearchForm.class);
+----
+
+This can be implemented in a few lines of code, as follows.
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadablepagefactory/LoadingPageFactory.java[LoadingPageFactory.java]
+----
+    public class LoadingPageFactory {
+        public static <T> T get(WebDriver driver, Class<T> pageObjectClass) {
+
+            driver.get(pageObjectClass.getAnnotation(Path.class).value()); <1>
+
+            Verify verify = pageObjectClass.getAnnotation(Verify.class); <2>
+
+            String expectedPageTitle = verify.title();
+            if (!expectedPageTitle.equals(Verify.INVALID_TITLE)) { <3>
+                String actualPageTitle = driver.getTitle();
+                if (!expectedPageTitle.equals(actualPageTitle)) {
+                    throw new IllegalStateException(
+                            String.format(
+                                "expected page title %s but was %s",
+                                expectedPageTitle,
+                                actualPageTitle
+                            )
+                        );
+                }
+            }
+
+            return PageFactory.initElements(driver, pageObjectClass); <4>
+        }
+    }
+----
+<1> Gets the page
+<2> Assumes that the @Verify annotation will be present
+<3> Verifies the page title if it's defined
+<4> Delegates the populating of elements to PageFactory
+
+Finally, you need the two new annotations:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadablepagefactory/Path.java[Path.java]
+----
+    @Retention(RetentionPolicy.RUNTIME) // <1>
+    @Target(ElementType.TYPE) // <2>
+    public @interface Path {
+        String value();
+    }
+----
+<1> Indicates this annotation needs to be available at runtime
+<2> Indicates this annotation applies to types only
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadablepagefactory/Verify.java[Verify.java]
+----
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE)
+    public @interface Verify {
+        String INVALID_TITLE = "\0"; // <1>
+
+        String title() default INVALID_TITLE;
+    }
+----
+<1> This is an invalid page title. This allows the verification of the title to be optional.
+
+==== Discussion
+
+This is one way to combine the benefits of `PageFactory` and `LoadableComponent` to consistently create verified page objects. It's a bit light on features, as it can only verify by page title, and other features will be useful in many cases.
+
+Annotations have some caveats. For example, values can't be null, so if an attribute is optional, you'll need to use some illegal value that no client would be expected to pass. Here we use the null string. You also must annotate them with `@Retention(RetentionPolicy.RUNTIME)` to make sure the JVM makes them available when your code runs, and `@Target(ElementType.TYPE)` to ensure that they are only applicable to class.
+
+You might find this sort of class useful in your automation framework.
+
+Because verifying the title is optional, you could extend this approach to verify other items on the page. For example, you could add a check to see that an XPath exists:
+
+[source,java]
+----
+public @interface Verify {
+    ...
+
+    String INVALID_XPATH = "\0";
+    String xpath() default INVALID_XPATH;
+}
+----
+
+To implement this, add the following to your `LoadingPageFactory`:
+
+[source,java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadablepagefactory/LoadingPageFactory.java[LoadingPageFactory.java]
+----
+        String xpath = verify.xpath();
+        if (!expectedPageTitle.equals(Verify.INVALID_XPATH)) {
+            if (driver.findElements(By.xpath(xpath)).isEmpty()) {
+                throw new IllegalStateException(String.format("expected XPath %s", xpath));
+            }
+        }
+----
+
+This will allow you to check for a part of a page:
+
+[source,java]
+----
+@Verify(xpath = "//h1[text()='Search']")
+public class SearchForm {
+...
+----
+
+== Summary
+
+* Page objects can represent the whole of a page, or just part of a page. You can choose the best approach depending on circumstances.
+* Page objects help reduce the complexity of tests, and help make them easier to understand by allowing you to re-use code that works with parts of a page used in many places. Page objects make your tests cheaper to maintain.
+* There are a number of best practices for getting the most out of page objects. These include hiding away WebDriver, being cohesive, and lazy loading.
+* Selenium's support library provides `PageFactory` and `LoadableComponent`. These help you keep your code short and easy to understand. You can build on these to create your own utility classes.
+
+We don't live in an ideal world, and there are number of issues you'll encounter when using WebDriver for which solutions and work-arounds will be required. In the next chapter we'll look at what you can do when things go wrong.
