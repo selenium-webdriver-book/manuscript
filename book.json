@@ -1,0 +1,14 @@
+{
+    "plugins": ["ga", "disqus", "anchors", "layout"],
+    "pluginsConfig": {
+        "ga": {
+            "token": "UA-63355774-1"
+        },
+        "disqus": {
+           "shortName": "seleniumwebdriverinpractice"
+       },
+       "layout": {
+        	"headerPath" : "layouts/header.html"
+        }
+     }
+}

@@ -593,10 +593,7 @@ You can run the following test to see how it works, and the style of this test i
 ----
 @Test
 public void pickADate() {
-    new BootstrapDatepickerPage(browser){{   <1>
-        pick(APRIL, 1, 2015);                    <2>
-        assertEquals("01-04-2015", getDate());    <3>
-    }};
+// TODO
 }
 ----
 <1> Create an instance of anonymous subclass `BootstrapDatepickerPage` class and the code within the inner bracket is anonymous constructor
@@ -810,13 +807,7 @@ You can run the following test to see how it works,
 [source,java]
 .link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch18datepicker/tests/ReactDatepickerIT.java#L27-L33[ReactDatepickerIT.java]
 ----
-@Test
-public void pickADate() {
-    new ReactDatepickerPage(browser){{
-        pick(APRIL, 1, 2015);
-        assertEquals("04/01/2015", super.getDate());
-    }};
-}
+// TODO
 ----
 
 Similarly, we can just copy the structure of those enum from ReactJS package to other packages and modify them to automate other datepickers.
@@ -914,10 +905,7 @@ Here is a test to run the datepicker,
 ----
 @Test
 public void pickADate() {
-    new MaterialDatepickerPage(browser) {{
-        pick(APRIL, 1, 2015);
-        assertEquals("4/1/2015", super.getDate());
-    }};
+// TODO
 }
 ----
 
@@ -1125,26 +1113,17 @@ Since it has year buttons, we actually can write some cool tests. footnote:[Thes
 ----
 @Test
 public void backToFuture1() {
-    new JsDatepickPage(browser) {{
-        pick(NOVEMBER, 5, 1955);                      <1>
-        assertEquals("05-NOV-1955", super.getDate());
-    }};
+//TODO
 }
 
 @Test
 public void backToFuture2() {
-    new JsDatepickPage(browser) {{
-        pick(OCTOBER, 21, 2015);                      <2>
-        assertEquals("21-OCT-2015", super.getDate());
-    }};
+  //TODO
 }
 
 @Test
 public void backToFuture3() {
-    new JsDatepickPageLambda(browser) {{   <4>
-        pick(SEPTEMBER, 2, 1885);                    <3>
-        assertEquals("02-SEP-1885", super.getDate());
-    }};
+  //TODO
 }
 ----
 <1> This is the date Marty McFly met his parents, George and Lorraine while they were teenage.

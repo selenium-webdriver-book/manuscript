@@ -1,3 +1,7 @@
-= Part 3
+= Page Based Automation Framework
 
 :imagesdir: ../images/part3
+
+We are going to use the technique we learnt from previous part of the book to write a wrapper framework around WebDriver. This framework is written by experienced enterprise developers based upon lessons learned on the development of many web automation projects. It encapsulates much of the complexity of WebDriver and exposes a clean API to boost productivity and make code easy to understand.
+
+The part of the book will explain the principles behind the evolution of a framework, and use it to show you how you can reduce the complexity of your code by developing an in-house framework.

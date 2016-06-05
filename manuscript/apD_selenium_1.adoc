@@ -1,3 +1,0 @@
-// We would write about migrating your tests?
-
-http://www.seleniumhq.org/docs/appendix_migrating_from_rc_to_webdriver.jsp

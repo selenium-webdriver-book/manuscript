@@ -724,15 +724,13 @@ We also add a test case for successful purchase, you can see by the end an order
 ----
 @Test
 public void purchaseSuccessful() {
-    new ShoppingCartPage(browser) {{    <3>
-        setBillingAddress(billingAddress);
-        setOtherInformation(otherInformation);
-        setCreditCard(creditCard);    //<1>
-        confirm();
-    }};
-    new ConfirmationPage(browser) {{   <4>
-        assertEquals(EXPECTED_ORDER_NUMBER, this.getOrderNumber());  //<2>
-    }};
+    ShoppingCartPage cart = new ShoppingCartPage(browser)   // <3>
+    cart.setBillingAddress(billingAddress);
+    cart.setOtherInformation(otherInformation);
+    cart.setCreditCard(creditCard);    //<1>
+    cart.confirm();
+    ConfirmationPage confirm new ConfirmationPage(browser);   <4>
+    assertEquals(EXPECTED_ORDER_NUMBER, confirm.getOrderNumber());  //<2>
 }
 ----
 <1> To set a valid credit card
@@ -760,7 +758,7 @@ new Function<WebElement, WebElement>() {
 }
 ----
 
-You can create anonymous inner class using non final class or abstract class as well. For example, in Listing 15.19, we created two anonymous inner classes. For `new ConfromationPage(browser) {{...}}`, what the compiler does is to create an anonymous inner class `BookstoreShoppingIT$2` that extends `ConfirmationPage` class and put the code inside the curly bracket as an anonymous constructor block inside `BookstoreShoppingIT$2` class, as illustrated in the following code snippet,
+// TODO
 
 [source,java]
 ----
@@ -778,7 +776,7 @@ Original source code
 
 [source,java]
 ----
-new ConfromationPage(browser) {{...}}
+// TODO
 ----
 
 Compiled code.
