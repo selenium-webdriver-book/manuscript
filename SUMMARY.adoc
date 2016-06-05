@@ -1,6 +1,6 @@
 
 * link:manuscript/part1.adoc[Part 1: Fundamentals]
-* link:manuscript/ch01_introduction.adoc[Chapter 1: Introduction]
+* link:manuscript/ch01_first_steps.adoc[Chapter 1: First Steps]
 * link:manuscript/ch02_locating_elements.adoc[Chapter 2: Locating elements on a page]
 * link:manuscript/ch03_interacting_with_elements.adoc[Chapter 3: Interacting with elements on a page]
 * link:manuscript/ch04_examining_a_page.adoc[Chapter 4: Examining a page]
