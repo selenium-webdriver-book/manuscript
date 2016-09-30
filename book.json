@@ -1,6 +1,6 @@
 {
     "plugins": ["ga", "disqus", "anchors"],
-    "title": "Alex and Yujun's Selenium WebDriver Book",
+    "title": "Selenium WebDriver: From Fundamentals To Framework",
     "author": "Alex Collins & Yujun Liang",
     "pluginsConfig": {
         "ga": {
