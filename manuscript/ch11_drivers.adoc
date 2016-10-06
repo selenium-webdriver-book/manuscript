@@ -193,11 +193,11 @@ private String osName = getProperty("os.name"); //<2>
 private String osArch = getProperty("os.arch");
 private String os = osName.contains("win") ? "win" :
     osName.contains("nix") ? "linux" : "mac";
-private int arch = os.equals("linux") && osArch.endsWith("64") ? 64 : 32; //<3>
+private int arch = os.matches("linux|mac") && osArch.endsWith("64") ? 64 : 32; //<3>
 ----
 <1> The name and download destination
 <2> You typically need to know what operating system and architecture you are running on to get the binary
-<3> Chrome has a 64-bit version for Linux and a 32-bit version for everyone else
+<3> Chrome has a 64-bit version for Linux and Mac, a 32-bit version for everyone else
 
 We then implement those four steps in this method:
 
