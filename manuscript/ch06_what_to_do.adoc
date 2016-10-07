@@ -101,7 +101,7 @@ One of the most common problems you will encounter when using WebDriver is being
 
 Both of the latter are good candidates if the page you are testing uses a lot of JavaScript. The clearest symptom of a slippery element is a `StaleElementReferenceException`.
 
-=== Technique 17: Retrying on exception
+=== Retrying on exception
 
 If you have a variable pointing to an element, but that element becomes stale, then calling methods on it will result in a `StaleElementReferenceException`. We can retry locating the element when this happens.
 
@@ -182,7 +182,7 @@ public void resetImplictWait() {
 
 An alternative to implicit waits is explicit waits. In this case, you wait for a condition to be true. This might be a condition that expects an element to be visible, or exist on the page. There are two key classes for explicit waits: `WebDriverWait` and `ExpectedConditions` classes. `WebDriverWait` is a class that actually does the waiting. The `ExpectedConditions` class is a factory that can produce the common conditions you might want to wait for.
 
-=== Technique 18: Using WebDriverWait to wait for slippery elements
+=== Using WebDriverWait to wait for slippery elements
 
 Sometimes we need to wait until a condition becomes true, as we know something will happen, but we're not sure when. This technique will look at using WebDriverWait to wait for something to change in the page.
 
@@ -413,7 +413,7 @@ Datepicker is a complex web widget so we will dedicate two chapters to explain t
 
 WebDriver's JSON protocol uses UTF-8 character encoding. However, you need to make sure your source code uses the correct encoding. If you are using Java properties files, the encoding of those files is always ISO-8859-1. But you can use various tools to work around this.
 
-=== Technique 19: Extracting link text to resource bundles for internationalization
+=== Extracting link text to resource bundles for internationalization
 
 Most public-facing web sites are in multiple languages. However, the functionality is the same in all versions, with text translated (and perhaps some image changes). This technique will look at how you can avoid copying and pasting tests by using resource bundles to store the text in different languages.
 

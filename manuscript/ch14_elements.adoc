@@ -104,7 +104,7 @@ public void conact() throws Exception {
 
 From the above examples, we can see it is necessary to refactor the common logic into methods to reduce duplicated code and provide clean interfaces to interact with form elements. We are going to introduce the following techniques to make tasks to interact with form elements easier and robust.
 
-=== Technique 44: Encapsulating form operations to reduce code complexity
+=== Encapsulating form operations to reduce code complexity
 
 This technique will look at reducing the work needed to test pages containing forms.
 
@@ -503,7 +503,7 @@ For example, we browsed screenshots for the failed test and we found this screen
 
 Now we are going to show you how to handle this kind of problem by introducing the following technique.
 
-=== Technique 45: encapsulating retry
+=== encapsulating retry
 
 Sometimes you may find that an operation on an element does not complete as you expect. You type into an input field, but then you find that the input does not have the text you expect. This technique will show you how to encapsulate a retry mechanism that checks that the action has completed correctly before continuing.
 
@@ -642,7 +642,7 @@ image::other-information.png[title=Other Information Form]
 
 As you can see from the screenshot of __Other Information Form__ illustrated in Figure <<Other_Information_Form>>, there are many fields, including input fields of "Redemption code",  "Billing email", checkboxes of "Send order messages to this address" and "would you like to rate this merchant?" and so on. If we expose all the fields as individual elements on the page object, the page object would be a very big class with many methods. And it is difficult to understand and maintain. So we introduce the next technique to ease the maintenance of page with many fields.
 
-=== Technique 46: Organizing elements into logical groups
+=== Organizing elements into logical groups
 
 This next technique will show you how to simplify more complex page objects by breaking them down into smaller parts using logical groups.
 

@@ -336,7 +336,7 @@ Test purpose of test is the make sure the application behave correctly. But it w
 
 Next we are going to introduce a technique to make debugging a failed test easier.
 
-=== Technique 48: Defining Customized Result Comparator to output detailed difference report
+=== Defining Customized Result Comparator to output detailed difference report
 
 Often, people write tests which fails at the first failed assertion, just as illustrated by listing <<long-version>>. There is a fundamental drawback with that approach. When things go wrong, you can only fix one problem on each run since each time you can only see one failed assertion. Thus it can be extremely time consuming to fix failed tests, especially when you need to navigate a couple of pages before making an assertion. Often people blame Selenium for that. It is not a problem with Selenium but with the way the tests are written.
 
@@ -549,7 +549,7 @@ public class CityMapper {
 
 Next we are about to create a `CityTable` class using this mapper, which is very similar to `PersonTable` class. But since the `getHeaders` method is same for both `PersonTable` and `CityTable`, so we are going to introduce a technique to remove the duplicates. Due to the limitation of that technique, the duplicate can only be removed partially.
 
-=== Technique 49: Using abstract class to partially remove duplicated code
+=== Using abstract class to partially remove duplicated code
 
 We need to create `CityTable` class to extract the headers and rows information on city table page.
 
@@ -702,7 +702,7 @@ Probably you already noticed that there are many similarities between the two se
 
 The duplicate can be removed. We are going to show you how to use Java Generics to remove the duplicated code. But if you are an experienced developer, probably you will just start with generics. We create these two sets of classes is to educate less experienced developers how to refactor the tests.
 
-=== Technique 50: Using Java Generics to remove duplicated code
+=== Using Java Generics to remove duplicated code
 
 We are going to show you how to use Java Generics to reduce duplicated code.
 

@@ -53,7 +53,7 @@ In the next section, we are going to show you how to automate the page navigatio
 
 In last chapter, when we introduced the technique to split the page into multiple forms and introduced `OtherInformation` and `OtherInformationForm` class, and use an instance of `OtherInformation` to hold the data and act as the parameter for the `setOtherInformation` method of `OtherInformationForm`.
 
-=== Technique 47: Create domain classes to represent reference data and form data
+=== Create domain classes to represent reference data and form data
 
 When working on automation, we always need to enter data on the form and those data need to be validated by the web application before the page can transition to the next page. So it is critical to know what data can be used to enter the form. And those data may be used over and over again.
 
@@ -587,7 +587,7 @@ And here are the class diagrams of `ShoppingCartPage`, both of they also wrap `B
 
 image::Shopping.png[title=Class diagram of `ShoppingCartPage` and `ConfirmationPage`]
 
-These page classes wrap `Browser` class and expose the functionalities as methods to reduce the verbosity in the tests. You can review Chapter 5 for more information about *page object*, besides *page object*, we also introduced Technique 46: Organizing elements into logical groups. `ShoppingCartPage` is the application of that technique and you can see it improves the modularity of the *page object*.
+These page classes wrap `Browser` class and expose the functionalities as methods to reduce the verbosity in the tests. You can review Chapter 5 for more information about *page object*, besides *page object*, we also introduced Organizing elements into logical groups. `ShoppingCartPage` is the application of that technique and you can see it improves the modularity of the *page object*.
 
 == Automating the entire page flow using data for major page flows
 

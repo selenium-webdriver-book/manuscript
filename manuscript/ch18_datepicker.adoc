@@ -15,7 +15,7 @@ By the end of this chapter, not only you will learn the technique and apply it i
 
 In this section, we are going to show you a technique to introduce a framework so we don't need to repeat some classes when automating datepickers built using other JavaScript frameworks.
 
-=== Technique 52: Introducing a framework for multiple JavaScript implementations
+=== Introducing a framework for multiple JavaScript implementations
 
 Besides detepicker built using JQuery, there are datepickers built using other JavaScript frameworks, it would be duplicate code if we just copy `JQueryDatepicker` into another class.
 

@@ -488,7 +488,7 @@ You may decide to extract the locator into a constant:
 
 Another solution would be to have a field containing the query input, but you'd would lose the benefits of lazy loading for the element. There's no ideal solution ... or is there?
 
-=== Technique 14: Using `PageFactory` to simplify code
+=== Using `PageFactory` to simplify code
 
 ==== Problem
 
@@ -619,7 +619,7 @@ When writing automation code, you are likely to find yourself doing the followin
 2. Verify the page loaded correctly.
 3. Create a page object for the loaded page.
 
-=== Technique 15: Using LoadableComponent to make your page object robust
+=== Using LoadableComponent to make your page object robust
 
 ==== Problem
 
@@ -686,7 +686,7 @@ There are unattractive issues with using `LoadableComponent`:
 
 What we're trying to do with `LoadableComponent` is an excellent idea. In the next section, we'll look at bringing `LoadableComponent` and `PageFactory` together, so we can get the benefits of both.
 
-=== Technique 16: Creating a loading page factory
+=== Creating a loading page factory
 
 We'd like to get the benefits of loadable components and page object factories at the same time. This technique shows how to combine the two.
 

@@ -153,7 +153,7 @@ new Actions(driver)
 
 Now you've seen a number of use cases for action chains. When you use them a lot, you may find out that you sometimes get a `StaleElementReferenceException`. This will be because you normally have to locate elements before you create the action chain. As you execute the chain, the page changes, and elements can become stale.
 
-=== Technique 25: Lazy element for action chains
+=== Lazy element for action chains
 
 Action chains require you to locate elements prior to performing the sequence of actions. On certain pages, the element might become stale before part of the action is performed. In this case you want to locate the element lazily. This can be done by creating a lazy `WebElement` class.
 
@@ -476,7 +476,7 @@ String tip = driver
 
 You can see there are a few different kinds of tooltip. To simplify accessing tooltips, let's look at introducing a helper class to extract the tooltips from a page.
 
-=== Technique 26: Creating a tooltip extractor
+=== Creating a tooltip extractor
 
 ==== Problem
 

@@ -149,7 +149,7 @@ You can save the binary anywhere, and one good place is within your project (for
 chmod +x chromedriver
 ----
 
-=== Technique 30: Automatically downloading the driver binary
+=== Automatically downloading the driver binary
 
 Chromedriver binaries are large, and require you to download different versions for different operating systems. This technique shows you how to automatically download the correct version.
 
@@ -346,7 +346,7 @@ selenium_standalone/osx/phantomjs/64bit/phantomjs
 
 Chrome has one feature that might make it the preferred choice of browser to test with: the ability to emulate mobile devices. The next technique looks at how to do that.
 
-=== Technique 31: Mobile testing using Chrome's mobile emulation
+=== Mobile testing using Chrome's mobile emulation
 
 Chrome provides the ability to emulate different mobile devices. This can be useful for early identification of problems with your site on mobile devices, without the time and effort required to set up a full mobile automation system.
 
@@ -460,7 +460,7 @@ To use Internet Explorer, add the following to your pom.xml file:
         </dependency>
 ----
 
-=== Technique 32: Using a Vagrant virtual machine to run IE
+=== Using a Vagrant virtual machine to run IE
 
 You may want to use a browser that is not available on your operating system, such as Internet Explorer when your computer is an Apple Mac. This technique shows you how to create a virtual machine to run a different operating system, allowing you to test a greater variety of browsers.
 

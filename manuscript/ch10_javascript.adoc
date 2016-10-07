@@ -136,7 +136,7 @@ We've had a look at the basic usage of `JavascriptExecutor`. Next, we'll look at
 
 As the `JavascriptExecutor` has access to every element on a page, you can use it to access information that might be hard to get using normal WebDriver methods. In the next technique, we'll use it to determine if an image has been loaded.
 
-=== Technique 27: Using JavaScript to verify that an image is loaded
+=== Using JavaScript to verify that an image is loaded
 
 You may have a page that does not load correctly, as an image is missing. This technique shows you how to use JavaScript to verify that an image is loaded.
 
@@ -320,7 +320,7 @@ The HTML for displaying the location is as follows:
 <4> If we can find the position, display it
 <5> Otherwise, display the error
 
-=== Technique 28: Overriding JavaScript to control geolocation
+=== Overriding JavaScript to control geolocation
 
 ==== Problem
 
@@ -416,7 +416,7 @@ Web notifications are notifications that are pushed by the server to the browser
 [[web-notification-firefox]]
 image::web-notification-firefox.png[title=Web notification on Firefox]
 
-=== Technique 29: Overriding JavaScript to capture a notification
+=== Overriding JavaScript to capture a notification
 
 ==== Problem
 

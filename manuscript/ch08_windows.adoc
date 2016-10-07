@@ -167,7 +167,7 @@ Both these approaches have a fair amount of boilerplate code. You would probably
 
 You've seen the basics of opening windows and tidying up after yourself. Let's now look at encapsulating that into a useful utility class.
 
-=== Technique 23: Encapsulating window handling
+=== Encapsulating window handling
 
 With this technique you will see how you can encapsulate the three operations into a single utility class.
 
@@ -401,7 +401,7 @@ We can inspect the source code for this to see the relevant HTML.
 
 Looking at this, you can see that the modal is actually composed of many different HTML elements, such as divs and buttons.
 
-=== Technique 24: Creating a Page Object for synthetic modals
+=== Creating a Page Object for synthetic modals
 
 As a synthetic modal contains many different elements, but encapsulated on behavior, it is a good candidate for a Page Object. Perhaps you do not want to know what kind of modal you are using, but you want to hide the nitty-gritty of how to interact with it -- after all, you just want to inspect it, then dismiss it! The next technique looks at how to encapsulate a synthetic modal into a Page Object.
 

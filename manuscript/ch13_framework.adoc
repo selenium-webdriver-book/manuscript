@@ -155,7 +155,7 @@ We will observe another test case failure caused by transition effect in Chapter
 
 In Chapter 12, we learnt that by wrapping `WebDriver` and `WebElement`, we can attach additional responsibility to these interfaces and make them easier to use. By applying the same design pattern, we can hide the code which is used to handle explicit wait and remove those cumbersome logic. We already started building the framework in Chapter 12, and right now, it becomes clearer that we need to continue evolving the framework to provide more supports for the automation developers. We can add support in wrapped `WebDriver` and `WebElement` to add one method with the build-in explicit wait, so developers can just call that method if they want the automation code to wait for an element to appear on the web page.
 
-=== Technique 39: Encapsulating `FluentWait` class to provide built in waiting
+=== Encapsulating `FluentWait` class to provide built in waiting
 
 We will use this technique to simplify the code in Listing <<explicit-waits1>> and Listing <<explicit-waits2>>, this technique works also for people not using Java 8, just the code will be some duplicates since *default method* is not available until Java 8, which helps in reducing some duplicates.
 
@@ -432,7 +432,7 @@ image::await-seq.png[title=Sequence diagram `await` method]
 
 We can attach more responsibility to this `Browser` and `Element` classes to make them more versatile.
 
-=== Technique 40: Using an `Optional` class To Check For Element Presence
+=== Using an `Optional` class To Check For Element Presence
 
 There is situation that some element may appear or may not. To handle this situation gracefully, we are going to provide another method to use an `Optional` class as an wrapper for the element we are trying to find as the return type. When nothing found, the `isPresent()` method of that `Optional` object returns `false`, when it is found, its `get()` method will return the element. This technique works better with Java 8 installation, since it is a built interface from the JDK.
 
@@ -523,7 +523,7 @@ Then you can call the `isPresent` method to check whether you has found somethin
 
 Also you can see `click` method is used multiple times in Listing <<explicit-test>>, so you can add these method to `ExplicitWait` for the time being. We are going to show another technique next.
 
-=== Technique 41: Adding helper methods for some frequently used method call.
+=== Adding helper methods for some frequently used method call.
 
 In Listing <<explicit-test>>, we can see there are three occurrences of `await` method call followed by calling `click`. These two methods are frequently used together in web automation code. Also you need to call `getText` after calling `await`.
 
@@ -674,7 +674,7 @@ throw new IllegalArgumentException("Argument is of an illegal type: " + <2>
 
 From its logic, we know it expects that our class that wraps `WebElement` needs to implement `WrapsElement` interface. We are going to do this to `WebDriver` and `WebElement` interfaces to make them backwards compatible.
 
-=== Technique 42: Making `Browser` Backwards Compatible By Implementing `WebDriver`
+=== Making `Browser` Backwards Compatible By Implementing `WebDriver`
 
 First let us make `Browser` class backwards compatible so it can be used in the code where expecting a `WebDriver` interface as parameter.
 
@@ -754,7 +754,7 @@ The test passes, it works! By making `Browser` implementing `WebDriver`, we make
 
 Now let us make `Element` class backwards compatible so it can be used in the code where expecting a `WebElement` interface as parameter.
 
-=== Technique 43: Making `Element` Backwards Compatible By Implementing `WrapsElement` interface
+=== Making `Element` Backwards Compatible By Implementing `WrapsElement` interface
 
 It is the same case with `Element` class too.
 

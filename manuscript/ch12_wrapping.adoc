@@ -38,7 +38,7 @@ Drivers that decorate a web driver typically implement the `WrapsDriver` interfa
 
 The standard Selenium Java library already container a wrapper, the *event firing web driver*. This wraps an existing driver to provide a method that allow you to register listeners which are invoked when certain actions (such as pages being loaded) are performed.
 
-=== Technique 33: Taking screen-shots each time a page is loaded
+=== Taking screen-shots each time a page is loaded
 
 The Event firing web driver allows you to write code that listens to requests send to a normal web driver and take action based on them. This technique shows you how to take a screen shot each time a page is loaded.
 
@@ -92,7 +92,7 @@ It also allows you to perform additional actions when there is an exception usin
 
 In a chapter 7 we looked at a technique that allowed you to use base URL for your URLs in you test by inject the URL into you test class. To use that technique you need to modify every class that you wanted to use it in. This can be achieved by wrapping a web driver to automatically prefix the base URL if it is missing very time you invoke `get`.
 
-=== Technique 34: Creating a driver that automatically prefixes URLs with a base URL
+=== Creating a driver that automatically prefixes URLs with a base URL
 
 ==== Problem
 
@@ -261,7 +261,7 @@ A *HTTP Status Code* is a number the server returns to the browser to indicate t
 
 These code are useful, as they can be used to quickly identify errors in pages, before anything else happens. However, WebDriver does not make the status code easily available.
 
-=== Technique 35: Creating a WebDriver wrapper that captures HTTP status codes using a HTTP proxy
+=== Creating a WebDriver wrapper that captures HTTP status codes using a HTTP proxy
 
 ==== Problem
 
@@ -464,7 +464,7 @@ For example, in the table cell, we will use (row number, column number) to indic
 
 Then we are going to introduce a technique to locate the contents on the table cell using its row number and column number.
 
-=== Technique 36: Encapsulating table access Within a `Table` class
+=== Encapsulating table access Within a `Table` class
 
 While tables are made up from rows, columns, headings, cells, you may find you want to access them by the cell. Lets look at a technique to do this.
 
@@ -652,7 +652,7 @@ The code is much cleaner after introducing this constant, but where is a good pl
 
 Some people tend to put these constants in the same file they are being used in, with the constants at top. For a complex page, the constants will occupy a lot of lines of code to make that class long. The next thing you might do is to move those constants into a `Constants` class; this way the page becomes cleaner. But a constants class does not require the constants to be homogenic-—of the same type. We can enforce this using an enum.
 
-=== Technique 37: Using enums to wrap and organize locators into cohesive groups
+=== Using enums to wrap and organize locators into cohesive groups
 
 You might find your code starts to get quite full of locators--locators everywhere! This technique shows you how to organize them into a single place.
 
@@ -716,7 +716,7 @@ Can you see something we can improve in that example? Let us have a look that en
 
 Yes, we will introduce a new technique to simplify this method calling.
 
-=== Technique 38: Expose locator enums as a `Supplier<By>` interface
+=== Expose locator enums as a `Supplier<By>` interface
 
 With the introduction of the enum constants, we don't need to use the locators with long names any more. It is an improvement. But there is still some problem lingering in the code base we need to address.
 

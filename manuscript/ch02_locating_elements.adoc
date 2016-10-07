@@ -277,7 +277,7 @@ XPath is good choice, but it's often better to try and solve locating problems u
 
 That's a great variety of locators! They are all orientated around the knowing the string that you need to pass to create it. For XPath and CSS locators, these can be long and complex. We can reduce the complexity of our code by encapsulating commonly used locators into small factories that we can then reuse. For example, rather than having a locator for finding inputs using an XPath, it might be easier to create a locator specifically for the task of locating inputs.
 
-=== Technique 1: Creating A Locator Factory For Complex Locators
+=== Creating A Locator Factory For Complex Locators
 
 You may find yourself creating locators that are similar to one another. For these common ones, you can reduce the verbosity of your code by having factories to create them.
 
@@ -459,7 +459,7 @@ Consider this one, suggested by Chrome:
 
 If the divs were reordered, and this would no longer be valid. Optimal, easy to maintain selectors are concise and accurate.
 
-=== Technique 2: Locating table cells using CSS selectors
+=== Locating table cells using CSS selectors
 
 HTML tables are a common way to layout data on a web page. As you may wish to locate cell by the heading of the cell's column, then you need to do a series of look ups. Lets look at a technique to make accessing them less complex.
 
@@ -575,7 +575,7 @@ You'll notice that you can use XPath and CSS based locators interchangeably. But
 
 Next, lets look at an example of chaining search context together.
 
-=== Technique 3: Narrowing down by locating within chained search contexts
+=== Narrowing down by locating within chained search contexts
 
 You can combine search contexts together. For example, if you can locate a form within a page, you can then easily find the submit button for that form by using the `findElement` method of the form. But if you need to search the whole page, you might have many buttons. Is this technique we will look at how we can chain searches together to find an element easily and accurately.
 
@@ -721,7 +721,7 @@ driver.findElement(By.id("registration-form"))
 
 Chained locators are useful when you want to mix and match different locators.
 
-=== Technique 4: Creating locator composers to provide backward/forward compatibility
+=== Creating locator composers to provide backward/forward compatibility
 
 Imagine a new version of your web site is going to be released. But the HTML changed so that your locators no longer work -- frustrating! You could update the locator to the new version, but that might not be complete yet, or you could leave your tests "red" and make sure everyone knows that they need to be updated at some point in the future. Or, you could make sure your test pass with both the old and the new code. This technique will show you how.
 
@@ -876,7 +876,7 @@ One of the interesting challenges to page automation is that we are automating a
 
 Any one of these can be legitimately changed by their author. Nowhere in the list does it say "used for automation".
 
-=== Technique 5: Using a common CSS class prefix to create your own automation namespace
+=== Using a common CSS class prefix to create your own automation namespace
 
 The HTML of the web site is designed for making the web site look good and customers happy. But what about our test automation? We can please everyone! This technique will show you how to mark up the HTML in such a way that changes to the HTML needed to styling or anything else won't affect your tests.
 
