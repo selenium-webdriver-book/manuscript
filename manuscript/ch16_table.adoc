@@ -16,7 +16,7 @@ image::people-table.png[title=An Example of An HTML Table]
 Let is tale a loos of the HTML behind this table, there is an `id` attribute for the table tag and we can use it to locate the entire table element.
 
 [source,html]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/main/webapp/people-table.html#L12-L32[people-table.html]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/main/webapp/people-table.html#L12-L32[people-table.html]
 ----
 <table class="table table-striped" id="users-table">
     <thead>
@@ -40,7 +40,7 @@ That technique is good for locating few elements on a table. If you want to do a
 
 [[long-version]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/tests/NaiveTableIT.java#L25-L68[NaiveTableIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/tests/NaiveTableIT.java#L25-L68[NaiveTableIT.java]
 ----
     assertEquals("Id", table.getHeader(1).getText());             <1>
     assertEquals("First Name", table.getHeader(2).getText());
@@ -105,7 +105,7 @@ We now create a `PersonTable` class to extract the headings,
 
 [[PersonTable]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/v0_5/PersonTable.java#L10-25[PersonTable.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/v0_5/PersonTable.java#L10-25[PersonTable.java]
 ----
 public class PersonTable {
 
@@ -158,7 +158,7 @@ Instead of using array of strings, we can create an entity class to represent th
 In tests, We need to compare the equality of other domain objects and output debugging messages for developer to analyze the cause of the failure. So we need to provide some customized `equals`, `hashCode` and `toString` method to those classes as well. In order not to repeat those methods in every classes we create, we introduce this `DomainBase` class as the super class for those domain classes, so they don't need to provide these methods if the can use these default ones in `DomainBase` class,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/domain/DomainBase.java#L8-L25[DomainBase.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/framework/domain/DomainBase.java#L8-L25[DomainBase.java]
 ----
 public abstract class DomainBase {   <1>
 
@@ -202,7 +202,7 @@ https://commons.apache.org/
 Now we create `Person` class and it extends `DomainBase` class. Since we are not satisfied with the `toString` method from `DomainBase` class, we override it in `Person` class to output different format.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/domain/Person.java#L3-L22[Person.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/domain/Person.java#L3-L22[Person.java]
 ----
 public class Person extends DomainBase {
     private final int id;
@@ -227,7 +227,7 @@ public class Person extends DomainBase {
 When you calling the `toString` method of `Person` object, it will output the way how it is created. This can be illustrated in the following test,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/domain/PersonTest.java#L3-L22[PersonTest.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/domain/PersonTest.java#L3-L22[PersonTest.java]
 ----
 private Person person = new Person(1, "John", "Doe", 44);
 
@@ -255,7 +255,7 @@ We are going to add a *row mapper* as an constant of the `PersonTable` class we 
 
 [[PersonTable]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/v0_8/PersonTable.java#L28-56[PersonTable.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/v0_8/PersonTable.java#L28-56[PersonTable.java]
 ----
 public static final Function<List<Element>, Person> MAPPER_NON_JAVA_8   <1>
     = new Function<List<Element>, Person>() {      <4>
@@ -282,7 +282,7 @@ public static final Function<List<Element>, Person> MAPPER_NON_JAVA_8   <1>
 And add `getRow` method to extract the table rows using the mapper `MAPPER_NON_JAVA_8`.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/v0_8/PersonTable.java#L28-56[PersonTable.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/v0_8/PersonTable.java#L28-56[PersonTable.java]
 ----
 public List<Person> getRows() {     <2>
     List<Person> rows = new ArrayList<>();  <1>
@@ -313,7 +313,7 @@ We can move `MAPPER_NON_JAVA_8` in Listing <<PersonTable>> out of `PersonTable` 
 
 [[PersonMapper]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/mapper/PersonMapper.java#L9-L22[PersonMapper.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/mapper/PersonMapper.java#L9-L22[PersonMapper.java]
 ----
 public enum PersonMapper implements Function<List<Element>, Person> {
 
@@ -358,7 +358,7 @@ We are going to create a `PersonTableContents` class to output all the differenc
 The `describeDiff` method of `PersonTableContents` class will find out what is missing in the actual result as well as what in the actual result is not expected. It extends DomainBase and inherits the three methods from DomainBase.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/v1/PersonTableContents.java#L9-L41[PersonTableContents.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/v1/PersonTableContents.java#L9-L41[PersonTableContents.java]
 ----
 public String describeDiff(PersonTableContents other) {   <1>
     return diffHeaders(other)
@@ -404,7 +404,7 @@ And we can write a `PersonTableIT` to verify the contents are correct,
 
 [[test-failed]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/tests/PersonTable_v1_IT.java#L55-L75[PersonTable_v1_IT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/tests/PersonTable_v1_IT.java#L55-L75[PersonTable_v1_IT.java]
 ----
 public static final PersonTableContents OUTDATED_EXPECTED =   <4>
     new PersonTableContents(
@@ -500,7 +500,7 @@ We are gong to show you a solution without using Java Generics first. You can se
 To validate this city table, we can follow the same approach we validate people table. Just like we create a `Person` class for people table, we create a `City` class for city table.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/domain/City.java#L5-L22[City.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/domain/City.java#L5-L22[City.java]
 ----
 public class City extends DomainBase {
     private final int id;
@@ -528,7 +528,7 @@ You can create a `CityMapper`, which does not need to be an enum constant as the
 
 [[CityMapper]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/mapper/CityMapper.java#L9-L16[CityMapper.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/mapper/CityMapper.java#L9-L16[CityMapper.java]
 ----
 public class CityMapper {
 
@@ -562,7 +562,7 @@ If we create `CityTable` class by copying `PersonTable` class, `getHeaders` meth
 we can create an abstract class with `getHeaders` method and delete the one in `PersonTable`.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/v2/AbstractTable.java#L10-L24[AbstractTable.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/v2/AbstractTable.java#L10-L24[AbstractTable.java]
 ----
 public abstract class AbstractTable {
     protected Element table;              <1>
@@ -587,7 +587,7 @@ Then we can have `CityTable` class extending `AbstractTable` class so we don't n
 
 [[CityTable]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/v2/CityTable.java#L13-L49[CityTable.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/v2/CityTable.java#L13-L49[CityTable.java]
 ----
 public List<City> getRows() {   <4>
     List<City> rows = new ArrayList<>();   <2>
@@ -617,7 +617,7 @@ public CityTableContents getContents() {
 As well as a `CityTableContents` class, also similar to `PersonTableContents` class. We follow the same approach as the `AbstractTable` class and create an `AnstractTableContents` class and move two methods originally in `PersonTableContents` over, as following,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/v2/AbstractTableContents.java#L8-L32[AbstractTableContents.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/v2/AbstractTableContents.java#L8-L32[AbstractTableContents.java]
 ----
 public class AbstractTableContents extends DomainBase {
 
@@ -649,7 +649,7 @@ public class AbstractTableContents extends DomainBase {
 And have `CityTableContents` class extending it, so `diifHeaders` and `diff` methods don't need to be repeated in `CityTableContents` class,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/v2/CityTableContents.java#L7-L21[CityTableContents.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/v2/CityTableContents.java#L7-L21[CityTableContents.java]
 ----
 public String describeDiff(CityTableContents other) {  <1>
     return diffHeader(other)
@@ -662,7 +662,7 @@ public String describeDiff(CityTableContents other) {  <1>
 And you can run the following test to verify the result. You need to comment out the line starting with `@Ignore` annotation to activate this test, otherwise it is ignored by junit test framework,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/tests/CityTable_v1_IT.java#L63-83[CityTable_v1_IT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/tests/CityTable_v1_IT.java#L63-83[CityTable_v1_IT.java]
 ----
 private static final CityTableContents OUTDATED_EXPECTED =
     new CityTableContents(
@@ -717,7 +717,7 @@ We will use Generics introduced from Java 5. Instead of creating `PersonTable`, 
 We are going to add a *row mapper* into the constructor of a `Table<T>` class to replace both `PersonTable` and `CityTable` classes. What this row mapper does is to map each row on the table to an instance of the `T` class we pass in. For `Table<Person>`, it will map to a list of `Person`, but for `Table<City>`, it will map to a list of `City`.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/v3/Table.java#L11-L42[Table.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/v3/Table.java#L11-L42[Table.java]
 ----
 public class Table<T> {  <1>
 
@@ -787,7 +787,7 @@ If you are not familiar with this style, it is fine. You can use pre-Java 8 styl
 Same as we use `Table<T>` to replace `PersonTable` and `CityTable`, we will use `TableContents<T>` to replace `PersonTableContents` and `CityTableContents`.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/v3/TableContents.java#L9-L41[TableContents.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/v3/TableContents.java#L9-L41[TableContents.java]
 ----
 public class TableContents<T> extends DomainBase {
 
@@ -832,7 +832,7 @@ Table<City> table = new Table<>(browser.await(TABLE), MAPPER_LAMBDA);
 Or if you use Java 8, you can have the following concise form by using Lambda expression to create a `rowMapper` and use it as the second parameter to create an instance of `Table` class.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch16table/tests/CityTable_v2_IT.java#L53-66[CityTable_v2_IT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch16table/tests/CityTable_v2_IT.java#L53-66[CityTable_v2_IT.java]
 ----
 @Test
 public void testReadFromTableJava8() {

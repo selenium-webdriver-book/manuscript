@@ -179,7 +179,7 @@ You can get this by running these commands:
 
 [source,sh]
 ----------------------------------------------------------------------
-git clone https://github.com/selenium-webdriver-in-practice/source.git
+git clone https://github.com/selenium-webdriver-book/source.git
 cd source
 ----------------------------------------------------------------------
 
@@ -284,7 +284,7 @@ Create a directory with this `pom.xml`:
 Create `src/test/java/swip/intro/HelloWebDriverIT.java`:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch01intro/HelloWebDriverIT.java[HelloWebDriverIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch01intro/HelloWebDriverIT.java[HelloWebDriverIT.java]
 ------------------------------------------------------------------------------------------------------------------------------------------------
 package swip.ch01intro;
 

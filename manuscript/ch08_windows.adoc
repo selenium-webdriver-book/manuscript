@@ -64,7 +64,7 @@ You can examine the open windows using `driver.getWindowHandles()`. This returns
 What would these steps look like as code?
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/windows/NewWindowIT.java[NewWindowIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch08windows/windows/NewWindowIT.java[NewWindowIT.java]
 ----
 driver.get("http://localhost:8080/open-a-new-window.html");
 
@@ -109,7 +109,7 @@ If you look at the HTML source code from earlier, you can see that the link has 
 The `target` attribute indicates the name of the window it will open. You can use the code in the following listing to find that window.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/windows/NewWindowIT.java[NewWindowIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch08windows/windows/NewWindowIT.java[NewWindowIT.java]
 ----
         driver.get("http://localhost:8080/open-a-new-window.html");
 
@@ -131,7 +131,7 @@ The `target` attribute indicates the name of the window it will open. You can us
 If the "finding the window that is not the original window" strategy does not work (e.g. in the rare case there are multiple open windows), you can use a feature of the window to identify it. This code sample looks for the first window that has an `h1` heading of "You Are In The New Window".
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/windows/NewWindowIT.java[NewWindowIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch08windows/windows/NewWindowIT.java[NewWindowIT.java]
 ----
         driver.get("http://localhost:8080/open-a-new-window.html");
 
@@ -203,7 +203,7 @@ assertEquals("Thank You!", driver.findElement(By.tagName("h1")).getText());
 You can put this together into a class. We'll create a class named `WindowHandler`. To use this, you override the `openWindow` and `useWindow` methods.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/windows/WindowHandlerIT.java[WindowHandlerIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch08windows/windows/WindowHandlerIT.java[WindowHandlerIT.java]
 ----
         new WindowHandler(driver) {
             @Override
@@ -224,7 +224,7 @@ You can put this together into a class. We'll create a class named `WindowHandle
 Let's put the underlying `WindowHandler` class together.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/windows/WindowHandler.java[WindowHandler.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch08windows/windows/WindowHandler.java[WindowHandler.java]
 ----
 public abstract class WindowHandler {
     private final WebDriver driver;
@@ -337,7 +337,7 @@ The Safari driver does not support alerts. They are automatically dismissed.
 You may find that you get a `NoAlertPresentException` error. To wait for the alert, you can use an instance of the `WebDriverWait` class with the `ExpectedConditions.alertIsPresent` condition.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/modals/JavaScriptAlertIT.java[JavaScriptAlertIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch08windows/modals/JavaScriptAlertIT.java[JavaScriptAlertIT.java]
 ------------------------------------------------------------------------
 new WebDriverWait(driver, 5).until(ExpectedConditions.alertIsPresent());
 ------------------------------------------------------------------------
@@ -358,7 +358,7 @@ image::firefox-network.png[title=Firefox Network Panel]
 Unfortunately, as this is a system pop-up, WebDriver cannot enter anything into it. To deal with this pop-up, you need to pass the username and password in the URL. You do this by inserting the username and password before the hostname. If the username is "admin" and the password is "secret", then you need to add "admin:secret@" to the URL, as in the following listing.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/modals/HttpAuthenticationIT.java[HttpAuthenticationIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch08windows/modals/HttpAuthenticationIT.java[HttpAuthenticationIT.java]
 ----
 driver.get("http://admin:secret@localhost:8080/auth.html");
 
@@ -416,7 +416,7 @@ Create a Page Object that encapsulates the pop-up by implementing the `Alert` in
 Let's look at how you can implement the condition first.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/modals/Modals.java[Modals.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch08windows/modals/Modals.java[Modals.java]
 ----
     public static ExpectedCondition<Alert> modalIsDisplayed() { <1>
         return new ExpectedCondition<Alert>() {
@@ -445,7 +445,7 @@ This solution provides a single class for locating modals. The modal you have mi
 You can implement each type of synthetic alert individually.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch08windows/modals/BootstrapModal.java[BootstrapModal.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch08windows/modals/BootstrapModal.java[BootstrapModal.java]
 ----
 public class BootstrapModal implements Alert { <1>
     private static final By INPUT_SELECTOR

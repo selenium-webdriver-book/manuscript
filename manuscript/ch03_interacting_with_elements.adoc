@@ -69,7 +69,7 @@ Let's look at the two primary methods that WebDriver provides for keyboard inter
 And we can use this test to understand how `sendKey` and `clear` work. Without clearing the text first, `sendKey` will just append the text to the end of original text,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/LoginIT.java[LoginIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch03interacting/LoginIT.java[LoginIT.java]
 ----
 @Test
 public void login() throws Exception {
@@ -166,7 +166,7 @@ image::sign-up-form.png[title=A mailing list sign-up form (http://localhost:8080
 You can see that you need to enter your email address, check a box to accept the terms and conditions (which you will do using the spacebar), and submit the form (by pressing Return).
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/KeyboardInputIT.java[KeyboardInputIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch03interacting/KeyboardInputIT.java[KeyboardInputIT.java]
 ----
     driver.get("http://localhost:8080/form.html");
     driver
@@ -246,7 +246,7 @@ To enter text into this WYSWYG form you will:
 
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/WyswygInputIT.java[WyswygInputIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch03interacting/WyswygInputIT.java[WyswygInputIT.java]
 ----
     driver.get("http://localhost:8080/wyswyg-editor.html");
 
@@ -391,7 +391,7 @@ Good news! There is a special way for doing this kind of interaction: the `Actio
 Finally, here is the complete test:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/MouseInputIT.java[MouseInputIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch03interacting/MouseInputIT.java[MouseInputIT.java]
 ----
     driver.get("http://localhost:8080/mailing-list.html");
     driver
@@ -437,7 +437,7 @@ An application contains a context menu and you want to open it.
 Locate the element and use `Actions` to perform a context click.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/ContextMenuIT.java[ContextMenuIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch03interacting/ContextMenuIT.java[ContextMenuIT.java]
 ----
     driver.get("http://localhost:8080/context-menu.html");
 
@@ -490,7 +490,7 @@ If you do not have access to the machine, then this won't work. We can only modi
 Unfortunately, several browsers have stopped honoring this attribute. The “Save Password” alert only appears if there is a password on the form. Instead, we can use JavaScript to convert all passwords to normal text inputs. We've not spoken about the `JavascriptExecutor` interface before. This interface allows you to execute JavaScript on the current page. It is useful if you want to do something that WebDriver does not support, such as modify the page it make it easier to test. To use it, you need to cast your WebDriver to it.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/FormIT.java[FormIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch03interacting/FormIT.java[FormIT.java]
 ----
         ((JavascriptExecutor) driver).executeScript("Array.prototype.slice.call(" +
                 "document.getElementsByTagName('input')).forEach(function(e){" +
@@ -529,7 +529,7 @@ You'll probably find the second option most reliable.
 To working with a select, you wrap it in a `Select` object. The `Select` class in part of the WebDriver support library. This class provides a number of features for working with select boxes, and one useful one is `selectByVisibleText`. If we want to select "Friend" in the following HTML:
 
 [source,html]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/main/webapp/registration-form.html[registration-form.html]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/main/webapp/registration-form.html[registration-form.html]
 ----
                 <select class="form-control" name="hearAbout">
                     <option>-</option>
@@ -541,7 +541,7 @@ To working with a select, you wrap it in a `Select` object. The `Select` class i
 We can use the `Select` class as follows:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/FormIT.java[FormIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch03interacting/FormIT.java[FormIT.java]
 ----
     new Select(driver.findElement(By.name("hearAbout")))
         .selectByVisibleText("Friend");
@@ -550,7 +550,7 @@ We can use the `Select` class as follows:
 `Select` can be used for single and multi-choice selects:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/FormIT.java[FormIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch03interacting/FormIT.java[FormIT.java]
 ----
     Select interestsSelect = new Select(driver.findElement(By.name("interest")));
     interestsSelect.selectByVisibleText("Movies");

@@ -29,7 +29,7 @@ image::web-driver-exception.png[title="WebDriver Exceptions"]
 ElementNotVisibleException:: An element is not visible, and therefore cannot be interacted with.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/CommonExceptionsIT.java[CommonExceptionsIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/CommonExceptionsIT.java[CommonExceptionsIT.java]
 ----
     @Before
     public void setUp() throws Exception {
@@ -47,7 +47,7 @@ You might want to try and wait for the element to become visible.
 NoSuchElementException:: This exception is thrown when trying to find an element that cannot be found on the page.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/CommonExceptionsIT.java[CommonExceptionsIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/CommonExceptionsIT.java[CommonExceptionsIT.java]
 ----
     @Test(expected = NoSuchElementException.class)
     public void noSuchElement() throws Exception {
@@ -60,7 +60,7 @@ You might want to wait for the element to appear, or you might be on the wrong p
 StaleElementReferenceException:: This exception occurs when trying to interact with an element that is no longer on the page, for example if the element has been removed from the page, or the browser has navigated to a new page.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/CommonExceptionsIT.java[CommonExceptionsIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/CommonExceptionsIT.java[CommonExceptionsIT.java]
 ----
     @Test(expected = StaleElementReferenceException.class)
     public void elementShouldBeStaleWhenPageChanges() throws Exception {
@@ -114,7 +114,7 @@ Tests are unreliable due to slippery elements.
 Transparently retry the locating of your element:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/TransparentRetryIT.java[TransparentRetryIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/TransparentRetryIT.java[TransparentRetryIT.java]
 ----
         driver.get("/login.html");
 
@@ -156,7 +156,7 @@ Unfortunately, it can be hard to figure out the right amount of time to sleep. Y
 Lets look at how we can avoid sleeping. WebDriver has a built-in mechanism for waiting — implicit wait. The implicit wait is the amount of time that WebDriver should always wait for elements to be ready to use. It can be set as follows:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ImplicitWaitIT.java[ImplicitWaitIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/ImplicitWaitIT.java[ImplicitWaitIT.java]
 ----
 driver.manage().timeouts().implicitlyWait(1, TimeUnit.SECONDS);
 ----
@@ -170,7 +170,7 @@ Using implicit waits is considered bad practice:
 If you do use implicit waits, make sure you reset them at the end of your tests:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ImplicitWaitIT.java[ImplicitWaitIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/ImplicitWaitIT.java[ImplicitWaitIT.java]
 ----
 @After
 public void resetImplictWait() {
@@ -202,7 +202,7 @@ The condition can be one of two things:
 You'll generally find expected conditions the most useful, as an expected condition can also return an element that you can then use. This is fantastic if you are waiting for an element to become visible, as in the following example:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ExplicitWaitIT.java[ExplicitWaitIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/ExplicitWaitIT.java[ExplicitWaitIT.java]
 ----
         driver.get("/slow-loading-elements.html");
 
@@ -250,7 +250,7 @@ You'll generally find expected conditions the most useful, as an expected condit
 If you need to check two conditions, you can use another wait.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ExplicitWaitIT.java[ExplicitWaitIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/ExplicitWaitIT.java[ExplicitWaitIT.java]
 ----
         WebElement paraElement = wait
                 .until(ExpectedConditions.visibilityOfElementLocated(By.id("theText")));
@@ -263,7 +263,7 @@ If you need to check two conditions, you can use another wait.
 The class `WebDriverWait` is a specialisation of the `FluentWait` class that makes it simpler to use. You can use `FluentWait` anywhere you `WebDriverWait` for example,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ExplicitFluentWaitIT.java[ExplicitFluentWaitIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/ExplicitFluentWaitIT.java[ExplicitFluentWaitIT.java]
 ----
 FluentWait<WebDriver> wait = new FluentWait<>(driver)
         .withTimeout(3, TimeUnit.SECONDS) // <1>
@@ -314,7 +314,7 @@ image::trigger.png[title=Input field with class attribute]
 So lets try using the class name:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/FindByClassNameIT.java[FindByClassNameIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/FindByClassNameIT.java[FindByClassNameIT.java]
 ----
 @Test(expected = NoSuchElementException.class)
 public void failedToLocate() {
@@ -325,7 +325,7 @@ public void failedToLocate() {
 It doesn't work, the finder method throws a `NoSuchElementException`. You apply the techniques learned from previous section and add explicit wait to the finders, but it doesn't work either.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/FindByClassNameIT.java[FindByClassNameIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/FindByClassNameIT.java[FindByClassNameIT.java]
 ----
 WebDriverWait wait = new WebDriverWait(driver, 3, 100);
 wait.until(new Function<WebDriver, WebElement>() {   <1>
@@ -341,7 +341,7 @@ wait.until(new Function<WebDriver, WebElement>() {   <1>
 We inspected the page again and find that the input field is inside a container `div` with `class` attribute `"react-datepicker__input-container"`. We learnt from Chapter 2 that we can narrow down the search by searching from a container element. Use its class to find it,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/FindByClassNameIT.java[FindByClassNameIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/FindByClassNameIT.java[FindByClassNameIT.java]
 ----
 WebElement webElement = driver.findElement(
     By.className("react-datepicker__input-container"));
@@ -350,7 +350,7 @@ WebElement webElement = driver.findElement(
 We find the container using this approach. But when we try to locate the input field from this container, it fails again.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/FindByClassNameIT.java[FindByClassNameIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/FindByClassNameIT.java[FindByClassNameIT.java]
 ----
 FluentWait<WebElement> webElementFluentWait = new FluentWait<>(webElement)
     .withTimeout(3, SECONDS)
@@ -373,7 +373,7 @@ Even we change the timeout to 30 seconds, we are still not able to find the trig
 Since we can find its container, we can try to find the `input` from the container using `By.ByTagName` locator,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/FindByTagNameIT.java[FindByTagNameIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/FindByTagNameIT.java[FindByTagNameIT.java]
 ----
 @Test
 public void locateSuccessfully() {
@@ -390,7 +390,7 @@ It works, we can see it triggers the display of the calendar.
 We know we can find it using xpath,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/FindByXpathIT.java[FindByXpathIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/FindByXpathIT.java[FindByXpathIT.java]
 ----
 @Test
 public void locateSuccessfully() {
@@ -462,7 +462,7 @@ forgotten.password=Contrase\u00f1a Olvidada
 You can then use the `ResourceBundle` class to get the value:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ResourceBundleExampleIT.java[ResourceBundleExampleIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/ResourceBundleExampleIT.java[ResourceBundleExampleIT.java]
 ----
 driver.get("http://localhost:8080/login.html");
 
@@ -474,7 +474,7 @@ driver.findElement(By.linkText(strings.getString("forgotten.password")));
 Or for Spanish:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ResourceBundleExampleIT.java[ResourceBundleExampleIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/ResourceBundleExampleIT.java[ResourceBundleExampleIT.java]
 ----
 driver.get("http://localhost:8080/es/login.html");
 
@@ -498,7 +498,7 @@ mvn verify -Duser.language=es
 And you can then change your code to:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch06problems/ResourceBundleExampleIT.java[ResourceBundleExampleIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swip/ch06problems/ResourceBundleExampleIT.java[ResourceBundleExampleIT.java]
 ----
 String language = Locale.getDefault().getLanguage();
 
