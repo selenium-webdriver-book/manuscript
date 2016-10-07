@@ -140,11 +140,11 @@ As the `JavascriptExecutor` has access to every element on a page, you can use i
 
 You may have a page that does not load correctly, as an image is missing. This technique shows you how to use JavaScript to verify that an image is loaded.
 
-==== Problem
+
 
 You want to make sure that an image is correctly loaded into a page.
 
-==== Solution
+
 
 Cast your driver to `JavascriptExecutor` to find out if the image has loaded. A loaded image will fulfill three criteria:
 
@@ -191,7 +191,7 @@ private boolean isImageLoaded(WebElement image) {
 ----
 <1> Use the JavaScript from the preceding code snippet; note that we cast to `boolean` here
 
-==== Discussion
+
 
 Checking elements may require access to some more unusual attributes. You can find a complete list of HTML attributes on the Mozilla Developer Network: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes.
 
@@ -322,11 +322,11 @@ The HTML for displaying the location is as follows:
 
 === Overriding JavaScript to control geolocation
 
-==== Problem
+
 
 You want to test geolocation. The location of the browser where the tests run can change, and therefore tests are unreliable.
 
-==== Solution
+
 
 Use `JavascriptExecutor` to replace the `navigator.geolocation.getCurrentPosition` function with your own function. The following snippet of JavaScript will do this:
 
@@ -368,7 +368,7 @@ public void geoLocationInjection() throws Exception {
 <1> Replace the geolocation function
 <2> Wait for the result; geolocation can take a moment to complete
 
-==== Discussion
+
 
 This solution has one main caveat -- it only works on pages where the JavaScript snippet can be executed before the location is requested. This means that if the page checks the location on startup, this technique will not work. In this case, you'll need to manually test the page.
 
@@ -418,11 +418,11 @@ image::web-notification-firefox.png[title=Web notification on Firefox]
 
 === Overriding JavaScript to capture a notification
 
-==== Problem
+
 
 You want to verify that a web notification is displayed.
 
-==== Solution
+
 
 Use the `JavascriptExecutor` interface to replace the `Notification` function with an implementation that captures the result. This can be achieved by the following JavaScript snippet:
 
@@ -486,7 +486,7 @@ driver.findElement(By.linkText("Show A Web Notification")).click();
 assertEquals("A Web Notification", notification.getTitle());
 ----
 
-==== Discussion
+
 
 Again, you are overriding the JavaScript function after the page has loaded. This means that if any notifications appear when it loads, you will not be able to intercept and inspect them.
 

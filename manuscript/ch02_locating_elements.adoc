@@ -281,11 +281,11 @@ That's a great variety of locators! They are all orientated around the knowing t
 
 You may find yourself creating locators that are similar to one another. For these common ones, you can reduce the verbosity of your code by having factories to create them.
 
-==== Problem
+
 
 XPaths are complicated to write and costly to maintain.
 
-==== Solution
+
 
 Create locator factories, similar to the methods on the `By` class, for complicated locators. My recommendation would be that because `By` method are not specific to an element, create one generic factory for locating without a tag name, named `ElementBy`, and then create one each for any tag you want to locate. For example, for locating `input` elements by the text of the label they are annotated with:
 
@@ -320,7 +320,7 @@ public final class ElementBy {
 }
 ----
 
-==== Discussion
+
 
 The preceding factory classes allow you to encapsulate complex locators within a class and then reuse them at will. By following a naming scheme and style similar to the `By` factory, you can ensure that other developers will find them easy to pick up and ensure that adoption is easier.
 
@@ -463,11 +463,11 @@ If the divs were reordered, and this would no longer be valid. Optimal, easy to 
 
 HTML tables are a common way to layout data on a web page. As you may wish to locate cell by the heading of the cell's column, then you need to do a series of look ups. Lets look at a technique to make accessing them less complex.
 
-==== Problem
+
 
 You want to robustly locate elements within a table, but tables can change, and columns can be re-ordered.
 
-==== Solution
+
 
 Locate table cells using CSS selectors. You can access cells within a HTML table using CSS selectors. Consider the table of users in figure <<users-table>>.
 
@@ -551,7 +551,7 @@ By.cssSelector(
         columnNumber))
 ----
 
-==== Discussion
+
 
 This is a good first example of working with a section of a page's DOM, rather than with a single element. Certain page structures, such as forms and tables, are reasonably complex, and the relationships between the elements within them is important to locating the specific element you are interested in.
 
@@ -579,11 +579,11 @@ Next, lets look at an example of chaining search context together.
 
 You can combine search contexts together. For example, if you can locate a form within a page, you can then easily find the submit button for that form by using the `findElement` method of the form. But if you need to search the whole page, you might have many buttons. Is this technique we will look at how we can chain searches together to find an element easily and accurately.
 
-==== Problem
+
 
 You have an element that is hard to find with a single locator.
 
-==== Solution
+
 
 `WebElement` implements `SearchContext`. This means you can chain calls together to narrow down the context until you find your element. Let's have a look at the raw HTML of the login page:
 
@@ -620,7 +620,7 @@ driver
 <1> Find a form group for the forgotten password.
 <2> Find a link in that group.
 
-==== Discussion
+
 
 You have a number of ways to search for common elements. If the element is harder to find, then you can use a chain of `findElement` invocations to narrow down the search context until you have the element you want. This is really effective when working with forms. You can find the form with a carefully created locator, then be a bit looser finding the elements you want within the form:
 
@@ -725,11 +725,11 @@ Chained locators are useful when you want to mix and match different locators.
 
 Imagine a new version of your web site is going to be released. But the HTML changed so that your locators no longer work -- frustrating! You could update the locator to the new version, but that might not be complete yet, or you could leave your tests "red" and make sure everyone knows that they need to be updated at some point in the future. Or, you could make sure your test pass with both the old and the new code. This technique will show you how.
 
-==== Problem
+
 
 You want to locate elements in a reliable and flexible fashion.
 
-==== Solution
+
 
 Create a locator factory that composes locators using matching operations such as `all`, `any` and `none`. For example, you can create an "all" locator as follows:
 
@@ -853,7 +853,7 @@ driver.findElements(
 );
 ----
 
-==== Discussion
+
 
 The hawk-eyed among you will have noticed the similarity to Hamcrest matchers. This is deliberate; it will make them easy to learn. The question you might want to ask is __"Why doesn't WebDriver come with these bundled?"__ Performance? Perhaps. The `NotBy` will need to return every element on the page.This might be quite slow, especially when working with a Selenium grid, or on pages with large numbers of elements.
 
@@ -880,11 +880,11 @@ Any one of these can be legitimately changed by their author. Nowhere in the lis
 
 The HTML of the web site is designed for making the web site look good and customers happy. But what about our test automation? We can please everyone! This technique will show you how to mark up the HTML in such a way that changes to the HTML needed to styling or anything else won't affect your tests.
 
-==== Problem
+
 
 Pages change causing automation code to break.
 
-==== Solution
+
 
 Get write access to the page source code. Add automation data to it. Revisiting the HTML for the shopping cart:
 
@@ -917,7 +917,7 @@ We can use this as follows:
 driver.findElement(By.className(String.format("wd-cart-item-%d", 0)))
 ----
 
-==== Discussion
+
 
 This technique relies on having access to the source code, and a clear and well-known agreement that classes prefixed with your automation prefix are only for automation, and can't be used for programming or other reasons. It would be easy for a new developer to accidentally undermine this technique if they don't know about it, so it's very important that everybody be aware of it.
 

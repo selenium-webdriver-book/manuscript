@@ -108,11 +108,11 @@ From the above examples, we can see it is necessary to refactor the common logic
 
 This technique will look at reducing the work needed to test pages containing forms.
 
-==== Problem
+
 
 From these two examples we demonstrated previously, you can see, there are duplicated code related to form operations, such as entering text and selecting radio buttons, as well as selecting drop-down and ticking checkboxes. As a professional developer, you may want to reduce the total number of lines of code you have to write to complete forms.
 
-==== Solution
+
 
 It's useful to encapsulate the locating and keying operations into one unit of work: find the element using a given locator, and then interact with the element. This interaction might be to type a value into the input field by entering text, clicking checkboxes, radio buttons, or selecting items from drop-down lists.
 
@@ -465,7 +465,7 @@ driver.click(BUTTON);
 
 You can see it is very clean, but it may not still be clean if the fields become more and more. We will talk about this in this chapter how to handle the page with many input fields.
 
-==== Discussion
+
 
 You've seen some examples of how you can add useful methods to your automation framework. These will reduce the amount of code in your tests. You've also see how you can reduce the number of issues you have by adding error correction code into your framework.
 
@@ -507,11 +507,11 @@ Now we are going to show you how to handle this kind of problem by introducing t
 
 Sometimes you may find that an operation on an element does not complete as you expect. You type into an input field, but then you find that the input does not have the text you expect. This technique will show you how to encapsulate a retry mechanism that checks that the action has completed correctly before continuing.
 
-==== Problem
+
 
 Tests fail as not enough time has passed for the page to be in the expected state, as stated in the beginning of this section, the `sendKeys` method doesn't work as expected but we can't figure out what caused problem.
 
-==== Solution
+
 
 Create a class that encapsulates retry.
 
@@ -623,7 +623,7 @@ retry.attempt(() -> {
 We will show you more examples in Lambda Expression later
 ****
 
-==== Discussion
+
 
 We've only shown how to apply this to inputs, by this could easily be applied to any element. For example, a select that only loads when you click on it, as discussed earlier in the chapter.
 
@@ -646,11 +646,11 @@ As you can see from the screenshot of __Other Information Form__ illustrated in 
 
 This next technique will show you how to simplify more complex page objects by breaking them down into smaller parts using logical groups.
 
-==== Problem
+
 
 On a page with many elements, a page object has become hard to understand because it is large.
 
-==== Solution
+
 
 In software development, there is a technique called *Delegate Pattern* footnote:[https://en.wikipedia.org/wiki/Delegation_pattern], instead of having one class that does everything, it breaks out some helper classes to manage the details. The master class just delegates the work to its helper classes. It is widely used to reduce the complexity of the code. We are going to create page objects by composing objects together by applying this principle.
 
@@ -848,7 +848,7 @@ public void weShouldBeABleToCompleteOtherInformation()  {
 
 Please compare this test with only 2 lines of code with Listing <<longer_test>> which has 10 lines of code and you can see it improves the readability of test.
 
-==== Discussion
+
 
 You can see that splitting the code into small logical groups that we have made the code simpler and more cohesive. Instead of having the `ShoppingCartPage` class to handle all the individual form elements on __Other Information__ form, it only handles `OtherInformationForm` class and leaves all the details to the `OtherInformationForm` class.
 

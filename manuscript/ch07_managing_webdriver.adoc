@@ -93,11 +93,11 @@ What you can do is have a class to encapsulate the creation and management of th
 
 I've mentioned Dependency Injection in this chapter, but you've not yet seen any code. Injecting a driver into your test is the first step in separating the management of the driver from the test.
 
-==== Problem
+
 
 You want to reduce the amount of duplicate code for creating and quitting drivers.
 
-==== Solution
+
 
 Use the Spring Framework footnote:[http://docs.spring.io/spring/docs/current/spring-framework-reference/html/beans.html] to create a Spring context, which is used to inject the driver into your tests.
 
@@ -204,7 +204,7 @@ public class InjectedDriverIT {
 <2> Tell Spring where the configuration is.
 <3> Indicate to Spring where to inject a driver.
 
-==== Discussion
+
 
 Using Dependency Injection gives the control of which driver to use for the test to the configuration. If you want the configuration to return the Chrome driver, you can do this. The tests will run using that driver, but without any change to the tests themselves. WebDriver provides a class named `DesiredCapabilities` that indicates what kind of browser capabilities you want. One of those capabilities is `browserName`. You can change the browser you want to use for your tests using a system property. For example, to run the tests using the HTMLUnit driver:
 
@@ -313,11 +313,11 @@ WebDriver requires absolute URLs. An absolute URL is one that includes the proto
 
 The following technique makes use of Dependency Injection, but this time you inject a URL rather than the driver.
 
-==== Problem
+
 
 You want to run the same code against both a local and a remote web server.
 
-==== Solution
+
 
 Inject a base URL into your tests.
 
@@ -364,7 +364,7 @@ You can run this test with alternative URLs from your terminal by using Maven an
 		-Dit.test=InjectedBaseUrlIT
 ----
 
-==== Discussion
+
 
 I hope you can see how using Dependency Injection means that you do not need to change your tests when the setup or configuration needs to change. The website is hosted somewhere else? You want to change the browser? No problem! All you need to do is update one property, and off you go!
 
@@ -380,11 +380,11 @@ It can be really helpful to take screenshots as part of a normal test cycle, for
 
 WebDriver provides a way to take and save a screenshot. Spring has a mechanism that allows us to have code run each time a test finishes. This technique combines those two features to take a screenshot whenever a test fails.
 
-==== Problem
+
 
 You want to take a screenshot of the browser at the end of every test automatically.
 
-==== Solution
+
 
 To solve this problem, you'll need to:
 
@@ -431,7 +431,7 @@ public class ScreenshotIT {
 
 You need to add both `TestExecutionListeners` and `DependencyInjectionTestExecutionListener` to the `@TestExecutionListeners` annotation. The first listener takes the screenshot and the second one performs the dependency injection. `DependencyInjectionTestExecutionListener` is normally added by default, but if you need to add more, then you need to override it.
 
-==== Discussion
+
 
 Taking screenshots is a great aid to debugging. You will want to tie in with the testing process to take them, and you want to make sure you name the files in a helpful fashion. The above example uses the test name to generate the name for the screenshot. If your test is running on a CI server, you will need to ensure it makes them available to view and does not delete them as part of its cleanup process.
 

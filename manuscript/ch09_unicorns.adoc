@@ -157,11 +157,11 @@ Now you've seen a number of use cases for action chains. When you use them a lot
 
 Action chains require you to locate elements prior to performing the sequence of actions. On certain pages, the element might become stale before part of the action is performed. In this case you want to locate the element lazily. This can be done by creating a lazy `WebElement` class.
 
-==== Problem
+
 
 You want to use action chains on elements that cannot be located before part of the chain is executed.
 
-==== Solution
+
 
 Use a **lazy element** that locates the element each time a method is called. This is similar to the mechanism that the `PageFactory` class uses.
 
@@ -242,7 +242,7 @@ You can then use this in a test:
 ----
 <1> Create a lazy element from the driver and a locator
 
-==== Discussion
+
 
 Using a lazy element to wrap an existing element will allow you to create long action chains. Lazy elements can be substituted in the place of any normal element and are useful for pages where an element becomes stale.
 
@@ -478,11 +478,11 @@ You can see there are a few different kinds of tooltip. To simplify accessing to
 
 === Creating a tooltip extractor
 
-==== Problem
+
 
 There are multiple frameworks for tooltips. We would like one way to get all tooltips.
 
-==== Solution
+
 
 Create a `Tooltip` class that can find the tip for an element by trying different strategies. We'd like to be able to ask for the tip on an element. To do this we will need to:
 
@@ -537,7 +537,7 @@ String tip = Tooltip.tip(driver, By.id("tooltip"));
 At the time of writing, the `moveToElement` method does not work in Safari.
 ====
 
-==== Discussion
+
 
 This is another example of encapsulating behavior that may vary by implementation behind a method or interface that hides the details of whether you are talking to an HTML tooltip, a Bootstrap tooltip, or another type of tooltip.
 

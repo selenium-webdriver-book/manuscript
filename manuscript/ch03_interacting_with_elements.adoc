@@ -142,11 +142,11 @@ On desktop browsers, it is possible to navigate the Internet using the keyboard 
 
 Probably the most common reason to need to enter text is to complete a form. As mentioned before, users will often do this by using the Tab key to move between elements, colloquially known as __tabbing__. This following technique will show you how to enter text into a form on a page.
 
-==== Problem
+
 
 You want to test the behavior of a form on a page to make sure that it can be filled out primarily using the keyboard.
 
-==== Solution
+
 
 To demonstrate various methods, we will:
 
@@ -196,7 +196,7 @@ This code demonstrates three ways you can interact with elements using the keybo
 
 The hawk-eyed among you will have noticed that we have used __method chaining__ footnote:[https://en.wikipedia.org/wiki/Method_chaining] to reduce the amount of code. I find that, if there is one suitably indented method call per line, it makes code easier to read.
 
-==== Discussion
+
 
 To be able to effectively test web pages, you need to be able to complete the same actions a user would complete. WebDriver provides more than one method to do this, each of which are be suitable for different tasks, but all make it easy to enter text into a page.
 
@@ -226,14 +226,14 @@ Many forms now allow you to enter text into inputs that allow the user to change
 
 In fact, unlike other page inputs, you don't modify the input within the form at all. Instead, the iframe contains a page that is marked as __content editable__. A page that is content editable can be modified by the user.
 
-==== Problem
+
 
 You want to enter styled text into a WYSIWYG editor similar to figure <<wyswyg-editor>>.
 
 [[wyswyg-editor]]
 image::wyswyg-editor.png[title=WYSWYG editor (http://localhost:8080/wyswyg-editor.html)]
 
-==== Solution
+
 
 To enter text into this WYSWYG form you will:
 
@@ -279,7 +279,7 @@ To enter text into this WYSWYG form you will:
 <9> Switch back to root window.
 <10> Deselect italics.
 
-==== Discussion
+
 
 Directly using WebDriver to interact with a WYSIWYG editor to complete even this basic task is complex. You have to deal with switching between frames, clicking a button to enable and disable italics, and coordinate both of these actions with entering text.  All the items have class name or IDs that might change if you upgrade your version of the editor. There is also a fair amount of repetition.
 
@@ -344,11 +344,11 @@ This is all rather laborious, when you just want simply click on an item. We wil
 
 The second main way to interact with a page is by clicking on elements using the mouse. Is this technique you'll see the two main ways you can achieve this using WebDriver, and meet the `Actions` class.
 
-==== Problem
+
 
 You want to simulate the behavior of a user navigating a form using a mixture of keyboard and mouse. Specifically, you want to see what happens if the user double-clicks the Submit button: does the form get submitted twice?
 
-==== Solution
+
 
 WebDriver provides methods to click elements in a similar manner to sending key presses to an element. You will use the same mailing list form from figure <<sign-up-form>>, where you will single-click on the check box, using this method.
 Here is an example of clicking on an element:
@@ -411,7 +411,7 @@ Finally, here is the complete test:
 
 Should you refactor this code by extracting a double-clicking method so you can reuse it elsewhere? Maybe. You should extract commonly used code, but as double-clicking is a less common action, perhaps wait until you have done it a few times.
 
-==== Discussion
+
 
 With WebDriver, there are two ways to simulate mouse clicks: either the click method, or using `Actions`. You will notice that both `sendKeys` and `click` are available for elements, though most elements can only accept text, or mouse clicks, not both.
 
@@ -428,11 +428,11 @@ image::context-menu.png[title=Context menu http://localhost:8080/context-menu.ht
 
 Context menus are rare is most modern web applications, perhaps because users expect the standard web browser menu to appear when the user right-clicks. However, you may still encounter them. This technique shows you how to open a context menu.
 
-==== Problem
+
 
 An application contains a context menu and you want to open it.
 
-==== Solution
+
 
 Locate the element and use `Actions` to perform a context click.
 
@@ -446,7 +446,7 @@ Locate the element and use `Actions` to perform a context click.
             .perform();
 ----
 
-==== Discussion
+
 
 We can see that for complex operations, the `Actions` class comes in very useful. Context clicks are a bit of a rarity; you won't find them in many web pages, but web based applications such as email, word processors, or spreadsheets will have them.
 

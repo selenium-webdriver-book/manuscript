@@ -105,11 +105,11 @@ Both of the latter are good candidates if the page you are testing uses a lot of
 
 If you have a variable pointing to an element, but that element becomes stale, then calling methods on it will result in a `StaleElementReferenceException`. We can retry locating the element when this happens.
 
-==== Problem
+
 
 Tests are unreliable due to slippery elements.
 
-==== Solution
+
 
 Transparently retry the locating of your element:
 
@@ -130,7 +130,7 @@ Transparently retry the locating of your element:
         }
 ----
 
-==== Discussion
+
 
 This problem can be caused by code that holds a reference to an element longer that it is available for. The above example is a little contrived, but the principle holds for any page that can remove elements: catch the exception and re-find the element.
 
@@ -186,11 +186,11 @@ An alternative to implicit waits is explicit waits. In this case, you wait for a
 
 Sometimes we need to wait until a condition becomes true, as we know something will happen, but we're not sure when. This technique will look at using WebDriverWait to wait for something to change in the page.
 
-==== Problem
+
 
 You have a web page with elements that take a few moments to load and you need your test to wait until they have loaded.
 
-==== Solution
+
 
 Use `WebDriverWait` to poll for a condition and return when it is true. If the condition does not become true within the required time, then a `TimeoutException` is thrown.
 
@@ -228,7 +228,7 @@ You'll generally find expected conditions the most useful, as an expected condit
 <3> A message to append to the exception when the condition is not satisfied within the time limit.
 <4> A condition: the element must be visible.
 
-==== Discussion
+
 
 `WebDriverWait` allows you to wait for any condition, not just a visible element. Let's have a look at some of the useful conditions.
 
@@ -417,11 +417,11 @@ WebDriver's JSON protocol uses UTF-8 character encoding. However, you need to ma
 
 Most public-facing web sites are in multiple languages. However, the functionality is the same in all versions, with text translated (and perhaps some image changes). This technique will look at how you can avoid copying and pasting tests by using resource bundles to store the text in different languages.
 
-==== Problem
+
 
 You have a multilingual site, and you want to test in different languages.
 
-==== Solution
+
 
 Extract all text from your code and store it in a resources bundle. Then run the code using a system property to switch languages. Imagine you have a Spanish login page:
 
@@ -484,7 +484,7 @@ ResourceBundle strings = ResourceBundle.getBundle("strings",
 driver.findElement(By.linkText(strings.getString("forgotten.password")));
 ----
 
-==== Discussion
+
 
 This shows a straightforward technique using core Java libraries to handle internationalization in the code. It is an interesting challenge to develop code that runs under different configurations, such as different browsers and languages. We will discus this in more detail later in the book.
 
