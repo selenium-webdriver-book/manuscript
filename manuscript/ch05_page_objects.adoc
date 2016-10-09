@@ -488,13 +488,13 @@ You may decide to extract the locator into a constant:
 
 Another solution would be to have a field containing the query input, but you'd would lose the benefits of lazy loading for the element. There's no ideal solution ... or is there?
 
-=== Technique 14: Using `PageFactory` to simplify code
+=== Using `PageFactory` to simplify code
 
-==== Problem
+
 
 The locating of elements in page objects is done with explicit calls to `WebDriver`, and it results in verbose code.
 
-==== Solution
+
 
 Use `PageFactory` to create page objects with fields that are populated automatically.
 
@@ -596,7 +596,7 @@ For each of the fields, instead of a real, concrete element, `PageFactory` creat
 
 Creating elements lazily is great for most cases, because every invocation makes sure the element is available. But if your code is slow, and you know the element is always available on the page, and you are using it repeatedly, then annotate the field with the `@CacheLookup` annotation. The element will only be looked up once.
 
-==== Discussion
+
 
 `PageFactory` can help reduce the verbosity of code by changing how you define a page object. Instead of explicitly getting elements when you use them, `PageFactory` will populate them dynamically based on the locators you've configured them with.
 
@@ -619,13 +619,13 @@ When writing automation code, you are likely to find yourself doing the followin
 2. Verify the page loaded correctly.
 3. Create a page object for the loaded page.
 
-=== Technique 15: Using LoadableComponent to make your page object robust
+=== Using LoadableComponent to make your page object robust
 
-==== Problem
+
 
 Page objects are loaded, but you don't know if they've loaded from the correct page. This results in tests that may fail unexpectedly.
 
-==== Solution
+
 
 Use `LoadableComponent`.
 
@@ -676,7 +676,7 @@ The usage is straightforward:
     page.searchFor("funny cats");
 ----
 
-==== Discussion
+
 
 There are unattractive issues with using `LoadableComponent`:
 
@@ -686,15 +686,15 @@ There are unattractive issues with using `LoadableComponent`:
 
 What we're trying to do with `LoadableComponent` is an excellent idea. In the next section, we'll look at bringing `LoadableComponent` and `PageFactory` together, so we can get the benefits of both.
 
-=== Technique 16: Creating a loading page factory
+=== Creating a loading page factory
 
 We'd like to get the benefits of loadable components and page object factories at the same time. This technique shows how to combine the two.
 
-==== Problem
+
 
 We'd like a unified approach to loading, populating, and verifying page objects.
 
-==== Solution
+
 
 Create a `LoadingPageFactory` class to do these operations.
 
@@ -802,7 +802,7 @@ Finally, you need the two new annotations:
 ----
 <1> This is an invalid page title. This allows the verification of the title to be optional.
 
-==== Discussion
+
 
 This is one way to combine the benefits of `PageFactory` and `LoadableComponent` to consistently create verified page objects. It's a bit light on features, as it can only verify by page title, and other features will be useful in many cases.
 

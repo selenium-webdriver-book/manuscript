@@ -276,7 +276,7 @@ We learnt from earlier chapters that enum is a good practice to organize locator
 
 In the table, each row is an element, its locator and the enum constant to wrap the locator. Except the Day buttons, since we don't want to define 31 enum constants for those days.
 
-Now that we all the locators, we can apply the technique we learnt from Technique 38: Expose locator enums as a `Supplier<By>` interface. Now we create two enum constants.
+Now that we all the locators, we can apply the technique we learnt from Expose locator enums as a `Supplier<By>` interface. Now we create two enum constants.
 
 ==== Locator supplier enum by Id
 
@@ -328,15 +328,15 @@ We are introducing the following techniques to accomplish the above tasks.
 
 We are going to implement a datepicker class to automate jQuery datepicker, and gradually refactor it into a general purpose framework, so we can use the framework to automate those datepickers built from other JavaScript libraries.
 
-=== Technique 51: Choose Parameters Carefully to Simplify API Call
+=== Choose Parameters Carefully to Simplify API Call
 
 We are going to introduce a technique associated with API design to simplify the method invocation. For example, we don't want the user of the method call to go a long way to think how to construct a `java.util.Date`, `java.util.Calendar` or a Java 8 `java.time.LocalDate` in order to use out API, the API should be as simple as `1`,`2`,`3`. For a datepicker, its functionality is to assist you to pick. year, month and then day. So the most strait forward interface is `Datepicker.pick(year, month, day)`.
 
-==== Problem
+
 
 In Java language, there are many classes represent the concept of date. They are `java.util.Date`, `java.util.Calendar` or a Java 8 `java.time.LocalDate`. If `pickDate` method took any of them as parameter, we need to construct an object of these classes first. But in the code handling date picking, we need to extract the year, month and day information from this object in order to operate on the jQuery calendar widget. There are conversions back and forth between normal string and the date type object.
 
-==== Solution
+
 
 Good API should be easy to use and read fluently. To save the trouble of writing above mentioned conversion code, an alternative API for datepicker should be the strait forward one, but we change the sequence of the parameters to make it read more like English language, `pick(Month month, int day, int year)`, When you call this method from the automation code, it is as simple as,
 
@@ -400,7 +400,7 @@ java.time.DateTimeException: Invalid date 'APRIL 31'
 It tells you that the date you try to pick doesn't exist. It is better than telling you an `NoSuchElementException`.
 ****
 
-==== Discussion
+
 
 Instead of using extra code to convert a string into an object of `java.util.Date`, `java.util.Calendar` or a Java 8 `java.time.LocalDate`, or introducing a dependency to third party date processing API such as Joda Date library, the new API just takes a `java.time.Month`, two `int` values as parameters. Even generally speaking, the less parameters a method takes, the better. But for this case, it is better to use these 3 parameters. You use type `java.time.Month` to restrict the first parameter to be an enum constant of a `Month` which is type safe. And it is not difficult to guess the second parameter is for day and third one for year. You still need to be careful not to pass negative value as day and year. But we have validation logic to verify the parameters are valid.
 

@@ -149,15 +149,15 @@ You can save the binary anywhere, and one good place is within your project (for
 chmod +x chromedriver
 ----
 
-=== Technique 30: Automatically downloading the driver binary
+=== Automatically downloading the driver binary
 
 Chromedriver binaries are large, and require you to download different versions for different operating systems. This technique shows you how to automatically download the correct version.
 
-==== Problem
+
 
 You want to use `ChromeDriver` without having to manually download the binary.
 
-==== Solution
+
 
 Automatically download the correct driver binary for your computer's operating system. As you may want to do this in a different way for different drivers, you can use the *strategy pattern* by creating an interface that can be implemented for each browser.
 
@@ -294,7 +294,7 @@ private String lastRelease() throws IOException {
 <4> Java 7 can unpack a jar file automatically -- a jar file is actually a zip file, so we take advantage of that here
 <5> Get the latest version from this URL
 
-==== Discussion
+
 
 The preceding example has some code for downloading and unzipping files. This could be extracted into a utility class for reuse in other drivers.
 
@@ -346,15 +346,15 @@ selenium_standalone/osx/phantomjs/64bit/phantomjs
 
 Chrome has one feature that might make it the preferred choice of browser to test with: the ability to emulate mobile devices. The next technique looks at how to do that.
 
-=== Technique 31: Mobile testing using Chrome's mobile emulation
+=== Mobile testing using Chrome's mobile emulation
 
 Chrome provides the ability to emulate different mobile devices. This can be useful for early identification of problems with your site on mobile devices, without the time and effort required to set up a full mobile automation system.
 
-==== Problem
+
 
 You want to test for mobile, but without too much special setup.
 
-==== Solution
+
 
 Use Chrome's mobile emulation mode.
 
@@ -433,7 +433,7 @@ capabilities.setCapability(ChromeOptions.CAPABILITY, chromeOptions);
 You can run the test application in mobile mode if you like. See https://github.com/selenium-webdriver-book/source/ for details.
 ****
 
-==== Discussion
+
 
 Chrome's mobile emulation feature is a great and inexpensive way to test mobile devices. It doesn't require any extra software installed on either developers' PCs or your CI system, so there is very little cost in getting set up. Naturally, there are a few differences between emulation and testing on a real device:
 
@@ -460,15 +460,15 @@ To use Internet Explorer, add the following to your pom.xml file:
         </dependency>
 ----
 
-=== Technique 32: Using a Vagrant virtual machine to run IE
+=== Using a Vagrant virtual machine to run IE
 
 You may want to use a browser that is not available on your operating system, such as Internet Explorer when your computer is an Apple Mac. This technique shows you how to create a virtual machine to run a different operating system, allowing you to test a greater variety of browsers.
 
-==== Problem
+
 
 Your desktop machine is not running Windows, but you want to run your tests on Internet Explorer. Or, you want to start from scratch each time with a working machine, as your tests can make the machine dirty.
 
-==== Solution
+
 
 Use VirtualBox and Vagrant to create a virtual machine (VM) that you roll back to a known good state before running your tests.
 
@@ -568,7 +568,7 @@ public void openGoogle() throws Exception {
 ----
 <1> Note the port number is the one we set up earlier
 
-==== Discussion
+
 
 Using `InternetExplorerDriver` is the only way to test on Internet Explorer with WebDriver. This example allows you to set up a Windows machine that lives inside your machine. Before you run your first test, you can save the virtual machine. To do this, you need to install a plugin into Vagrant:
 

@@ -38,15 +38,15 @@ Drivers that decorate a web driver typically implement the `WrapsDriver` interfa
 
 The standard Selenium Java library already container a wrapper, the *event firing web driver*. This wraps an existing driver to provide a method that allow you to register listeners which are invoked when certain actions (such as pages being loaded) are performed.
 
-=== Technique 33: Taking screen-shots each time a page is loaded
+=== Taking screen-shots each time a page is loaded
 
 The Event firing web driver allows you to write code that listens to requests send to a normal web driver and take action based on them. This technique shows you how to take a screen shot each time a page is loaded.
 
-==== Problem
+
 
 You want to take a screen-shot when pages are loaded to make it easier to trace problems in your code.
 
-==== Solution
+
 
 Wrap your driver in an EventFiringWebDriver and register a listener. To do this, you need to create an object the sub-classes `WebDriverEventListener`. This class has a large number of methods, so to avoid having to implement them all, you can sub-class `AbstractWebDriverEventListener`. This has empty implementations of each of the methods, so you only need to implement the ones you want.
 
@@ -72,7 +72,7 @@ driver.get("/index.html"); // <3>
 <2> Take a screen-shot and save it to a file.
 <3> This will navigate to a page, and therefore it will take a screenshot.
 
-==== Discussion
+
 
 This shows an example of using the event firing web driver to wrap a web driver, and then save a screen-shot. The event firing web driver allows you to perform operations before and after a number of actions:
 
@@ -92,13 +92,13 @@ It also allows you to perform additional actions when there is an exception usin
 
 In a chapter 7 we looked at a technique that allowed you to use base URL for your URLs in you test by inject the URL into you test class. To use that technique you need to modify every class that you wanted to use it in. This can be achieved by wrapping a web driver to automatically prefix the base URL if it is missing very time you invoke `get`.
 
-=== Technique 34: Creating a driver that automatically prefixes URLs with a base URL
+=== Creating a driver that automatically prefixes URLs with a base URL
 
-==== Problem
+
 
 Injecting base URLs into tests is verbose, we want to have a driver that automatically prefixes a base URL.
 
-==== Solution
+
 
 Create a method that returns a web driver that wraps an existing web driver, but prefixes the URLs with a base URL.
 
@@ -174,7 +174,7 @@ And set it to different locations when you run you tests:
 mvn ... -Dwebdriver.baseUrl="http://test-server"
 ----
 
-==== Discussion
+
 
 The above example has a very specific use: to allow you to use the same tests to test applications on different hosts. To make this completely versatile, we need to implement all the interfaces that the `RemoteWebDriver` class implements. As `WebDriver` does not implement other useful interfaces such as `JavascriptExecutor`, you'll need to cast them as shown in listing <<DelegatingWebDriver>>.
 
@@ -261,13 +261,13 @@ A *HTTP Status Code* is a number the server returns to the browser to indicate t
 
 These code are useful, as they can be used to quickly identify errors in pages, before anything else happens. However, WebDriver does not make the status code easily available.
 
-=== Technique 35: Creating a WebDriver wrapper that captures HTTP status codes using a HTTP proxy
+=== Creating a WebDriver wrapper that captures HTTP status codes using a HTTP proxy
 
-==== Problem
+
 
 We'd like to be able to see the last HTTP status code of the last page loaded.
 
-==== Solution
+
 
 Use a HTTP proxy that captures the status codes, and expose those codes as a Spring bean in your tests.
 
@@ -438,7 +438,7 @@ public class HttpStatusCodeIT {
 }
 ----
 
-==== Discussion
+
 
 This technique may not work if you are running your tests on Selenium Grid. This will be because the grid will need to connect to the proxy, running on your desktop PC, and your office network might not allow this. If you use a grid, then you probably want to test this first to make sure you can get any changes made necessary.
 
@@ -464,15 +464,15 @@ For example, in the table cell, we will use (row number, column number) to indic
 
 Then we are going to introduce a technique to locate the contents on the table cell using its row number and column number.
 
-=== Technique 36: Encapsulating table access Within a `Table` class
+=== Encapsulating table access Within a `Table` class
 
 While tables are made up from rows, columns, headings, cells, you may find you want to access them by the cell. Lets look at a technique to do this.
 
-==== Problem
+
 
 You regularly have to create complex table locators and it is proving to be time-consuming to write, and difficult to maintain.
 
-==== Solution
+
 
 Encapsulate table access within a `Table` object. HTML tables have a standard layout, they have a head, and a body. Both contain cells, in the case of the body, using the `td` HTML tag.
 
@@ -546,7 +546,7 @@ public WebElement getBodyCell(int rowNumber, int columnNumber) {
 }
 ----
 
-==== Discussion
+
 
 You can build on this class to provide some more interesting and useful methods. For example, you can encapsulate the strategy of finding the correct column number:
 
@@ -652,15 +652,15 @@ The code is much cleaner after introducing this constant, but where is a good pl
 
 Some people tend to put these constants in the same file they are being used in, with the constants at top. For a complex page, the constants will occupy a lot of lines of code to make that class long. The next thing you might do is to move those constants into a `Constants` class; this way the page becomes cleaner. But a constants class does not require the constants to be homogenic-—of the same type. We can enforce this using an enum.
 
-=== Technique 37: Using enums to wrap and organize locators into cohesive groups
+=== Using enums to wrap and organize locators into cohesive groups
 
 You might find your code starts to get quite full of locators--locators everywhere! This technique shows you how to organize them into a single place.
 
-==== Problem
+
 
 Code is cluttered with long locators that make it hard to understand.
 
-==== Solution
+
 
 Wrapping locators to their own enum class that acts as a locator factory. Enum was introduced in Java 5; we should take advantage of this language feature and use it to organize out locators to make our code more cohesive. Since enum implicitly extends `Enum`, it cannot extend `By`.
 
@@ -707,7 +707,7 @@ datepicker. When automating datepicker, we use this technique extensively, so
 it will be helpful if you can master this technique.
 ****
 
-==== Discussion
+
 
 A benefit of having an enum is that it can be a great reference for new or inexperienced team members. When they join your project, before adding new constants, they can check whether the constants are already there. If they're not familiar with certain search mechanisms, for example, they can use the existing constants as examples to learn how to produce the ones they want. For example, developers who are interested in learning
 XPath selectors can check the suppliers to learn how to come up with new locators. By organizing them in one place improves the cohesion of the code and will reduce duplication in the system.
@@ -716,11 +716,11 @@ Can you see something we can improve in that example? Let us have a look that en
 
 Yes, we will introduce a new technique to simplify this method calling.
 
-=== Technique 38: Expose locator enums as a `Supplier<By>` interface
+=== Expose locator enums as a `Supplier<By>` interface
 
 With the introduction of the enum constants, we don't need to use the locators with long names any more. It is an improvement. But there is still some problem lingering in the code base we need to address.
 
-==== Problem
+
 
 As in Listing <<call_get>>, you always need to call the `get` method before you can pass the `By` locator in the enum as the parameter to the finder methods of `Browser` and `Element`. It will add up the complexity of the automation code when many locators are used.
 
@@ -733,7 +733,7 @@ driver.findElement(QUANTITY) <1>
 
 The code looks better than the one need to call `get`. And it is not difficult to achieve this.
 
-==== Solution
+
 
 The solution to this problem is relatively simple. What we need to do is to have the enum implement `Supplier<By>` interface and follow some conversions.
 
@@ -801,7 +801,7 @@ driver.findElement(Name.QUANTITY)
 
 You can see, not only we wrap `By` inside an enum, but we created a cleaner interface for other classes to use as well. So you no longer need to call the `get` method of the enum before you can use it as the parameter for finder methods.
 
-==== Discussion
+
 
 When you work on a complex web application, with many things need to be located, the code will be much cleaner without calling `get` method repeatedly. From now on, we will continue to use this technique through out the rest of the book. To save paper, when we list locator enums similar to Listing <<ByName>>, we will omit `get()` and `toString()` methods and just provide the following definition and leave out the rest.
 

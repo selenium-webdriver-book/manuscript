@@ -15,15 +15,15 @@ By the end of this chapter, not only you will learn the technique and apply it i
 
 In this section, we are going to show you a technique to introduce a framework so we don't need to repeat some classes when automating datepickers built using other JavaScript frameworks.
 
-=== Technique 52: Introducing a framework for multiple JavaScript implementations
+=== Introducing a framework for multiple JavaScript implementations
 
 Besides detepicker built using JQuery, there are datepickers built using other JavaScript frameworks, it would be duplicate code if we just copy `JQueryDatepicker` into another class.
 
-==== Problem
+
 
 The previously demonstrated code are well formed and very concise, but there is jQuery specific code in the classes so they are not ready to be used to automate the datepickers built using other JavaScript frameworks.
 
-==== Solution
+
 
 We are going to move jQuery specific implementation out of main datepicker classes, so those classes can be used as framework code.
 
@@ -49,7 +49,7 @@ public class Datepicker {
 <4> This variable changed from JQueryDayPicker to DayPicker
 <5> The method body doesn't change from Listing 17.23
 
-==== Discussion
+
 
 You can see the `Datepicker` has several variables injected from its constructor, a `Calendar` class to display the calendar, a `YearPicker` class to pick year, a `MonthPicker` class to pick month and a `DayPicker` to click the day of the month.
 

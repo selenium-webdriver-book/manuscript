@@ -155,11 +155,11 @@ We will observe another test case failure caused by transition effect in Chapter
 
 In Chapter 12, we learnt that by wrapping `WebDriver` and `WebElement`, we can attach additional responsibility to these interfaces and make them easier to use. By applying the same design pattern, we can hide the code which is used to handle explicit wait and remove those cumbersome logic. We already started building the framework in Chapter 12, and right now, it becomes clearer that we need to continue evolving the framework to provide more supports for the automation developers. We can add support in wrapped `WebDriver` and `WebElement` to add one method with the build-in explicit wait, so developers can just call that method if they want the automation code to wait for an element to appear on the web page.
 
-=== Technique 39: Encapsulating `FluentWait` class to provide built in waiting
+=== Encapsulating `FluentWait` class to provide built in waiting
 
 We will use this technique to simplify the code in Listing <<explicit-waits1>> and Listing <<explicit-waits2>>, this technique works also for people not using Java 8, just the code will be some duplicates since *default method* is not available until Java 8, which helps in reducing some duplicates.
 
-==== Problem
+
 
 You have duplicated code related to waiting. In Listing <<explicit-waits1>> and Listing <<explicit-waits2>>, the following block block has been repeated 3 times with only small variant, such as `By.id("location")` in the code snippet below and `By.linkText("MEXICO")` in other place.
 
@@ -177,7 +177,7 @@ WebElement location = webDriverWait.until(
 
 This repeated code block with only small difference in each block makes the code unpleasant to read and fragile to maintain.
 
-==== Solution
+
 
 Wrap both `WebElement` and `WebDriver` in new objects, and provide new methods to support waiting. Wrapping an object to simplify it is known as the *facade pattern* footnote:[http://en.wikipedia.org/wiki/Facade_pattern]. You can create an object that has the methods that you want, and delegates calls to the "delegate".
 
@@ -393,7 +393,7 @@ You can see another advantage of using Java 8 is not to repeat the implementatio
 
 Regardless whether you use Java 8 or not, the test is same as Listing <<explicit-test>>.
 
-==== Discussion
+
 
 The examples give us a clear idea of some of the benefits of wrapping up common WebDriver classes. But you need to invoke the constructor of the `Element` every time you use the `await` method.
 
@@ -432,17 +432,17 @@ image::await-seq.png[title=Sequence diagram `await` method]
 
 We can attach more responsibility to this `Browser` and `Element` classes to make them more versatile.
 
-=== Technique 40: Using an `Optional` class To Check For Element Presence
+=== Using an `Optional` class To Check For Element Presence
 
 There is situation that some element may appear or may not. To handle this situation gracefully, we are going to provide another method to use an `Optional` class as an wrapper for the element we are trying to find as the return type. When nothing found, the `isPresent()` method of that `Optional` object returns `false`, when it is found, its `get()` method will return the element. This technique works better with Java 8 installation, since it is a built interface from the JDK.
 
 Then you can use the `Optional` class from Guava library. It provides same functionality as the one from Java 8. Here is the JavaDoc for Guava *`Optional` class* footnote:[http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/base/Optional.html]
 
-==== Problem
+
 
 Code for checking for the presence of an element must catch `NoSuchElementException`. This adds several lines of code to each use.
 
-==== Solution
+
 
 Provide an `optionalElement` method to find optional elements. Again, you want to create a method that you could add to both `Browser` and to `Element`. This can be done as per listing <<optional-element>> below. If you haven't use Java 8 yet, the default method is not available in earlier version of Java. You need to have an empty method and repeat the implementation in each of the class which implements this interface
 
@@ -523,15 +523,15 @@ Then you can call the `isPresent` method to check whether you has found somethin
 
 Also you can see `click` method is used multiple times in Listing <<explicit-test>>, so you can add these method to `ExplicitWait` for the time being. We are going to show another technique next.
 
-=== Technique 41: Adding helper methods for some frequently used method call.
+=== Adding helper methods for some frequently used method call.
 
 In Listing <<explicit-test>>, we can see there are three occurrences of `await` method call followed by calling `click`. These two methods are frequently used together in web automation code. Also you need to call `getText` after calling `await`.
 
-==== Problem
+
 
 Often, we need to find an element and click it using `await` method call followed by calling `click`. Also we need to find an element and read its text using `getText` after calling `untiFound`. And we also check whether an element can be found by using a `By` locater. These chained methods calls are very frequent and they are repeated everywhere.
 
-==== Solution
+
 
 We can achieve this by adding helper methods to give a single method call so you no longer expose a chained method calls in the code,
 
@@ -582,7 +582,7 @@ You can see the `isPresent`, `click` and `getText` methods makes the code cleane
 
 Then we can just call `Element.getValue()`.
 
-==== Discussion
+
 
 The reason we add these helper methods into `ExplicitWait` class is because both `Browser` and `Element` implements `ExplicitWait` interface, the helper methods in `ExplicitWait` are available for them. And we make code simpler and pleasant to read.
 
@@ -674,15 +674,15 @@ throw new IllegalArgumentException("Argument is of an illegal type: " + <2>
 
 From its logic, we know it expects that our class that wraps `WebElement` needs to implement `WrapsElement` interface. We are going to do this to `WebDriver` and `WebElement` interfaces to make them backwards compatible.
 
-=== Technique 42: Making `Browser` Backwards Compatible By Implementing `WebDriver`
+=== Making `Browser` Backwards Compatible By Implementing `WebDriver`
 
 First let us make `Browser` class backwards compatible so it can be used in the code where expecting a `WebDriver` interface as parameter.
 
-==== Problem
+
 
 You have a `Browser` class which can use for new tests, and you'd like to use it in existing tests, so you only have to manage one driver.
 
-==== Solution
+
 
 To do this you can add interface `WrapsDriver` to `DelegatingWebDriver` class as per listing <<delegating-webdriver>> below. You can then sub-class it to override specific methods.
 
@@ -724,7 +724,7 @@ public class Browser extends DelegatingWebDriver {
 ----
 <1> The constructor of the `Browser` class
 
-==== Discussion
+
 
 By applying Object Oriented principle, we made `Browser` backwards compatible with old tests. Let us go back to chapter 5, Making maintainable tests using the Page Object pattern, and take another look of Listing 5.8 link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch05pageobjects/d/SearchPage.java[d/SearchPage.java]. In the listing, `SearchPage` class takes a `WebDriver` interface as the constructor parameter, now we are going to pass it a `Browser` object. Will it work? Let us see.
 
@@ -754,15 +754,15 @@ The test passes, it works! By making `Browser` implementing `WebDriver`, we make
 
 Now let us make `Element` class backwards compatible so it can be used in the code where expecting a `WebElement` interface as parameter.
 
-=== Technique 43: Making `Element` Backwards Compatible By Implementing `WrapsElement` interface
+=== Making `Element` Backwards Compatible By Implementing `WrapsElement` interface
 
 It is the same case with `Element` class too.
 
-==== Problem
+
 
 You have an `Element` class which can use for new tests, and you'd like to use it in existing tests, so you only have to manage one element.
 
-==== Solution
+
 
 Again, use the delegate pattern to delegate the code to another class. To do this you can create a new class `DelegatingWebElement` as per listing <<delegating-webelement>> below and have it implementing `WrapsElement` interface. You can then sub-class it to override specific methods.
 
@@ -802,7 +802,7 @@ public class Element extends DelegatingWebElement {
 ----
 <1> The constructor of the `Element` class
 
-==== Discussion
+
 
 Creating a delegate allows us to override specific methods, and yet keep our code readable. In this example you have use it to extend `Element` to allow it to be used as a drop-in and backwards compatible replacement for `WebElement` in existing code.
 

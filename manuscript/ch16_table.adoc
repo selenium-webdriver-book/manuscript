@@ -336,17 +336,17 @@ Test purpose of test is the make sure the application behave correctly. But it w
 
 Next we are going to introduce a technique to make debugging a failed test easier.
 
-=== Technique 48: Defining Customized Result Comparator to output detailed difference report
+=== Defining Customized Result Comparator to output detailed difference report
 
 Often, people write tests which fails at the first failed assertion, just as illustrated by listing <<long-version>>. There is a fundamental drawback with that approach. When things go wrong, you can only fix one problem on each run since each time you can only see one failed assertion. Thus it can be extremely time consuming to fix failed tests, especially when you need to navigate a couple of pages before making an assertion. Often people blame Selenium for that. It is not a problem with Selenium but with the way the tests are written.
 
 This technique will show you how to make the test easier to debug.
 
-==== Problem
+
 
 Tests are hard to debug due to limited diagnostic output. And after you fix one problem, you will get another problem. This goes on and on.
 
-==== Solution
+
 
 One approach is to find all possible errors so we can fix them together.
 
@@ -458,7 +458,7 @@ image::CompileError.png[title=Compilation error caused by type mismatch detected
 
 All IDEs such as Intellij, Eclipse and NetBeans can detect mistake earlier and save you time.
 
-==== Discussion
+
 
 While you work on a project, likely things will change soon and often, you end up changing the test a lot. This technique can help you to improve the productivity of changing the test, as illustrated in Figure <<difference>>, it is obvious to know the difference between the expected results and actual result. With a more detailed test report, you will have all information to fix the test quicker than writing a test which fails at the first assertion failure.
 
@@ -549,15 +549,15 @@ public class CityMapper {
 
 Next we are about to create a `CityTable` class using this mapper, which is very similar to `PersonTable` class. But since the `getHeaders` method is same for both `PersonTable` and `CityTable`, so we are going to introduce a technique to remove the duplicates. Due to the limitation of that technique, the duplicate can only be removed partially.
 
-=== Technique 49: Using abstract class to partially remove duplicated code
+=== Using abstract class to partially remove duplicated code
 
 We need to create `CityTable` class to extract the headers and rows information on city table page.
 
-==== Problem
+
 
 If we create `CityTable` class by copying `PersonTable` class, `getHeaders` method is same for both `PersonTable` and `CityTable`.
 
-==== Solution
+
 
 we can create an abstract class with `getHeaders` method and delete the one in `PersonTable`.
 
@@ -690,7 +690,7 @@ public void failedToReadFromTable() {
 
 This is a failed test and you will have enough information to working on the fix of the tests. The reason we provide failed tests here is to illustrate the benefit of having customized comparison and error reporting in the tests.
 
-==== Discussion
+
 
 You can see, by using inheritance, we can only partially remove the duplicated code, `getHeaders` is in `AbstractTable` class so both `CityTable` and `PersonTable` inherit it from `AbstractTable`. They both have `getRows` method defined individually, even those two methods are quite similar. However, we can't have a single method to handle both table, person and city tables, since `Person` and `City` are too different types.
 
@@ -702,15 +702,15 @@ Probably you already noticed that there are many similarities between the two se
 
 The duplicate can be removed. We are going to show you how to use Java Generics to remove the duplicated code. But if you are an experienced developer, probably you will just start with generics. We create these two sets of classes is to educate less experienced developers how to refactor the tests.
 
-=== Technique 50: Using Java Generics to remove duplicated code
+=== Using Java Generics to remove duplicated code
 
 We are going to show you how to use Java Generics to reduce duplicated code.
 
-==== Problem
+
 
 You noticed that there are many similarities between the two sets of the classes and most codes are duplicated, even you tried to use inheritance but there is some duplicate code which can't be reduced using inheritance.
 
-==== Solution
+
 
 We will use Generics introduced from Java 5. Instead of creating `PersonTable`, `CityTable` and so on, we just create one `Table<T>` class. And when we want to use it, we pass in a generics parameter to the `Table` class, such as `Table<Person>`, `Table<City>`.
 
@@ -878,7 +878,7 @@ image::table.png[title=Class diagram of generic classes for city and people tabl
 
 With the help from Generics, you turn the two abstract classes into two concrete classes with type parameter.
 
-==== Discussion
+
 
 Now you can see, we only need one `Table<T>` class one `TableContents<T>` class to handle HTML tables with different data types, such as `Person` and `City`, and other data type you use in your projects. The different mapping logic is managed by the row mapper classes we create for the data types. Generics is a powerful way to reduce duplication and you will find it useful.
 

@@ -25,15 +25,15 @@ image::styled-page.png[title="Screenshot of a styled page - http://localhost:808
 
 One of the tasks you may want to do is to determine whether an element is present on a page. You'll doubtless find yourself in a situation in which you want to check that something isn't yet visible. For example, a online shopping basket might be invisible until you click a button. Fortunately, WebDriver can give you access to elements a user can't see. Let's look at how to do this.
 
-=== Technique 10: Using findElements to determine whether an element is present
+=== Using findElements to determine whether an element is present
 
 Some times you want to not just check the color or text of something on the page. You might want to check something more fundamental -- whether or not it exists. This following technique will show you how to do that using the `findElements` method.
 
-==== Problem
+
 
 You want to check whether an element is present on a page or not.
 
-==== Solution
+
 
 The `WebElement` interface provides two method to do this. When an element may not be present, you should locate it using `findElements` (plural) rather than `findElement` (singular). The method `findElement` will throw an exception if the element can't be found, but `findElements` will return an empty list:
 
@@ -49,7 +49,7 @@ public void checkingAnElementIsPresent() throws Exception {
 }
 ----
 
-==== Discussion
+
 
 You could use a few different approaches to check the elements in the list. You could check whether it's an empty list, or you could assert that its size equals 1. The problem with both of these methods is that when the test fails, you don't get clear diagnostic information. Instead, you might want to use `assertThat` (as we do in listing <<checking-an-element-is-present>>), as this typically gives more information.
 
@@ -57,13 +57,13 @@ You could use a few different approaches to check the elements in the list. You 
 
 Sometimes you may have an element that is hidden from view and that becomes visible only after some action, such as opening a navigation menu, and you don't wish to continue unless the element is visible. Or you may want to make sure an element isn't visible after some operation has occurred. `WebElement` provides the `isDisplayed` method to help you achieve this.
 
-=== Technique 11: Using isDisplayed to determine whether an element is visible
+=== Using isDisplayed to determine whether an element is visible
 
-==== Problem
+
 
 You know that an element will be on a page, and you want to make sure it's visible.
 
-==== Solution
+
 
 Use `findElement` to find an element, and then check whether it's visible using `isDisplayed()`. Consider the following HTML:
 
@@ -85,7 +85,7 @@ The paragraph of text is invisible.
     }
 ----
 
-==== Discussion
+
 
 This test is shorter than a check for the presence of an element. It can be used to check that an item isn't visible. Naturally, it would be time-consuming to check for every hidden element on the page! This technique is most useful in the case when you want to make sure an element is invisible until some action is performed, as per listing <<invisible>>.
 
@@ -99,15 +99,15 @@ assertFalse(driver.findElement(By.id("invisible")).isDisplayed());
 
 Checking the page title is straightforward and fast. This can make it a great first choice for checking that the correct page has been loaded after a link or button has been clicked.
 
-===  Technique 14: Using getTitle to check the title of a page
+===  Using getTitle to check the title of a page
 
 Many parts of a page are subject to change based on how the page's developer lays them out. But one part is almost always available, is quick to access and fundamental to the page -- its title. This technique will show you how to access and verify that.
 
-==== Problem
+
 
 You want to make sure a page's title is correct, but you want to ignore any prefix the title might have.
 
-==== Solution
+
 
 You can use the `getTitle` method to get the current page's title:
 
@@ -122,7 +122,7 @@ You can use the `getTitle` method to get the current page's title:
     }
 ----
 
-==== Discussion
+
 
 It's extremely straightforward to verify a page's title. Our test site prepends the site's name to every page title, so using `containsString` means you won't have to rewrite the test if the site's name changes. In figure <<page-assertion-error>>, you can see the diagnostics produced by using `assertThat`.
 
@@ -146,15 +146,15 @@ You'll often want to make sure certain text has appeared in response to an opera
 
 Checking text when you don't know where it might be on the page is more challenging. Let's look at a couple of approaches that work well.
 
-=== Technique 12: Using XPath and an element stream to verify that text is on the page
+=== Using XPath and an element stream to verify that text is on the page
 
 Sometimes you might find that you're not too worried about where text is on a page, but more worried that it is actually visible and correct. This technique will show you how to use XPath to achieve that.
 
-==== Problem
+
 
 You want to verify that text appears on a page, but you don't know where it might appear.
 
-==== Solution
+
 
 If you can't find the element easily, you have two options. We'll cover each of these in turn.
 
@@ -208,7 +208,7 @@ Option 2: The _XPath text method_ uses a complex XPath to find the element.
     }
 ----
 
-==== Discussion
+
 
 You can see from the previous examples that there are several ways to check for text on a page. The best approach depends on your circumstances. We recommend targeting the element directly by ID or CSS locator, as shown in chapter 2.
 
@@ -220,15 +220,15 @@ The XPath text method is concise, but the example only checks the entire element
 
 In addition to verifying text you can see, you'll want to check that it's styled the way you expect. You can do this using the `getCssValue` method, which returns the CSS value of the style applied to the element.
 
-=== Technique 13: Verifying an element's style using getCssValue
+=== Verifying an element's style using getCssValue
 
 All elements on a page have styling. This can be important, for example, you might want error messages is red, and informational messages in blue. This technique will show you how to check an elements style, and some pitfalls to watch out for.
 
-==== Problem
+
 
 You want to make sure an element is styled correctly.
 
-==== Solution
+
 
 Checking the style of an element isn't straightforward. You can specify the color of a web page element via inlined-styles:
 
@@ -259,7 +259,7 @@ Watch out! Although both paragraphs are colored with “red”, when you access 
     }
 ----
 
-==== Discussion
+
 
 The `WebElement` class provides the `getCssValue` method to examine an element's CSS values. These aren't the values applied inline or via a stylesheet, but the computed values. This means they may not be the same and the source code of the web page. Watch out _shorthand values_, which aren't meant to be returned. A shorthand value is used to aggregate several independent values. For example, consider this piece of HTML:
 

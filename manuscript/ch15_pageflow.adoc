@@ -53,15 +53,15 @@ In the next section, we are going to show you how to automate the page navigatio
 
 In last chapter, when we introduced the technique to split the page into multiple forms and introduced `OtherInformation` and `OtherInformationForm` class, and use an instance of `OtherInformation` to hold the data and act as the parameter for the `setOtherInformation` method of `OtherInformationForm`.
 
-=== Technique 47: Create domain classes to represent reference data and form data
+=== Create domain classes to represent reference data and form data
 
 When working on automation, we always need to enter data on the form and those data need to be validated by the web application before the page can transition to the next page. So it is critical to know what data can be used to enter the form. And those data may be used over and over again.
 
-==== Problem
+
 
 Normally, people just used string to hold data, but string is not a good candidate for structured or frequently used data. For example, the names of the all countries in the world and all the states in United States. If we use string to hold those data, it is not well organized and people may created different variables scattered across application.
 
-==== Solution
+
 
 Create domain package to hold all domain classes. So developers have a common place to store useful design ideas. For this particular bookstore application, since we need to ship the book to a place, so we need to create a class to hold address information, and it can be used for both billing and shipping address,
 
@@ -256,7 +256,7 @@ public class OtherInformation extends DomainBase {
 
 In above code. we changed `mailingOption` from `String` to `MailingOption` enum type.
 
-==== Discussion
+
 
 Now that we created package for domain classes, we can use them for the project. And the parameter passing become easier comparing the code in this chapter to some earlier chapters, due to the application of enum in organizing domain information such as the name of the countries, name of the states and type of the credit cards.
 
@@ -587,7 +587,7 @@ And here are the class diagrams of `ShoppingCartPage`, both of they also wrap `B
 
 image::Shopping.png[title=Class diagram of `ShoppingCartPage` and `ConfirmationPage`]
 
-These page classes wrap `Browser` class and expose the functionalities as methods to reduce the verbosity in the tests. You can review Chapter 5 for more information about *page object*, besides *page object*, we also introduced Technique 46: Organizing elements into logical groups. `ShoppingCartPage` is the application of that technique and you can see it improves the modularity of the *page object*.
+These page classes wrap `Browser` class and expose the functionalities as methods to reduce the verbosity in the tests. You can review Chapter 5 for more information about *page object*, besides *page object*, we also introduced Organizing elements into logical groups. `ShoppingCartPage` is the application of that technique and you can see it improves the modularity of the *page object*.
 
 == Automating the entire page flow using data for major page flows
 
