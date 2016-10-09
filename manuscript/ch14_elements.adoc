@@ -43,7 +43,7 @@ image::Browser-in-ch13.png[title=Simplified class diagram of `Browser` and `Elem
 And we can use the following code snippet to set a user name and password on the the registration form to register.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/RegistrationForm_v2_IT.java#L23-L37[RegistrationForm_v2_IT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/tests/RegistrationForm_v2_IT.java#L23-L37[RegistrationForm_v2_IT.java]
 ----
 Element email = driver.await(EMAIL);  <1>
 email.clear();                   <2>
@@ -75,7 +75,7 @@ This code example demonstrate how to check which choice is checked for "Channel"
 
 [[NaiveRadioIT]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/NaiveRadioIT.java#L29-L42[NaiveRadioIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/tests/NaiveRadioIT.java#L29-L42[NaiveRadioIT.java]
 ----
 @Test
 public void conact() throws Exception {
@@ -121,7 +121,7 @@ It's useful to encapsulate the locating and keying operations into one unit of w
 Adding a `setInputText` method to the `Browser` class to handle the text field input:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v4_5/Browser.java#L14-18[Browser.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/v4_5/Browser.java#L14-18[Browser.java]
 ----
 public void setInputText(Supplier<By> by, String text) {   <4>
     Element element = await(by);   <1>
@@ -145,7 +145,7 @@ PASSWORD("password"),
 The earlier code can be rewritten in the following more concise form.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/RegistrationForm_v4_IT.java#L22-L23[RegistrationForm_v4_IT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/tests/RegistrationForm_v4_IT.java#L22-L23[RegistrationForm_v4_IT.java]
 ----
 driver.setInputText(EMAIL "john@doe.com"); <1>
 driver.setInputText(PASSWORD, "secret");
@@ -182,7 +182,7 @@ browser.setInputText(By.name("amount"), String.valueOf(value));
 You can also add a method to read the input's value and another method to convert the text to upper case,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L53-L55[Browser.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/v5/Browser.java#L53-L55[Browser.java]
 ----
 public String getInputText(Supplier<By> by) {
     return await(by).getAttribute("value");
@@ -197,7 +197,7 @@ We can add a `getRadio(By by)` method into `Browser` class to handle the request
 
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L83-L94[Browser.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/v5/Browser.java#L83-L94[Browser.java]
 ----
 public String getRadio(Supplier<By> by) {
     List<WebElement> radiobuttons = findElements(by);   <1>
@@ -217,7 +217,7 @@ public String getRadio(Supplier<By> by) {
 And we can rewrite the test in Listing <<NaiveRadioIT>> as following, you can see how simple it became,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/RadioIT.java#L25-L28[RadioIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/tests/RadioIT.java#L25-L28[RadioIT.java]
 ----
 @Test
 public void conact() throws Exception {  <2>
@@ -231,7 +231,7 @@ Naturally, we'll want a method that will checked the desired element:
 
 [[set-radio]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L68-L81[Browser.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/v5/Browser.java#L68-L81[Browser.java]
 ----
 public void setRadio(Suppler<By> by, String value) {
     List<WebElement> radiobuttons = findElements(by);  <1>
@@ -276,7 +276,7 @@ image::checkbox.png[title=A Checkbox and "Inspect Element" view]
 Similarly, we can reduce the complexity of checking checkboxes by adding a method to the `Browser` class,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L57-L62[Browser.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/v5/Browser.java#L57-L62[Browser.java]
 ----
 public void setCheckboxValue(Supplier<By> by, boolean value) {
     Element checkbox = await(by);
@@ -326,7 +326,7 @@ That's the reason we only have one method `setCheckboxValue`, not having `checkC
 Also, we can add a method to get the checked value:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L64-L66[Browser.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/v5/Browser.java#L64-L66[Browser.java]
 ----
     public boolean isChecked(Supplier<By> by) {
         return await(by).isSelected();
@@ -347,7 +347,7 @@ image::select.png[title=A select and "Inspect Element" view]
 In web applications built using AJAX, the select maybe empty when clicked on, and then populated asynchronously using JavaScript. the `Select` class does not work for these cases. But, we can add a framework method to handle this scenario. Using a `WebDriverWait` we click on the select and then wait until there are options to choose from:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L96-L121[Browser.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/v5/Browser.java#L96-L121[Browser.java]
 ----
 public Select getSelect(Supplier<By> by) {
     final Element element = await(by);   <1>
@@ -375,7 +375,7 @@ public void selectByVisibleText(Supplier<By> by, String ... values) {  <3>
 [sidebar]
 .Replace anonymous inner class with Lambda Expression
 ****
-If you use Java 8, you can use lambda expression in above code, as in link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v4_6/Browser.java#L108-L115[Browser.java]
+If you use Java 8, you can use lambda expression in above code, as in link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/v4_6/Browser.java#L108-L115[Browser.java]
 
 [source,java]
 ----
@@ -395,7 +395,7 @@ Also, in Java 8, keyword `final` is longer needed here but it is still a final v
 
 ===== Click and DoubleClick Mouse Action
 
-Besides normal form elements, we can also encapsulate mouse action into `Browser`. Let us revisit Listing 3.11 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/MouseInputIT.java#L30-34[MouseInputIT.java]
+Besides normal form elements, we can also encapsulate mouse action into `Browser`. Let us revisit Listing 3.11 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch03interacting/MouseInputIT.java#L30-34[MouseInputIT.java]
 
 [source,java]
 ----
@@ -408,7 +408,7 @@ new Actions(driver)
 We can move this logic of locating an element and creating an `Action` object and doubleClick it into `Browser` class as `doubleClick(by)` method.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java##L127-L130[Browser.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/v5/Browser.java##L127-L130[Browser.java]
 ----
 public void doubleClick(Supplier<By> by) {  <1>
     Element element = await(by);
@@ -417,10 +417,10 @@ public void doubleClick(Supplier<By> by) {  <1>
 ----
 <1> Now you can just call `browser.doubleClick(by)`
 
-And then Listing 3.11 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch03interacting/MouseInputIT.java[MouseInputIT.java] can be rewritten as following, which is cleaner and concise.
+And then Listing 3.11 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch03interacting/MouseInputIT.java[MouseInputIT.java] can be rewritten as following, which is cleaner and concise.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/MouseInputIT.java#L22[MouseInputIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/tests/MouseInputIT.java#L22[MouseInputIT.java]
 ----
 driver.doubleClick(BUTTON);
 ----
@@ -449,7 +449,7 @@ And this table illustrates what method we can use to change the value or read th
 And the old registration form test can be written as following,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/RegistrationForm_v4_IT.java#L22-L29[RegistrationForm_v4_IT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/tests/RegistrationForm_v4_IT.java#L22-L29[RegistrationForm_v4_IT.java]
 ----
 driver.setInputText(EMAIL, "john@doe.com");
 driver.setInputText(PASSWORD, "secret");
@@ -522,7 +522,7 @@ Add a retry mechanism into the logic of entering text into input fields. If the 
 To achieve this goal, we need to create an interface `Attemptable` with only one method `attempt`, so we can provide an implementation for what need to be attempted inside that method body. If you already use Java 8, you may already know that you can use a lambda expression to provide that implementation. If you still use Java 7 or below, you have to use an anonymous inner class in the place of the Java 8 lambdas express.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/robust/Attemptable.java#L3-L5[Attemptable.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/framework/robust/Attemptable.java#L3-L5[Attemptable.java]
 ----
 public interface Attemptable {
     void attempt() throws Exception;
@@ -536,7 +536,7 @@ And we can pass the implementation of `Attemptable` interface as a parameter int
 And in the `attempt` method of the `Retry` class, it simply execute the `attempt` method of the `Attemptable` and repeats it if any exception is caught, until the maximum count is reached.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/robust/Retry.java#L5-L33[Retry.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/framework/robust/Retry.java#L5-L33[Retry.java]
 ----
 public class Retry {
     private final long interval;
@@ -576,7 +576,7 @@ image::Retry.png[title=Class diagram of Retry]
 The `setInputText` method of the `Browser` class can be rewritten to retry until the value is what we were attempting to set it to:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L24-L38[Browser.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/v5/Browser.java#L24-L38[Browser.java]
 ----
 public void setInputText(Suppler<By> by, String value) throws Exception {
     Retry retry = new Retry(5, 1, TimeUnit.SECONDS); // <1>
@@ -608,7 +608,7 @@ image::Retry-seq.png[title=Sequence diagram of setInputText using Retry]
 [sidebar]
 .Replace anonymous inner class with Lambda Expression
 ****
-If you use Java 8, you don't need anonymous inner classes in your code, here is part of the example written using lambda expression, link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/v5/Browser.java#L40-L51[Browser.java]
+If you use Java 8, you don't need anonymous inner classes in your code, here is part of the example written using lambda expression, link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/v5/Browser.java#L40-L51[Browser.java]
 
 [source,java]
 ----
@@ -668,7 +668,7 @@ For now, let us use the fields on __Other Information__ form (Figure <<Other Inf
 [sidebar]
 .Replace anonymous inner class with Lambda Expression
 ****
-If you use Java 8, you can rewrite the for loop using Stream API, it is not necessarily cleaner than before, link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/domain/MailingOption.java#L38-L46[MailingOption.java]
+If you use Java 8, you can rewrite the for loop using Stream API, it is not necessarily cleaner than before, link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/domain/MailingOption.java#L38-L46[MailingOption.java]
 
 [source,java]
 ----
@@ -694,7 +694,7 @@ Just like what we describe in the beginning of this section, if we put every fie
 
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/pages/NaiveShoppingCartPage.java#L6-L53[NaiveShoppingCartPage.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/pages/NaiveShoppingCartPage.java#L6-L53[NaiveShoppingCartPage.java]
 ----
 public class NaiveShoppingCartPage  {
 
@@ -716,7 +716,7 @@ And the test is lengthy too,
 
 [[longer_test]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/NaiveShoppingCartPageIT.java#L#L34-L47[NaiveShoppingCartPageIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/tests/NaiveShoppingCartPageIT.java#L#L34-L47[NaiveShoppingCartPageIT.java]
 ----
 @Test
 public void weShouldBeABleToCompleteOtherInformationIndividually() {
@@ -742,7 +742,7 @@ We are going to show you a different way of doing things. What we can do is to c
 
 [[OtherInformation]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/domain/OtherInformation.java#L8-L44[OtherInformation.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/domain/OtherInformation.java#L8-L44[OtherInformation.java]
 ----
 public class OtherInformation extends DomainBase {
     public final String couponCode;    <3>
@@ -771,7 +771,7 @@ As a Java developer, you probably already noticed that this class is not a Java 
 Here is the code to create instance of `OtherInformation` class
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/ShoppingCartPageIT.java#L26-L33[ShoppingCartPageIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/tests/ShoppingCartPageIT.java#L26-L33[ShoppingCartPageIT.java]
 ----
 new OtherInformation(                       //<1>
         "no code",
@@ -793,7 +793,7 @@ other.sendRatingEmail;
 Then we can use this in an `OtherInformationForm` class as the method parameter,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/pages/OtherInformationForm.java#L29-L39[OtherInformationForm.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/pages/OtherInformationForm.java#L29-L39[OtherInformationForm.java]
 ----
 public class OtherInformationForm {
 
@@ -815,7 +815,7 @@ public class OtherInformationForm {
 These two classes split the data and the operations into two classes. Then they can be used in the `ShoppingCartPage` class. Instead of having all the fields as separate setter methods, there is just one setter and one getter method on the `ShoppingCartPage` class.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/pages/ShoppingCartPage.java#L6-L21[ShoppingCartPage.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/pages/ShoppingCartPage.java#L6-L21[ShoppingCartPage.java]
 ----
 public class ShoppingCartPage  {
 
@@ -836,7 +836,7 @@ public class ShoppingCartPage  {
 And the test can be as simple as this,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/ShoppingCartPageIT.java#L44-L48[ShoppingCartPageIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/tests/ShoppingCartPageIT.java#L44-L48[ShoppingCartPageIT.java]
 ----
 @Test
 public void weShouldBeABleToCompleteOtherInformation()  {

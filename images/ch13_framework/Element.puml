@@ -11,7 +11,7 @@ namespace org.openqa.selenium  {
     SearchContext <|-- WebElement
 }
 
-namespace swip.framework {
+namespace swb.framework {
 
     interface SearchScope
 

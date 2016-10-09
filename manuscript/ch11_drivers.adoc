@@ -162,7 +162,7 @@ You want to use `ChromeDriver` without having to manually download the binary.
 Automatically download the correct driver binary for your computer's operating system. As you may want to do this in a different way for different drivers, you can use the *strategy pattern* by creating an interface that can be implemented for each browser.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/WebDriverBinarySupplier.java#L6-L12[WebDriverBinarySupplier.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch11drivers/WebDriverBinarySupplier.java#L6-L12[WebDriverBinarySupplier.java]
 ----
 public interface WebDriverBinarySupplier {
     /**
@@ -183,7 +183,7 @@ There are four basic steps that you need to do to get a binary:
 We implement these steps in the `ChromeDriverBinarySupplier` class. To make it easy to understand, we define some variables first:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/ChromeDriverBinarySupplier.java#L26-L34[ChromeDriverBinarySupplier.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch11drivers/ChromeDriverBinarySupplier.java#L26-L34[ChromeDriverBinarySupplier.java]
 ----
 private Logger LOGGER = getLogger(ChromeDriverBinarySupplier.class);
 private String BASE_PATH = "http://chromedriver.storage.googleapis.com";
@@ -202,7 +202,7 @@ private int arch = os.matches("linux|mac") && osArch.endsWith("64") ? 64 : 32; /
 We then implement those four steps in this method:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/ChromeDriverBinarySupplier.java#L36-L48[ChromeDriverBinarySupplier.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch11drivers/ChromeDriverBinarySupplier.java#L36-L48[ChromeDriverBinarySupplier.java]
 ----
 @Override
 public Path get(Path driverDir) throws IOException {
@@ -223,7 +223,7 @@ public Path get(Path driverDir) throws IOException {
 Some helper methods used in that method are listed here:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/ChromeDriverBinarySupplier.java#L50-L110[ChromeDriverBinarySupplier.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch11drivers/ChromeDriverBinarySupplier.java#L50-L110[ChromeDriverBinarySupplier.java]
 ----
 private void download() throws IOException {
     try (FileOutputStream fos = new FileOutputStream(download.toFile())) {
@@ -381,7 +381,7 @@ To tell the `ChromeDriver` class to start in mobile emulation mode, you must pas
 For example:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/mobileemulation/ChromeMobileEmulationKnownDeviceIT.java#L28-L37[ChromeMobileEmulationKnownDeviceIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch11drivers/mobileemulation/ChromeMobileEmulationKnownDeviceIT.java#L28-L37[ChromeMobileEmulationKnownDeviceIT.java]
 ----
 mobileEmulation.put("deviceName", "Apple iPad");
 
@@ -406,7 +406,7 @@ If Chrome does not know about the device, you must *specify individual device at
 The following example uses the same values as the Apple iPad:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/mobileemulation/ChromeMobileEmulationDeviceAttributesIT.java#L26-L45[ChromeMobileEmulationDeviceAttributesIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch11drivers/mobileemulation/ChromeMobileEmulationDeviceAttributesIT.java#L26-L45[ChromeMobileEmulationDeviceAttributesIT.java]
 ----
 Map<String, Object> deviceMetrics = new HashMap<>();
 
@@ -549,7 +549,7 @@ image::ie-command.png[title=Expected output from command]
 Now, you can create a test!
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/VagrantInternetExplorerIT.java#L16-L33[VagrantInternetExplorerIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch11drivers/VagrantInternetExplorerIT.java#L16-L33[VagrantInternetExplorerIT.java]
 ----
 private WebDriver driver;
 
@@ -768,7 +768,7 @@ It's well worth making sure you can start the device you want to test on before 
 Finally, you use `AppiumDriver` in a similar manner to other remote drivers:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/AppiumIPhoneIT.java#L20-L51[AppiumIPhoneIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch11drivers/AppiumIPhoneIT.java#L20-L51[AppiumIPhoneIT.java]
 ----
 public class AppiumIPhoneIT {
     private AppiumDriver<MobileElement> driver; //<1>
@@ -816,7 +816,7 @@ image::appium-ios-flow.png[title="Appium iOS flow"]
 The code for Android is very similar, with just a change to the parameters:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch11drivers/AppiumAndroidIT.java#L26-L29[AppiumAndroid.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch11drivers/AppiumAndroidIT.java#L26-L29[AppiumAndroid.java]
 ----
 capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, "Nexus");
 capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "Android");

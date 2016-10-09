@@ -39,7 +39,7 @@ The `WebElement` interface provides two method to do this. When an element may n
 
 [[checking-an-element-is-present]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/ElementIsPresentIT.java[ElementIsPresentIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch04examiningapage/ElementIsPresentIT.java[ElementIsPresentIT.java]
 ----
 @Test
 public void checkingAnElementIsPresent() throws Exception {
@@ -75,7 +75,7 @@ Use `findElement` to find an element, and then check whether it's visible using 
 The paragraph of text is invisible.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/ElementIsVisibleIT.java[ElementIsVisibleIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch04examiningapage/ElementIsVisibleIT.java[ElementIsVisibleIT.java]
 ----
     @Test
     public void visibleElementIsDisplayed() throws Exception {
@@ -112,7 +112,7 @@ You want to make sure a page's title is correct, but you want to ignore any pref
 You can use the `getTitle` method to get the current page's title:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/PageTitleIT.java[PageTitleIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch04examiningapage/PageTitleIT.java[PageTitleIT.java]
 ----
     @Test
     public void checkThePageTitle() throws Exception {
@@ -161,7 +161,7 @@ If you can't find the element easily, you have two options. We'll cover each of 
 Option 1: The _easy to find method_ checks that the text is somewhere in the page source.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/VerifyingTextIT.java[VerifyingTextIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch04examiningapage/VerifyingTextIT.java[VerifyingTextIT.java]
 ----
     @Test
     public void pageSourceMethod() throws Exception {
@@ -175,7 +175,7 @@ Option 1: The _easy to find method_ checks that the text is somewhere in the pag
 Unfortunately, this also recognizes your text in the header, a script, or even a page comment. Thus tests may pass or fail when they shouldn't. Consider the following example.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/VerifyingTextIT.java[VerifyingTextIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch04examiningapage/VerifyingTextIT.java[VerifyingTextIT.java]
 ----
     @Test
     public void whenPageSourceFails() throws Exception {
@@ -198,7 +198,7 @@ Unfortunately, this also recognizes your text in the header, a script, or even a
 Option 2: The _XPath text method_ uses a complex XPath to find the element.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/VerifyingTextIT.java[VerifyingTextIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch04examiningapage/VerifyingTextIT.java[VerifyingTextIT.java]
 ----
     @Test
     public void xpathTextMethod() throws Exception {
@@ -247,7 +247,7 @@ Or using CSS:
 Watch out! Although both paragraphs are colored with “red”, when you access their color, you'll get what's known as the _computed value_. The computed value is the color of the element you see on the page, and it's the one you have to check. Computed colors are usually in the format `rgba(red, green, blue, alpha)`, where `red`, `green`, and `blue` are integers between 0 and 255. Red is therefore `rgba(255, 0, 0, 1)`. You may find that some colors are returned without alpha, as in `rgb(red, green, blue)`:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/VerifyingStylesIT.java[VerifyingStylesIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch04examiningapage/VerifyingStylesIT.java[VerifyingStylesIT.java]
 ----
     @Test
     public void elementHasRedText() throws Exception {
@@ -282,7 +282,7 @@ This is short-hand for
 Interestingly, most major browsers (Safari, Chrome, and Firefox) return shorthand values (despite what the JavaDoc says) for `border`, so the following test passes for them:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/VerifyingStylesIT.java[VerifyingStylesIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch04examiningapage/VerifyingStylesIT.java[VerifyingStylesIT.java]
 ----
     @Test
     public void cssShortHand() throws Exception {
@@ -297,7 +297,7 @@ Interestingly, most major browsers (Safari, Chrome, and Firefox) return shorthan
 We recommend avoiding shorthand. For `background`, what you get depends on the browser. The following code works on Safari and Chrome, but not on Firefox:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/CssShorthandIT.java[CssShorthandIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch04examiningapage/CssShorthandIT.java[CssShorthandIT.java]
 ----
     @Test
     public void cssShortHandBackground() throws Exception {
@@ -338,7 +338,7 @@ To check a field's value, you can get the `value` attribute:
 
 [source,java]
 ----
-    assertEquals("john.doe@swip.com",
+    assertEquals("john.doe@swb.com",
         driver.findElement(By.name("email")).getAttribute("value"));
 ----
 
@@ -384,7 +384,7 @@ Just as when you interact with a select drop-down, you wrap it using the `Select
 If the select has multiple options, you can use `getAllSelectedOptions`, but you'll want to extract the selected text:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch04examiningapage/VerifyingFormIT.java[VerifyingFormIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch04examiningapage/VerifyingFormIT.java[VerifyingFormIT.java]
 ----
         WebElement interestsElement = driver.findElement(By.name("interest"));
         List<String> selectedText = new ArrayList<>();

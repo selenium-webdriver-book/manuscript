@@ -290,7 +290,7 @@ XPaths are complicated to write and costly to maintain.
 Create locator factories, similar to the methods on the `By` class, for complicated locators. My recommendation would be that because `By` method are not specific to an element, create one generic factory for locating without a tag name, named `ElementBy`, and then create one each for any tag you want to locate. For example, for locating `input` elements by the text of the label they are annotated with:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/InputBy.java[InputBy.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/InputBy.java[InputBy.java]
 ----
 public final class InputBy {
     private InputBy() {
@@ -308,7 +308,7 @@ For locating any element by the text it
 contains:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/ElementBy.java[ElementBy.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/ElementBy.java[ElementBy.java]
 ----
 public final class ElementBy {
     private ElementBy() {
@@ -532,7 +532,7 @@ Our first task is to find the column index of the column you want. Since
 you want to get a cell by the column title, you can do the following:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/TableIT.java[TableIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/TableIT.java[TableIT.java]
 ----
 	int columnNumber = 1;
         while (!driver
@@ -558,7 +558,7 @@ This is a good first example of working with a section of a page's DOM, rather t
 This is also a great opportunity to create a __locator factory__:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/TdBy.java[TdBy.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/TdBy.java[TdBy.java]
 ----
 public final class TdBy {
     private TdBy() {
@@ -611,7 +611,7 @@ You have an element that is hard to find with a single locator.
 The `btn` class is used twice here. To find the "Forgotten Password" link, you can chain two `findElement` calls together to find the precise one you want:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/ChainedLocatorsIT.java[ChainedLocatorsIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/ChainedLocatorsIT.java[ChainedLocatorsIT.java]
 ----
 driver
     .findElement(By.className("forgotten-password")) // <1>
@@ -625,7 +625,7 @@ driver
 You have a number of ways to search for common elements. If the element is harder to find, then you can use a chain of `findElement` invocations to narrow down the search context until you have the element you want. This is really effective when working with forms. You can find the form with a carefully created locator, then be a bit looser finding the elements you want within the form:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/ChainedLocatorsIT.java[ChainedLocatorsIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/ChainedLocatorsIT.java[ChainedLocatorsIT.java]
 ----
 WebElement loginForm = driver.findElement(By.id("login")); <1>
 WebElement emailInput = loginForm.findElement(By.name("email")); <2>
@@ -687,7 +687,7 @@ This locator performs a sequence of matches, drilling down into the DOM to find 
         <label> <2>
             Email
             <input type="email" name="email"  class="form-control"
-               placeholder="E.g. john.doe@swip.com"/> <3>
+               placeholder="E.g. john.doe@swb.com"/> <3>
         </label>
     </div>
   <!--- ... --->
@@ -699,7 +699,7 @@ This locator performs a sequence of matches, drilling down into the DOM to find 
 
 [[by-chained]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/LocatorCompositionIT.java[LocatorCompositionIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/LocatorCompositionIT.java[LocatorCompositionIT.java]
 ----
 driver.findElement(
         new ByChained(
@@ -734,7 +734,7 @@ You want to locate elements in a reliable and flexible fashion.
 Create a locator factory that composes locators using matching operations such as `all`, `any` and `none`. For example, you can create an "all" locator as follows:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/AllBy.java[AllBy.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/AllBy.java[AllBy.java]
 ----
 public class AllBy extends By {
 
@@ -770,7 +770,7 @@ public class AllBy extends By {
 You can use this as follows:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/LocatorCompositionIT.java[LocatorCompositionIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/LocatorCompositionIT.java[LocatorCompositionIT.java]
 ----
 driver.findElement(AllBy.all(By.tagName("input"), By.name("password")))
 ----
@@ -778,7 +778,7 @@ driver.findElement(AllBy.all(By.tagName("input"), By.name("password")))
 You can emulate the `IdOrName` locator with a `AnyBy`:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/AnyBy.java[AnyBy.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/AnyBy.java[AnyBy.java]
 ----
 public class AnyBy extends By {
     private final By[] bys;
@@ -806,7 +806,7 @@ public class AnyBy extends By {
 This can be used as follows:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/LocatorCompositionIT.java[LocatorCompositionIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/LocatorCompositionIT.java[LocatorCompositionIT.java]
 ----
 driver.findElement(AnyBy.any(By.id("email"), By.name("email")))
 ----
@@ -814,7 +814,7 @@ driver.findElement(AnyBy.any(By.id("email"), By.name("email")))
 If you want to exclude matches, the code is straightforward:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/NotBy.java[NotBy.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/NotBy.java[NotBy.java]
 ----
 public class NotBy extends By {
 
@@ -843,7 +843,7 @@ For example, to find all contact check boxes on the registration page,
 but excluding the email box:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/LocatorCompositionIT.java[LocatorCompositionIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/LocatorCompositionIT.java[LocatorCompositionIT.java]
 ----
 driver.findElements(
         AllBy.all(
@@ -924,7 +924,7 @@ This technique relies on having access to the source code, and a clear and well-
 Rather than have the common prefix littered across your code, this technique can be combined with locator factories to produce more concise code, for example:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch02locatingelements/ElementBy.java[ElementBy.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch02locatingelements/ElementBy.java[ElementBy.java]
 ----
 public final class ElementBy {
     ...

@@ -83,7 +83,7 @@ For a login form, a great choice would be the HTML form element itself, as it co
 Our final login form object might look like this:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/LoginForm.java[LoginForm.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/LoginForm.java[LoginForm.java]
 ----
     public class LoginForm {
         private final WebElement loginForm;
@@ -143,7 +143,7 @@ It's said that there's more than one way to skin a cat. One alternative to encap
 These steps might result the following code.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/fluentbuilder/LoginFormIT.java[fluentbuilder/LoginFormIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/fluentbuilder/LoginFormIT.java[fluentbuilder/LoginFormIT.java]
 ----
     new LoginForm(driver.findElement(By.id("login")))
             .username("foo@bar.com")
@@ -154,7 +154,7 @@ These steps might result the following code.
 This is easier to read for many people than the first version of the login form we looked at. The primary downside to this approach is that although it makes for more readable tests, it makes for more verbose page objects:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/fluentbuilder/LoginForm.java[fluentbuilder/LoginForm.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/fluentbuilder/LoginForm.java[fluentbuilder/LoginForm.java]
 ----
     public class LoginForm {
         private final WebElement loginForm;
@@ -217,7 +217,7 @@ image::search.png[title=Search form]
 You could model a search form as a page object by sticking closely to the form's HTML structure:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/a/SearchForm.java[a/SearchForm.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/a/SearchForm.java[a/SearchForm.java]
 ----
     public class SearchForm {
         private final WebDriver driver;
@@ -270,7 +270,7 @@ But what are you trying to do? Search for something. You could create a class fo
 The usage here is straightforward:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/a/SearchFormIT.java[a/SearchFormIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/a/SearchFormIT.java[a/SearchFormIT.java]
 ----
     SearchPage searchPage = new SearchPage(driver);
 
@@ -306,7 +306,7 @@ You may be encouraged to create immutable objects—functional programming is al
 Consider this page object:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/c/SearchPage.java[c/SearchPage.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/c/SearchPage.java[c/SearchPage.java]
 ----
     public class SearchPage {
         private final WebElement queryInput;
@@ -367,7 +367,7 @@ Typically, it's bad practice to create any object with an invalid state. This ap
 When creating a page object, you might want to check that you've got the correct page. Making sure the correct page is loaded, ideally with an inexpensive test, can prevent hard-to-diagnose problems in your code.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/d/SearchPage.java[d/SearchPage.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/d/SearchPage.java[d/SearchPage.java]
 ----
     public SearchPage(WebDriver driver) {
         String pageTitle = driver.getTitle();
@@ -463,7 +463,7 @@ If you're anything like us, you'll immediately notice some code duplication, and
 You may decide to extract the locator into a constant:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/pagefactory/whybad/SearchForm.java[pagefactory/whybad/SearchForm.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/pagefactory/whybad/SearchForm.java[pagefactory/whybad/SearchForm.java]
 ----
     public class SearchForm {
         private static final By QUERY_SELECTOR = By.cssSelector("input[name='q']");
@@ -566,7 +566,7 @@ public class SearchForm {
 Finally, I'd like to rename the variable `q` to something more descriptive. I'd like to rename it to `query`. But the input is not named `query`, so I'll need to add a `@FindBy` annotation with it's `name` property set:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/pagefactory/SearchForm.java[pagefactory/SearchForm.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/pagefactory/SearchForm.java[pagefactory/SearchForm.java]
 ----
 public class SearchForm {
     @FindBy(name = "q")
@@ -584,7 +584,7 @@ public class SearchForm {
  To create this page object, you must invoke the `PageFactory.initElements` method:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/pagefactory/SearchFormIT.java[pagefactory/SearchFormIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/pagefactory/SearchFormIT.java[pagefactory/SearchFormIT.java]
 ----
     SearchForm searchForm = PageFactory.initElements(driver, SearchForm.class);
     searchForm.searchFor("funny cats");
@@ -641,7 +641,7 @@ To utilize it, you need to provide two pieces of code on your page object:
 Let's redo our search page in this style:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadable/SearchForm.java[loadable/SearchForm.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/loadable/SearchForm.java[loadable/SearchForm.java]
 ----
     public class SearchPage extends LoadableComponent<SearchPage> {
         private final WebDriver driver;
@@ -670,7 +670,7 @@ Let's redo our search page in this style:
 The usage is straightforward:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadable/SearchFormIT.java[loadable/SearchFormIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/loadable/SearchFormIT.java[loadable/SearchFormIT.java]
 ----
     LoadableSearchPage page = new LoadableSearchPage(driver).get();
     page.searchFor("funny cats");
@@ -714,7 +714,7 @@ To do this we need three things:
 You can do this all using annotations. We're going to create some new annotations: `@Path` and `@Verify` to work with `@FindBy`. Lets look at how we would use them:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadablepagefactory/SearchForm.java[loadablepagefactory/SearchForm.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/loadablepagefactory/SearchForm.java[loadablepagefactory/SearchForm.java]
 ----
     @Path("http://localhost:8080/search.html")
     @Verify(title = "Search")
@@ -735,7 +735,7 @@ You can do this all using annotations. We're going to create some new annotation
 We want a terse way to load these pages, so borrowing from `PageFactory` gives us the following:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadablepagefactory/SearchFormIT.java[loadablepagefactory/SearchFormIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/loadablepagefactory/SearchFormIT.java[loadablepagefactory/SearchFormIT.java]
 ----
     SearchForm page = LoadingPageFactory.get(driver, SearchForm.class);
 ----
@@ -743,7 +743,7 @@ We want a terse way to load these pages, so borrowing from `PageFactory` gives u
 This can be implemented in a few lines of code, as follows.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadablepagefactory/LoadingPageFactory.java[LoadingPageFactory.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/loadablepagefactory/LoadingPageFactory.java[LoadingPageFactory.java]
 ----
     public class LoadingPageFactory {
         public static <T> T get(WebDriver driver, Class<T> pageObjectClass) {
@@ -778,7 +778,7 @@ This can be implemented in a few lines of code, as follows.
 Finally, you need the two new annotations:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadablepagefactory/Path.java[Path.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/loadablepagefactory/Path.java[Path.java]
 ----
     @Retention(RetentionPolicy.RUNTIME) // <1>
     @Target(ElementType.TYPE) // <2>
@@ -790,7 +790,7 @@ Finally, you need the two new annotations:
 <2> Indicates this annotation applies to types only
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadablepagefactory/Verify.java[Verify.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/loadablepagefactory/Verify.java[Verify.java]
 ----
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.TYPE)
@@ -825,7 +825,7 @@ public @interface Verify {
 To implement this, add the following to your `LoadingPageFactory`:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/loadablepagefactory/LoadingPageFactory.java[LoadingPageFactory.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch05pageobjects/loadablepagefactory/LoadingPageFactory.java[LoadingPageFactory.java]
 ----
         String xpath = verify.xpath();
         if (!expectedPageTitle.equals(Verify.INVALID_XPATH)) {
