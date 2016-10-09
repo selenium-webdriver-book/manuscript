@@ -1,6 +1,6 @@
 # Introduction
 
-This book is a hands-on guide to dozens of specific techniques you can use to get the most of WebDriver in your test automation development. Following a cookbook-style Problem/Solution/Discussion format, this practical handbook gives you instantly-useful solutions for important areas like interacting with and testing web applications and using the WebDriver APIs. As you read, you'll graduate from WebDriver fundamentals to must-have practices ranging from how to interact with, control and verify web pages and exception handling, to more complex interactions like page objects, alerts, and JavaScript, as well as integrating with Continuous Integration tools, mobile testing, and much more. By the end of the book, you’ll be confident and skilled at testing your web applications with WebDriver.
+This book is a hands-on guide to dozens of specific ways you can use to get the most of WebDriver in your test automation development. This practical handbook gives you instantly-useful solutions for important areas like interacting with and testing web applications and using the WebDriver APIs. As you read, you'll graduate from WebDriver fundamentals to must-have practices ranging from how to interact with, control and verify web pages and exception handling, to more complex interactions like page objects, alerts, and JavaScript, as well as, mobile testing, and much more. Finally, you'll learn how to build your own framework. By the end of the book, you’ll be confident and skilled at testing your web applications with WebDriver.
 
 ## About the technology
 
@@ -22,4 +22,4 @@ This book assumes you’re comfortable reading code in Java or a similar languag
 
 **Yujun Liang** is a Technical Agile Coach who teaches agile software development technologies including test automation using Selenium WebDriver. He used to work for ThoughtWorks and helped clients build automation testing for web applications with rich user interaction and complex business logic.
 
-**Alex Collins** is a Technical Lead at Gamesys in the UK, a technology blogger, public speaker, and OSS contributor. Alex has been working with Selenium WebDriver since 2011.
+**Alex Collins** is a Technical Architect in the UK, a technology blogger, public speaker, and OSS contributor. Alex has been working with Selenium WebDriver since 2011.
