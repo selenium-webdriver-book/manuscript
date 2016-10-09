@@ -36,7 +36,7 @@ All the main web drivers implement this interface. To use it, you will need to c
 Typically you cast the driver to expose the `executeScript` and `executeAsyncScript` methods, and then cast the result into the class you expect:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch10javascript/usage/JavascriptExecutorUsageIT.java[JavascriptExecutorUsageIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch10javascript/usage/JavascriptExecutorUsageIT.java[JavascriptExecutorUsageIT.java]
 ----
 JavascriptExecutor jsExecutor = (JavascriptExecutor) driver; <1>
 long windowWidth = (long) jsExecutor <2>
@@ -50,7 +50,7 @@ You can pass arguments to your script for execution. Those arguments are made av
 
 [[console-log]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch10javascript/usage/JavascriptExecutorUsageIT.java[JavascriptExecutorUsageIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch10javascript/usage/JavascriptExecutorUsageIT.java[JavascriptExecutorUsageIT.java]
 ----
 JavascriptExecutor jsExecutor = (JavascriptExecutor) driver; // <1>
 jsExecutor.executeScript(
@@ -66,7 +66,7 @@ jsExecutor.executeScript(
 If you want to execute methods on a `WebElement` you have already found on the page you are testing, then you can also pass that as an argument:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch10javascript/usage/JavascriptExecutorUsageIT.java[JavascriptExecutorUsageIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch10javascript/usage/JavascriptExecutorUsageIT.java[JavascriptExecutorUsageIT.java]
 ----
 WebElement link = driver.findElement(By.tagName("a"));
 
@@ -82,7 +82,7 @@ On top of the existing arguments you pass, the `arguments` variable will have ex
 As WebDriver normally expects all scripts to complete immediately, you need to set the timeout to allow enough time for your script to complete using `driver.manage().timeouts().setScriptTimeout`.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch10javascript/usage/JavascriptExecutorUsageIT.java[JavascriptExecutorUsageIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch10javascript/usage/JavascriptExecutorUsageIT.java[JavascriptExecutorUsageIT.java]
 ----
 @Test
 public void waitForAsyncJavaScript() throws Exception {
@@ -110,7 +110,7 @@ If you want to return values when executing the script, then pass them as the fi
 
 [[async-return]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch10javascript/usage/JavascriptExecutorUsageIT.java[JavascriptExecutorUsageIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch10javascript/usage/JavascriptExecutorUsageIT.java[JavascriptExecutorUsageIT.java]
 ----
 String result = (String) jsExecutor.executeAsyncScript(
         "var callback = arguments[arguments.length - 1];" + // <1>
@@ -169,7 +169,7 @@ image::images.png[title="Images, one having failed to load - http://localhost:80
 You can write the following test for this page:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch10javascript/images/VerifyingImagesIT.java[VerifyingImagesIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch10javascript/images/VerifyingImagesIT.java[VerifyingImagesIT.java]
 ----
 @Before
 public void setUp() throws Exception {
@@ -241,7 +241,7 @@ This page prints the current time when you click a button. We want to make sure 
 The current time is found by executing `new Date()`. `Date` is a JavaScript function, and you can override JavaScript functions. If you want the page to show a specific time instead of the time on the computer (for example, 16:23:45), then you can override the `Date` function with a new function that returns a fixed, predictable value:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch10javascript/time/PrintTheTimeIT.java[PrintTheTimeIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch10javascript/time/PrintTheTimeIT.java[PrintTheTimeIT.java]
 ----
         ((JavascriptExecutor) driver).executeScript(
                 "var d = new Date(2016, 1, 1, 16, 23, 45);\n" + // <1>
@@ -339,7 +339,7 @@ navigator.geolocation.getCurrentPosition
 Here's how to use this in your code:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch10javascript/geolocationjs/GeolocationIT.java[GeolocationIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch10javascript/geolocationjs/GeolocationIT.java[GeolocationIT.java]
 ----
 @Test
 public void geoLocationInjection() throws Exception {
@@ -375,7 +375,7 @@ This solution has one main caveat -- it only works on pages where the JavaScript
 You can also use this technique to test error scenarios, such as the user denying access to geolocation:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch10javascript/geolocationjs/GeolocationIT.java[GeolocationIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch10javascript/geolocationjs/GeolocationIT.java[GeolocationIT.java]
 ----
 @Test
 public void positionError() throws Exception {
@@ -427,7 +427,7 @@ You want to verify that a web notification is displayed.
 Use the `JavascriptExecutor` interface to replace the `Notification` function with an implementation that captures the result. This can be achieved by the following JavaScript snippet:
 
 [source,javascript]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch10javascript/webnotification/Notification.java[Notification.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch10javascript/webnotification/Notification.java[Notification.java]
 ----
 Notification = function(title, options) { <1>
     var n = this;  <2>
@@ -447,7 +447,7 @@ Notification = function(title, options) { <1>
 You can encapsulate this in an object similar to the `Select` class:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch10javascript/webnotification/Notification.java[Notification.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch10javascript/webnotification/Notification.java[Notification.java]
 ----
 public class Notification {
 
@@ -476,7 +476,7 @@ public class Notification {
 Now you can reuse `Notification` in as many places as you need:
 
 [source,java]
-.https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch10javascript/webnotification/WebNotificationIT.java[WebNotificationIT.java]
+.https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch10javascript/webnotification/WebNotificationIT.java[WebNotificationIT.java]
 ----
 JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
 Notification notification = new Notification(jsExecutor);

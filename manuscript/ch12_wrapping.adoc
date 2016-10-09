@@ -51,7 +51,7 @@ You want to take a screen-shot when pages are loaded to make it easier to trace 
 Wrap your driver in an EventFiringWebDriver and register a listener. To do this, you need to create an object the sub-classes `WebDriverEventListener`. This class has a large number of methods, so to avoid having to implement them all, you can sub-class `AbstractWebDriverEventListener`. This has empty implementations of each of the methods, so you only need to implement the ones you want.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/tests/ScreenshotIT.java[ScreenshotIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/tests/ScreenshotIT.java[ScreenshotIT.java]
 ----
 EventFiringWebDriver driver = new EventFiringWebDriver(this.driver); // <1>
 
@@ -106,7 +106,7 @@ The main item we need to achieve this is a driver that delegates all its calls t
 
 [[DelegatingWebDriver.v1]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/v0_5/DelegatingWebDriver.java[DelegatingWebDriver.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/v0_5/DelegatingWebDriver.java[DelegatingWebDriver.java]
 ----
 class DelegatingWebDriver implements WebDriver {
     private final WebDriver driver;
@@ -134,7 +134,7 @@ class DelegatingWebDriver implements WebDriver {
 This class doesn't do very much on it's own, but lets look at what a sub-class of it can do.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/framework/BaseUrlDriver.java[BaseUrlDriver.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/BaseUrlDriver.java[BaseUrlDriver.java]
 ----
 class BaseUrlDriver extends DelegatingWebDriver {
     private final URI baseUrl;
@@ -180,7 +180,7 @@ The above example has a very specific use: to allow you to use the same tests to
 
 [[DelegatingWebDriver]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/v0_8/DelegatingWebDriver.java[DelegatingWebDriver.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/v0_8/DelegatingWebDriver.java[DelegatingWebDriver.java]
 ----
 class DelegatingWebDriver
     implements WebDriver, JavascriptExecutor, TakesScreenshot,  <1>
@@ -302,7 +302,7 @@ Rather than write out own HTTP proxy server, we'll use *Lightbody Proxy* footnot
 When we start our tests, we'll need to start the proxy server. This can be done by modifying the `WebDriverConfig` and adding a few new Spring beans to it:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/framework/WebDriverConfig.java[WebDriverConfig.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/WebDriverConfig.java[WebDriverConfig.java]
 ----
 private static int freePort() throws IOException { //<1>
     try (ServerSocket serverSocket = new ServerSocket(0)) {
@@ -328,7 +328,7 @@ public HttpProxyServer proxyServer(HttpFiltersSource httpFiltersSource)
 Add add this method to add the `PROXY` as a capability to `WebDriver`:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/framework/WebDriverConfig.java[WebDriverConfig.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/WebDriverConfig.java[WebDriverConfig.java]
 ----
 @Bean
 public DesiredCapabilities desiredCapabilities(HttpProxyServer proxyServer) {
@@ -349,7 +349,7 @@ public DesiredCapabilities desiredCapabilities(HttpProxyServer proxyServer) {
 Next you'll need a class to capture the last status code, as we'll as allow your test to access them. This class must implement the `HttpFiltersSource` interface.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/framework/HttpStatusCodeSupplier.java[HttpStatusCodeSupplier.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/HttpStatusCodeSupplier.java[HttpStatusCodeSupplier.java]
 ----
 public class HttpStatusCodeSupplier extends HttpFiltersSourceAdapter { //<1>
 
@@ -411,7 +411,7 @@ Finally, you can use this in your code as per listing <<http-status-code-usage>>
 
 [[http-status-code-usage]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/tests/HttpStatusCodeIT.java[HttpStatusCodeIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/tests/HttpStatusCodeIT.java[HttpStatusCodeIT.java]
 ----
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = WebDriverConfig.class)
@@ -479,7 +479,7 @@ Encapsulate table access within a `Table` object. HTML tables have a standard la
 Let's have a look at the methods you would want a table class to provide:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/table/Table.java[Table.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/table/Table.java[Table.java]
 ----
 public interface Table extends WebElement {
 
@@ -496,7 +496,7 @@ We won't cover all the methods (`getWidth` and `getBodyHeight` are left as exerc
 You are going to create a simple implementation that is passed the table element from the page via the constructor as follows:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/table/SimpleTable.java[SimpleTable.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/table/SimpleTable.java[SimpleTable.java]
 ----
 public class SimpleTable implements Table {
     private final WebElement tableElement;
@@ -510,7 +510,7 @@ public class SimpleTable implements Table {
 You would use this as follows:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/tests/TableIT.java[TableIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/tests/TableIT.java[TableIT.java]
 ----
 Table table = new SimpleTable(driver.findElement(By.id("users-table")));
 ----
@@ -536,7 +536,7 @@ public List<WebElement> findElements(By by) {
 The most interesting method is `WebElement getBodyCell(int rowNumber, int columnNumber)`. This method will need to find a cell by its row and column numbers. You can use the `TdBy` to do this.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/table/SimpleTable.java[SimpleTable.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/table/SimpleTable.java[SimpleTable.java]
 ----
 @Override
 public WebElement getBodyCell(int rowNumber, int columnNumber) {
@@ -551,7 +551,7 @@ public WebElement getBodyCell(int rowNumber, int columnNumber) {
 You can build on this class to provide some more interesting and useful methods. For example, you can encapsulate the strategy of finding the correct column number:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/table/ColumnNumberFinder.java[ColumnNumberFinder.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/table/ColumnNumberFinder.java[ColumnNumberFinder.java]
 ----
 class ColumnNumberFinder {
 
@@ -576,7 +576,7 @@ class ColumnNumberFinder {
 This is an example of the *strategy pattern* footnote:[https://en.wikipedia.org/wiki/Strategy_pattern]. It is a strategy for finding out something about the page. Let's look at an example of applying this strategy:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/table/SimpleTable.java[SimpleTable.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/table/SimpleTable.java[SimpleTable.java]
 ----
 public class SimpleTable extends DelegatingWebElement implements Table {
 
@@ -665,7 +665,7 @@ Code is cluttered with long locators that make it hard to understand.
 Wrapping locators to their own enum class that acts as a locator factory. Enum was introduced in Java 5; we should take advantage of this language feature and use it to organize out locators to make our code more cohesive. Since enum implicitly extends `Enum`, it cannot extend `By`.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/v0_7/ShoppingCartBySupplier.java[ShoppingCartBySupplier.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/v0_7/ShoppingCartBySupplier.java[ShoppingCartBySupplier.java]
 ----
 public enum ShoppingCartBySupplier {
     QUANTITY(
@@ -687,7 +687,7 @@ This can then be used as follows:
 
 [[call_get]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/tests/ShoppingCartBySupplierIT.java[ShoppingCartBySupplierIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/tests/ShoppingCartBySupplierIT.java[ShoppingCartBySupplierIT.java]
 ----
 driver.findElement(ShoppingCartBySupplier.QUANTITY.get())  <1>
 ----
@@ -746,7 +746,7 @@ For example, the following is a `ByName` enum with 2 constants defined.
 
 [[ByName]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch12wrapping/v0_8/Name.java[Name.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch12wrapping/v0_8/Name.java[Name.java]
 ----
 public enum Name implements Supplier<By> {  <1>
     EMAIL("email"),
@@ -779,7 +779,7 @@ When you use `Name.EMAIL.get()`, it will return you a `By.name("email")` locator
 So we change the methods in `Browser` to take `Supplier<By>` as parameter.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/framework/DelegatingSearchContext.java#L29-L32[DelegatingSearchContext.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/DelegatingSearchContext.java#L29-L32[DelegatingSearchContext.java]
 ----
 @Override
 public Element findElement(Supplier<By> by) {    <1>

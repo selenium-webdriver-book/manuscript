@@ -66,7 +66,7 @@ Normally, people just used string to hold data, but string is not a good candida
 Create domain package to hold all domain classes. So developers have a common place to store useful design ideas. For this particular bookstore application, since we need to ship the book to a place, so we need to create a class to hold address information, and it can be used for both billing and shipping address,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/domain/Address.java#L3-L30[Address.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/Address.java#L3-L30[Address.java]
 ----
 public class Address {
     public final String firstName;   <1>
@@ -91,7 +91,7 @@ public class Address {
 We can use string as the type for `country`, but it is more desirable to introduce an enum for that purpose. When you use string, people can create many variables in the test to hold those information, For example, one developer many add one variable in one class, but string is not type safe, if you accidentally modify a string, adding or removing a character, the compiler won't be able to notice that mistake. While if all country names are in one enum, it will be more cohesive and people don't need to define those variables in the classes they work on, they can just refer to the enum constants. And if it is changed accidentally, the compiler will tell you that it is not valid.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/domain/Countries.java#L3-L19[Countries.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/Countries.java#L3-L19[Countries.java]
 ----
 public enum Countries {
     Australia,            //<1>
@@ -108,7 +108,7 @@ public enum Countries {
 Same is `UnitedStates`, you can define all the states as constants inside `UnitedStates` enum,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/domain/UnitedStates.java#L3-L70[UnitedStates.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/UnitedStates.java#L3-L70[UnitedStates.java]
 ----
 public enum UnitedStates {
     ...          //<1>
@@ -150,7 +150,7 @@ So there will be more code. We prefer the way we choose, but you can choose to f
 And `CreditCard` class to hold the data for credit card information.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/domain/CreditCard.java#L5-L26[CreditCard.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/CreditCard.java#L5-L26[CreditCard.java]
 ----
 public class CreditCard {
 
@@ -168,7 +168,7 @@ public class CreditCard {
 Where `CreditCardType` class is another enum with some major credit cards,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/domain/CreditCardType.java##L3-L20[CreditCardType.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/CreditCardType.java##L3-L20[CreditCardType.java]
 ----
 public enum CreditCardType {
 
@@ -185,7 +185,7 @@ public enum CreditCardType {
 One thing you may notice is that there are a number of mailing list options. And when we use string as parameter, the code is very verbose, as in Chapter 14,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/tests/ShoppingCartPageIT.java#L26-L33[ShoppingCartPageIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/tests/ShoppingCartPageIT.java#L26-L33[ShoppingCartPageIT.java]
 ----
 new OtherInformation(
         "no code",
@@ -197,7 +197,7 @@ new OtherInformation(
 ----
 <1> The value of this parameter is extremely long
 
-Since each one of them has a long text name, we can also encapsulate them into an enum link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/domain/MailingOption.java#L6-L47[MailingOption.java]
+Since each one of them has a long text name, we can also encapsulate them into an enum link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/MailingOption.java#L6-L47[MailingOption.java]
 
 [source,java]
 ----
@@ -242,10 +242,10 @@ public static MailingOption from(String string) {
 }
 ----
 
-We already have `OtherInformation` in Listing 14.20 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch14elements/domain/OtherInformation.java[OtherInformation.java]. Since we added this enum for mailing option, we need to change the type for variable `mailingOption` from `String` to `MailingOption` in `OtherInformation` class.
+We already have `OtherInformation` in Listing 14.20 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch14elements/domain/OtherInformation.java[OtherInformation.java]. Since we added this enum for mailing option, we need to change the type for variable `mailingOption` from `String` to `MailingOption` in `OtherInformation` class.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/domain/OtherInformation.java[OtherInformation.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/domain/OtherInformation.java[OtherInformation.java]
 ----
 public class OtherInformation extends DomainBase {
     ...
@@ -277,7 +277,7 @@ By using Technique 37 and 38, we can define this `ClassName` enum for all the `B
 
 [[xpath-enum]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/locators/ClassName.java#L9-L30[ClassName.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/ClassName.java#L9-L30[ClassName.java]
 ----
 SEARCH_INPUT("navbar-search"),      <3>
 CART_BUTTON("cart-button"),         <1>
@@ -298,7 +298,7 @@ And we can use this enum without calling `.get()`, as shown in the following `se
 
 [[BookstoreHomepage]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/pages/BookstoreHomepage.java#L10-L27[BookstoreHomepage.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/BookstoreHomepage.java#L10-L27[BookstoreHomepage.java]
 ----
 public class BookstoreHomepage {
 
@@ -331,7 +331,7 @@ And we can create a test to run, it simply creates an instance of `BookstoreHomp
 
 [[BookStoreShoppingIT]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/tests/BookstoreSearchIT.java#L11-L23[BookstoreSearchIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/tests/BookstoreSearchIT.java#L11-L23[BookstoreSearchIT.java]
 ----
 @Test
 public void searchBook() {
@@ -355,7 +355,7 @@ This page has two responsibilities,
 We want to simplify it so ignore the first responsibility and only code `BookListPage` to allow `chooseBook`, as in the following class.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/pages/BookListPage.java#L10-L27[BookListPage.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/BookListPage.java#L10-L27[BookListPage.java]
 ----
 public class BookListPage {
     ...
@@ -400,7 +400,7 @@ We can create a `BookPage` class to represent the responsibilities on book page,
 2. `gotoCart` - find top nav bar and click the cart image button.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/pages/BookPage.java#L9-L29[BookPage.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/BookPage.java#L9-L29[BookPage.java]
 ----
 public class BookPage {
     ...
@@ -448,7 +448,7 @@ image::credit-card.png[title=Credit Card Form]
 We can create a `CreditCardForm` class and use its `setCreditCard` method to set the input values represented by an instance of `CreditCard` class to the areas for credit card information as illustrated in Figure <<Credit_Card_Form>>.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/pages/CreditCardForm.java#L10-L24[CreditCardForm.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/CreditCardForm.java#L10-L24[CreditCardForm.java]
 ----
 public void setCreditCard(CreditCard card) {
     browser.selectByVisibleText(CARD_TYPE, card.cardType);   <1>
@@ -476,7 +476,7 @@ image::billing-address.png[title=Billing Address]
 We use `setBillingAddress` method from `BillingAddressForm` class to set the input values of `Address` to the areas for billing address information as illustrated in Figure <<Billing_Address_Form>>
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/pages/BillingAddressForm.java#L10-L29[BillingAddressForm.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/BillingAddressForm.java#L10-L29[BillingAddressForm.java]
 ----
 public void setBillingAddress(Address address) {   <1>
     browser.setInputText(BILLING_FIRST_NAME, address.firstName);  <2>
@@ -506,7 +506,7 @@ image::other-information.png[title=Other Information]
 We use `setOtherInformation` method of `OtherInformationForm` class to set the input values of `OtherInformation` to the areas for other information as illustrated in Figure <<Other_Information_Form>>.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/pages/OtherInformationForm.java#L9-L25[OtherInformationForm.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/OtherInformationForm.java#L9-L25[OtherInformationForm.java]
 ----
 public void setOtherInformation(OtherInformation info) {  <1>
     browser.setInputText(COUPON_CODE, info.couponCode);     <2>
@@ -528,7 +528,7 @@ And we add these variables to `ShoppingCartPage` class we created in Chapter 14,
 
 [[ShoppingCartPage]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/pages/ShoppingCartPage.java#L12-L45[ShoppingCartPage.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/ShoppingCartPage.java#L12-L45[ShoppingCartPage.java]
 ----
 public class ShoppingCartPage {
 
@@ -564,7 +564,7 @@ And we can see the order number "#00008" is on a `span` with `class` attribute "
 
 [[ConfirmationPage]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/pages/ConfirmationPage.java#L12-L45[ConfirmationPage.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/pages/ConfirmationPage.java#L12-L45[ConfirmationPage.java]
 ----
 public class ConfirmationPage {
     ...
@@ -600,7 +600,7 @@ How to design the test data, the topic alone can be put into one separate book, 
 First some constants for the expected results,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/tests/BookstoreShoppingIT.java#L24-L26[BookstoreShoppingIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/tests/BookstoreShoppingIT.java#L24-L26[BookstoreShoppingIT.java]
 ----
 public static final String EXPECTED_ERROR_MESSAGE =
     "The cardNumber must be between 19 and 19 characters long";   //<1>
@@ -609,7 +609,7 @@ public static final String EXPECTED_ORDER_NUMBER = "#00008";    //<2>
 <1> Define an expected error message
 <2> Define an oder number for confirmation
 
-And some variables for the data to be used to fill out the forms in link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/tests/BookstoreShoppingIT.java#L31-L61[BookstoreShoppingIT.java]
+And some variables for the data to be used to fill out the forms in link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/tests/BookstoreShoppingIT.java#L31-L61[BookstoreShoppingIT.java]
 
 An instance of `Address`, used to fill out Billing Address using `BillingAddressForm`,
 
@@ -670,7 +670,7 @@ And then writing some tests to automate these two page flows.
 Now we can finish the test by wiring all the page classes we created in the following test. First let us put common path inside another method so it doesn't repeat.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/tests/BookstoreShoppingIT.java#L63-L82[BookstoreShoppingIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/tests/BookstoreShoppingIT.java#L63-L82[BookstoreShoppingIT.java]
 ----
 @Before   <6>
 public void addToCartAndSetSomeInformation() {
@@ -693,7 +693,7 @@ Then the exception flow in this method.
 
 [[invalid-purchase]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/tests/BookstoreShoppingIT.java#L63-L82[BookstoreShoppingIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/tests/BookstoreShoppingIT.java#L63-L82[BookstoreShoppingIT.java]
 ----
 @Test
 public void invalidCreditCard() {
@@ -720,7 +720,7 @@ We can see it runs and page transits from home page to search result page and th
 We also add a test case for successful purchase, you can see by the end an order number has been created. Unlike what we did in Listing <<invalid-purchase>>, where we just use the `getText` method of the `browser` object to read the text for error message, in Listing <<ConfirmationPage>>, we use the `getOrderNumber` method in `ConfirmationPage` for the responsibility of getting order number. And the test uses `getOrderNumber` to get order number/
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch15pageflow/tests/BookstoreShoppingIT.java#L84-L93[BookstoreShoppingIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch15pageflow/tests/BookstoreShoppingIT.java#L84-L93[BookstoreShoppingIT.java]
 ----
 @Test
 public void purchaseSuccessful() {
@@ -813,22 +813,22 @@ These are the domain classes defined for the pages.
 
 [source,java]
 ----
-import swb.ch15pageflow.domain.*;
+import swip.ch15pageflow.domain.*;
 ----
 
 These are all the page classes and a supplier locator
 
 [source,java]
 ----
-import swb.ch15pageflow.pages.*;
-import static swb.locators.Id.CARDNUMBER_ERROR;
+import swip.ch15pageflow.pages.*;
+import static swip.locators.Id.CARDNUMBER_ERROR;
 ----
 
 And `Browser` and `BrowserRunner` to start the test.
 [source,java]
 ----
-import swb.framework.Browser;
-import swb.framework.BrowserRunner;
+import swip.framework.Browser;
+import swip.framework.BrowserRunner;
 ----
 
 With this design, you don't need to import Selenium WebDriver classes in the test at all. This is a commonly used pattern in enterprise software development, to have an in-framework to prevent the direct access to third party libraries. Either to attach more responsibility or increase the consistency of the application.

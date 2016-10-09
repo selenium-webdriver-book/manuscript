@@ -197,7 +197,7 @@ image::hello-webdriver.png[title=Hello WebDriver]
 
 When you are done, press `Ctrl+C` to quit the server.
 
-If you want to find examples from the book in the code, look for the package named after the chapter. For example, if you're looking for chapter one's examples, then they can be found in `src/test/java/swb/ch01intro`.
+If you want to find examples from the book in the code, look for the package named after the chapter. For example, if you're looking for chapter one's examples, then they can be found in `src/test/java/swip/ch01intro`.
 
 To run all the tests with the book, run the following:
 
@@ -281,12 +281,12 @@ Create a directory with this `pom.xml`:
 <3> Compile using the latest version of Java -- Java 1.8.
 <4> Make sure that tests are run using Maven's failsafe plugin.
 
-Create `src/test/java/swb/intro/HelloWebDriverIT.java`:
+Create `src/test/java/swip/intro/HelloWebDriverIT.java`:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swb/ch01intro/HelloWebDriverIT.java[HelloWebDriverIT.java]
+.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch01intro/HelloWebDriverIT.java[HelloWebDriverIT.java]
 ------------------------------------------------------------------------------------------------------------------------------------------------
-package swb.ch01intro;
+package swip.ch01intro;
 
 import org.junit.After;
 import org.junit.Before;

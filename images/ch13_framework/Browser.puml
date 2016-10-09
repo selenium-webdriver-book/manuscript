@@ -11,7 +11,7 @@ namespace org.openqa.selenium  {
     SearchContext <|-- WebDriver
 }
 
-namespace swb.framework {
+namespace swip.framework {
 
     interface SearchScope
     SearchScope : Element findElement(Supplier<By> by)
