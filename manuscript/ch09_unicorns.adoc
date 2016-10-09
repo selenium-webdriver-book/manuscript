@@ -28,7 +28,7 @@ An **action chain** is a way to chain several user interactions together. It's u
 The primary class for building and then performing a chain of actions is `Actions`. To use it, create a new instance from your driver, add some actions, and finally invoke the `perform` method. For example:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/ExampleIT.java[ExampleIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch09unicorns/actionchains/ExampleIT.java[ExampleIT.java]
 ----
         driver.get("/login.html");
 
@@ -42,7 +42,7 @@ The primary class for building and then performing a chain of actions is `Action
 Most methods on the `Actions` class have two versions, one that takes a `WebElement` as the first parameter, and another that requires you to focus on the element beforehand. The preceding test can also be written as follows:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/ExampleIT.java[ExampleIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch09unicorns/actionchains/ExampleIT.java[ExampleIT.java]
 ----
         new Actions(driver)
                 .moveToElement(driver.findElement(By.name("email")))
@@ -104,7 +104,7 @@ If you are doing mobile testing, then there is another class named `TouchActions
 OK. So that was an overview of the APIs, but what are they useful for? One use is copying from one input to another. To do this, you need to use the correct modifier key with the copy key and the paste key. On Windows and Linux the modifier key is the Ctrl key, but on Mac OS X it's the Cmd key. This means there is a little extra logic necessary to determine which operating system you are using and therefore which modifier key to use.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/CopyAndPasteIT.java[CopyAndPasteIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch09unicorns/actionchains/CopyAndPasteIT.java[CopyAndPasteIT.java]
 ----
         driver.get("/registration-form.html");
 
@@ -128,7 +128,7 @@ OK. So that was an overview of the APIs, but what are they useful for? One use i
 You can use action chains to move the mouse over an element:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/MouseHoverIT.java[MouseHoverIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch09unicorns/actionchains/MouseHoverIT.java[MouseHoverIT.java]
 ----
         driver.get("/mouse-hover.html");
 
@@ -140,7 +140,7 @@ You can use action chains to move the mouse over an element:
 Drag-and-drop is where you can move an element from one place to another using the mouse. The `Actions` class provides a method for that:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/draganddrop/DragAndDropIT.java[DragAndDropIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch09unicorns/draganddrop/DragAndDropIT.java[DragAndDropIT.java]
 ----------------------------------------------
 driver.get("/drag-and-drop.html");
 
@@ -168,7 +168,7 @@ Use a **lazy element** that locates the element each time a method is called. Th
 To demonstrate this problem, we've created a page in the test app. The page  at <http://localhost:8080/stale-elements.html> has a button that, when clicked, is removed from the page, and an identical button is added in its place. A second click results in a `StaleElementReferenceException `. Let's have a look at an example of a test that uses this problematic button.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/LazyActionChainIT.java[LazyActionChainIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch09unicorns/actionchains/LazyActionChainIT.java[LazyActionChainIT.java]
 ----
     @Test(expected = StaleElementReferenceException.class)
     public void staleElementProblem() throws Exception {
@@ -188,7 +188,7 @@ To demonstrate this problem, we've created a page in the test app. The page  at 
 You can create a class that implements the `WebElement` interface, but actually locates the element each time a method is invoked and then delegates the call to the freshly located element:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/LazyElement.java[LazyElement.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch09unicorns/actionchains/LazyElement.java[LazyElement.java]
 ----
 public class LazyElement implements WebElement, Locatable { <1>
     private final SearchContext searchContext;
@@ -223,7 +223,7 @@ public class LazyElement implements WebElement, Locatable { <1>
 You can then use this in a test:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/actionchains/LazyActionChainIT.java[LazyActionChainIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch09unicorns/actionchains/LazyActionChainIT.java[LazyActionChainIT.java]
 ----
     @Test
     public void lazyActionChain() throws Exception {
@@ -272,7 +272,7 @@ The HTML for the select box looks like this:
 WebDriver's support library provides the `Select` class to make it easier to work with select boxes:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/select/MultipleSelectIT.java[MultipleSelectIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch09unicorns/select/MultipleSelectIT.java[MultipleSelectIT.java]
 ------------------------------------------------------------------
 Select single = new Select(driver.findElement(By.name("single")));
 single.selectByVisibleText("Ginger");
@@ -296,7 +296,7 @@ Multiple select boxes work in much the same way. The only point to note is that 
 If you want to select multiple options from this select list, you can do the following:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/select/MulipleSelectIT.java[MulipleSelectIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch09unicorns/select/MulipleSelectIT.java[MulipleSelectIT.java]
 ----------------------------------------------------------------------
 driver.get("http://localhost:8080/select-boxes.html");
 
@@ -338,7 +338,7 @@ File uploads can be recognized in HTML by the input type being `file`. The form 
 If you are running your test remotely (that is, you are using a `RemoteWebDriver`), then you need to set the file detector so that WebDriver knows to transfer the file. WebDriver will magically copy the file from your local machine to where the browser is running!
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/fileupload/FileUploadIT.java[FileUploadIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch09unicorns/fileupload/FileUploadIT.java[FileUploadIT.java]
 ----
     if (driver instanceof RemoteWebDriver) { <1>
         ((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
@@ -494,7 +494,7 @@ Create a `Tooltip` class that can find the tip for an element by trying differen
 You can encapsulate this as in the following class:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch09unicorns/tooltips/Tooltip.java[Tooltip.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch09unicorns/tooltips/Tooltip.java[Tooltip.java]
 ----
 public static String tip(WebDriver driver, By by) {
     WebElement element = driver.findElement(by);

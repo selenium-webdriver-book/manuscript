@@ -30,7 +30,7 @@ The Java Virtual Machine (JVM) can crash, or be forcibly terminated. When this h
 You have probably seen a JUnit test that sets up a driver and then quits in the teardown method, something similar to the following:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/basic/CommonWebDriverIT.java[CommonWebDriverIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch07managingwebdriver/basic/CommonWebDriverIT.java[CommonWebDriverIT.java]
 ----
     public class CommonWebDriverIT {
 
@@ -51,7 +51,7 @@ You have probably seen a JUnit test that sets up a driver and then quits in the 
 On initial inspection, everything looks fine. You are creating a driver, using it in your test, and then quitting it when complete. This will work fine to start with, but what happens if you kill the JVM mid-test? The browser will stay open. JUnit does not get the chance to perform the cleanup operation. In Java, you can create a method named `finalize` for any class. This is a special method that the JVM will try to call when the object is garbage collected. It can be used by that object to clean up any resources it might be using. WebDriver is a resource. Maybe you can try to make your code more robust by overriding `finalize`?
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/basic/FinalizeWebDriverIT.java[FinalizeWebDriverIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch07managingwebdriver/basic/FinalizeWebDriverIT.java[FinalizeWebDriverIT.java]
 ----
     @Override
     protected void finalize() throws Throwable {
@@ -65,7 +65,7 @@ Unfortunately, Java makes no promises about when, or even if, the `finalize` met
 A more robust option is to make sure the browser is closed by adding a JVM *shutdown hook* footnote:[http://docs.oracle.com/javase/8/docs/api/java/lang/Runtime.html#addShutdownHook-java.lang.Thread-]. A shutdown hook is executed automatically when the JVM terminates.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/basic/ShutdownHookWebDriverIT.java[ShutdownHookWebDriverIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch07managingwebdriver/basic/ShutdownHookWebDriverIT.java[ShutdownHookWebDriverIT.java]
 ----
     private WebDriver driver;
 
@@ -118,7 +118,7 @@ The Spring Framework allows you to create a configuration for your tests. The co
 I'm going to assume you are using Maven to build your project. You will need a couple of additional dependencies for this technique:
 
 [source,xml]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/pom.xml[pom.xml]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/pom.xml[pom.xml]
 ----
 	<dependency>
 	    <groupId>org.springframework</groupId>
@@ -140,7 +140,7 @@ Then, you can create a configuration file that defines the context for your test
 // TODO - update these listing to reflect the current code
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/injectingdriver/WebDriverConfig.java[WebDriverConfig.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch07managingwebdriver/injectingdriver/WebDriverConfig.java[WebDriverConfig.java]
 ----
 @Configuration
 public class WebDriverConfig {
@@ -185,7 +185,7 @@ Spring provides two ways to define a context. The first way is using XML, but si
 Finally, you can update your test to have the necessary annotations:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/injectingdriver/InjectedDriverIT.java[InjectedDriverIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch07managingwebdriver/injectingdriver/InjectedDriverIT.java[InjectedDriverIT.java]
 ----
 @RunWith(SpringJUnit4ClassRunner.class) // <1>
 @ContextConfiguration(classes = WebDriverConfig.class) // <2>
@@ -218,7 +218,7 @@ You will see that I have prefixed the property's name with the string `webdriver
 Currently, this doesn't allow you to run remote web drivers, but you can expand your configuration by having a method to create remote drivers:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/WebDriverConfig.java[framework/WebDriverConfig.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/framework/WebDriverConfig.java[framework/WebDriverConfig.java]
 ----
     private WebDriver remoteDriver(URL remoteUrl, DesiredCapabilities desiredCapabilities) {
         return new Augmenter().augment(new RemoteWebDriver(remoteUrl, desiredCapabilities)); // <1>
@@ -235,7 +235,7 @@ The `RemoteWebDriver` class won't allow you to take screenshots as it does not i
 And another for local drivers:
 
 [source,java]
-.https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/WebDriverConfig.java[framework/WebDriverConfig.java]
+.https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/framework/WebDriverConfig.java[framework/WebDriverConfig.java]
 ----
     private WebDriver localDriver(DesiredCapabilities desiredCapabilities) throws IOException {
         switch (desiredCapabilities.getBrowserName()) {
@@ -256,7 +256,7 @@ And another for local drivers:
 Here is the method that creates the driver for the tests to use:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/WebDriverConfig.java[framework/WebDriverConfig.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/framework/WebDriverConfig.java[framework/WebDriverConfig.java]
 ----
     @Bean(destroyMethod = "quit")
     public WebDriver webDriver(
@@ -277,7 +277,7 @@ Tests running using Spring reuse the same beans. This means that the context can
 This can be partly addressed by using the special Spring annotation `@Scope("prototype")`. This annotation tells Spring to create a new driver for every test. However, you might only need to use a driver whose cookies have been deleted, so you could add this method to your configuration:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/WebDriverConfig.java[framework/WebDriverConfig.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/framework/WebDriverConfig.java[framework/WebDriverConfig.java]
 ----
     @Bean
     @Primary // <1>
@@ -324,7 +324,7 @@ Inject a base URL into your tests.
 Define the base URL in the Spring configuration file. Add the following lines:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/injectingbaseurl/WebDriverConfig.java[injectingbaseurl/WebDriverConfig.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch07managingwebdriver/injectingbaseurl/WebDriverConfig.java[injectingbaseurl/WebDriverConfig.java]
 ----
     @Bean
     public URI baseUrl(@Value("${webdriver.baseUrl:http://localhost:8080}") URI value) {
@@ -336,7 +336,7 @@ Define the base URL in the Spring configuration file. Add the following lines:
 You can inject this into your code:
 
 [source,java]
-.https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/injectingbaseurl/InjectedBaseUrlIT.java[InjectedBaseUrlIT.java]
+.https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch07managingwebdriver/injectingbaseurl/InjectedBaseUrlIT.java[InjectedBaseUrlIT.java]
 ----
 	@RunWith(SpringJUnit4ClassRunner.class)
 	@ContextConfiguration(classes = WebDriverConfig.class)
@@ -393,7 +393,7 @@ To solve this problem, you'll need to:
 3. Copy that screenshot somewhere safe, so it can be accessed later on.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/screenshot/ScreenshotTaker.java[ScreenshotTaker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch07managingwebdriver/screenshot/ScreenshotTaker.java[ScreenshotTaker.java]
 ----
 public class ScreenshotTaker extends AbstractTestExecutionListener { // <1>
     @Override
@@ -418,7 +418,7 @@ public class ScreenshotTaker extends AbstractTestExecutionListener { // <1>
 Finally, you need to annotate your test with the `@TestExecutionListeners` annotation, so that Spring is aware of the listeners.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch07managingwebdriver/screenshot/ScreenshotIT.java[ScreenshotIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch07managingwebdriver/screenshot/ScreenshotIT.java[ScreenshotIT.java]
 ----
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = WebDriverConfig.class)

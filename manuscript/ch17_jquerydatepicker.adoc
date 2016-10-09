@@ -283,7 +283,7 @@ Now that we all the locators, we can apply the technique we learnt from Techniqu
 We create `JQueryById` enum to organize the locators using `By.ById` locators, those locators build from `By.id(id)`, and we can keep adding new locators of `By.ById` to this enum when the project grows,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/jquery/JQueryById.java#L12-L35[JQueryById.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/locators/jquery/JQueryById.java#L12-L35[JQueryById.java]
 ----
 CALENDAR("ui-datepicker-div"),  <1>
 TRIGGER_BY("datepicker");                <2>
@@ -303,7 +303,7 @@ And a locator supplier enum to organize those `By.ByClassName`
 We use this enum to organize `By.ByClassName` locators. Similarly to `JQueryById`, we can keep adding new locators of `By.ByClassName` type to this enum,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/locators/jquery/JQueryByClassName.java#L12-L37[JQueryByClassName.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/locators/jquery/JQueryByClassName.java#L12-L37[JQueryByClassName.java]
 ----
 NEXT_MONTH_BUTTON("ui-datepicker-next"), //<1>
 NEXT_MONTH_BUTTON("ui-datepicker-prev"), //<2>
@@ -351,7 +351,7 @@ datepicker.pick(APRIL, 1, 2014)  <1>
 
 [[pick-method]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L27-L33[JQueryDatepicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L27-L33[JQueryDatepicker.java]
 ----
 public void pick(Month month, int day, int year) {
     LocalDate.of(year, month, day);            //<1>
@@ -415,7 +415,7 @@ We don't have `Browser` and `Element` in the class diagram, because those method
 Now we can start to design the class to handle all the date picking logic. First we have the `pick` method from Listing <<pick-method>>, and methods related to display the calendar which is private since it is in the same class,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L35-L37[JQueryDatepicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L35-L37[JQueryDatepicker.java]
 ----
 private void show() {
     browser.click(TRIGGER_BY);          <1>
@@ -427,7 +427,7 @@ And here are the methods used to pick year. They are in the same class and these
 
 [[methods-pick-year]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L39-L74[JQueryDatepicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L39-L74[JQueryDatepicker.java]
 ----
 private void previousYear() {          <5>
     for (int i = 0; i < 12; i++) {
@@ -485,7 +485,7 @@ And methods related to pick month, which are also `private`,
 
 [[methods-pick-month]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L68-L91[JQueryDatepicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L68-L91[JQueryDatepicker.java]
 ----
 private void previousMonth() {...}
 
@@ -522,7 +522,7 @@ As well as the `private` method used to pick the day,
 
 [[pick-day]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L93-L102[JQueryDatepicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v1/JQueryDatepicker.java#L93-L102[JQueryDatepicker.java]
 ----
 private void pickDay(int day) {
     browser.await(CALENDAR)
@@ -542,7 +542,7 @@ private void pickDay(int day) {
 In the method body of `pickDay`, we use `new ElementVisible(CALENDAR).negate()` to wait until the calendar is closed. `ElementVisible` class can be used to check whether an element is visible. The `negate()` method is a method from `Predicate` to reverse the condition so we don't need to have another class `ElementNotVisible`.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/framework/ElementVisible.java#L9-L22[ElementVisible.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/framework/ElementVisible.java#L9-L22[ElementVisible.java]
 ----
 public class ElementVisible implements Predicate<SearchScope> { <1>
 
@@ -580,7 +580,7 @@ This approach automates one situation, somebody watches the calendar while click
 
 [[methods-pick-year2]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryYearPicker.java#L18-29[JQueryYearPicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v2/JQueryYearPicker.java#L18-29[JQueryYearPicker.java]
 ----
 public void pickYear(int year) {
     int difference =  displayYear() - year;    <1>
@@ -604,7 +604,7 @@ Same, we can change the logic to pick month as following so the read from displa
 
 [[methods-pick-month2]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryMonthPicker.java#L18-L29[JQueryMonthPicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v2/JQueryMonthPicker.java#L18-L29[JQueryMonthPicker.java]
 ----
 public void pickMonth(int month) {
     int difference =  displayMonth() - month;  <1>
@@ -641,7 +641,7 @@ If we want to reuse some date picking logic to automate the datepicker built usi
 First, we create a `JQueryCalendar` class move `show()` method over and change it to `public`, then we inject this class into `JQueryDatepicker` to be in charge the `show` method that triggers the display of calendar.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryCalendar.java#L7-L18[JQueryCalendar.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v2/JQueryCalendar.java#L7-L18[JQueryCalendar.java]
 ----
 public class JQueryCalendar {
 
@@ -662,7 +662,7 @@ And create `JQueryYearPicker` class and move all methods in Listing <<methods-pi
 
 [[JQueryYearPicker-version1]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v1_5/JQueryYearPicker.java#L8-L54[JQueryYearPicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v1_5/JQueryYearPicker.java#L8-L54[JQueryYearPicker.java]
 ----
 public class JQueryYearPicker {
 
@@ -680,7 +680,7 @@ Then another class to pick month.
 And methods in Listing <<methods-pick-month>> are moved into `JQueryMonthPicker` and `pickMonth` method is replace by Listing <<methods-pick-month2>> so all month related methods are in this class,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryMonthPicker.java#L10-L44[JQueryMonthPicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v2/JQueryMonthPicker.java#L10-L44[JQueryMonthPicker.java]
 ----
 public class JQueryMonthPicker {
 
@@ -701,7 +701,7 @@ image::calendarpicker-seq.png[title=Sequence Diagram of how `JQueryMonthPicker` 
 Due to lacking of Previous Year Button, `JQueryYearPicker` needs to click Previous Month Button 12 times in `previousYear` method. These two methods `previousMonth` and `nextMonth` repeat in both `JQueryYearPicker` and `JQueryMonthPicker` classes. We can remove the duplicates by creating a `JQueryMonthPicker` object during the construction of `JQueryYearPicker` object and use it as a collaborator, as shown in the following code,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryYearPicker.java#L13-L16[JQueryYearPicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v2/JQueryYearPicker.java#L13-L16[JQueryYearPicker.java]
 ----
 public JQueryYearPicker(Browser browser) {
     this.browser = browser;
@@ -713,7 +713,7 @@ public JQueryYearPicker(Browser browser) {
 And modify `previousYear` and `nextYear` methods to use the collaborator.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryYearPicker.java#L31-L41[JQueryYearPicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v2/JQueryYearPicker.java#L31-L41[JQueryYearPicker.java]
 ----
 private void previousYear() {
     for (int i = 0; i < 12; i++) {
@@ -744,7 +744,7 @@ Next, We implement day clicking logic in `JQueryDayPicker` class as method `pick
 The method is same as in Listing <<pick-day>>, we need to change the method from `private` to `public` since it is in `JQueryDayPicker` class.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryDayPicker.java#L10-L23[JQueryDayPicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v2/JQueryDayPicker.java#L10-L23[JQueryDayPicker.java]
 ----
 public class JQueryDayPicker {
 
@@ -769,7 +769,7 @@ Now we inject all the collaborators into `JQueryDatepicker` through its construc
 
 [[v2-JQueryDatepicker]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/jquery/v2/JQueryDatepicker.java#L6-L31[JQueryDatepicker.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/jquery/v2/JQueryDatepicker.java#L6-L31[JQueryDatepicker.java]
 ----
 public class JQueryDatepicker {
 
@@ -807,7 +807,7 @@ As a rule of thumb, delegate pattern often works together with *Dependency Injec
 You can run this test on your computer to watch the calendar flipping and "04/01/2014" is on the input field after the calendar closed.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch17jquerydatepicker/tests/JQueryDatepicker_v2_IT.java#L34-L38[JQueryDatepicker_v2_IT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch17jquerydatepicker/tests/JQueryDatepicker_v2_IT.java#L34-L38[JQueryDatepicker_v2_IT.java]
 ----
 @Test
 public void pickADate() {

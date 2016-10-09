@@ -49,7 +49,7 @@ Your first attempt to write an automation code might result in some code like th
 
 [[error-prone]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/tests/ErrorProneLocatingLogicIT.java#L40-L51[ErrorProneLocatingLogicIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/tests/ErrorProneLocatingLogicIT.java#L40-L51[ErrorProneLocatingLogicIT.java]
 ----
 driver.findElement(linkText("choose location")).click();
 WebElement tabMenu = driver.findElement(By.id("location"));
@@ -87,7 +87,7 @@ You may recall that you have learnt from Chapter 6, there is a workaround to thi
 
 [[explicit-waits1]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/tests/LocatingLogicWithExplicitWaitIT.java#L29-L41[LocatingLogicWithExplicitWaitIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/tests/LocatingLogicWithExplicitWaitIT.java#L29-L41[LocatingLogicWithExplicitWaitIT.java]
 ----
 driver.get("/location-chooser.html");
 driver.findElement(linkText("choose location")).click();
@@ -112,7 +112,7 @@ You need to create a separate `FluentWait<WebElement>` object if the wait is on 
 
 [[explicit-waits2]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/tests/LocatingLogicWithExplicitWaitIT.java#L43-L68[LocatingLogicWithExplicitWaitIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/tests/LocatingLogicWithExplicitWaitIT.java#L43-L68[LocatingLogicWithExplicitWaitIT.java]
 ----
 FluentWait<WebElement> webElementWait              //<1>
     = new FluentWait<WebElement>(location)
@@ -189,7 +189,7 @@ Due to the limitation with abstract class, we decided to use an interface for th
 
 [[ExplicitWait-interface]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v1/ExplicitWait.java#L13-L24[ExplicitWait.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v1/ExplicitWait.java#L13-L24[ExplicitWait.java]
 ----
 public interface ExplicitWait {   <4>
 
@@ -260,7 +260,7 @@ Both `Browser` and `Element` already have the `findElement` method. To get the n
 `Browser` class implements `ExplicitWait` so it has `await` method,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v1/Browser.java#L6-L12[Browser.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v1/Browser.java#L6-L12[Browser.java]
 ----
 public class Browser extends DelegatingWebDriver
     implements ExplicitWait {   <2>
@@ -276,7 +276,7 @@ public class Browser extends DelegatingWebDriver
 `Element` class implements `ExplicitWait` so it also inherits the `await` methods,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v1/Element.java#L6-25[Element.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v1/Element.java#L6-25[Element.java]
 ----
 public class Element implements ExplicitWait {  <2>
 
@@ -317,7 +317,7 @@ You can see in the following test, `await` can be called from both `Browser` and
 
 [[explicit-test]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/tests/ExplicitWait_v1_IT.java#L28-L35[ExplicitWait_v1_IT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/tests/ExplicitWait_v1_IT.java#L28-L35[ExplicitWait_v1_IT.java]
 ----
 browser.get("/location-chooser.html");
 browser.await(CHOOSE_LOCATION).click();                   //<1>
@@ -357,7 +357,7 @@ And alternatively, how can we implement it in project using pre-Java 8 version.
 If you don't use Java 8, you need to define an empty `await` method in `ExplicitWait` interface and provide the implementation in each class which implements `ExplicitWait`,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v1_0_prejava8/ExplicitWait.java#L6-L9[ExplicitWait.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v1_0_prejava8/ExplicitWait.java#L6-L9[ExplicitWait.java]
 ----
 public interface ExplicitWait {
     WebElement findElement(Supplier<By> by);
@@ -369,7 +369,7 @@ public interface ExplicitWait {
 Then we implement `public WebElement await(Supplier<By> by)` in both `Browser` and `Element` class,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v1_0_prejava8/Browser.java#L13-L32[Browser.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v1_0_prejava8/Browser.java#L13-L32[Browser.java]
 ----
     public WebElement await(final Supplier<By> by) {  //<1>
         return new FluentWait<>((ExplicitWait) this)   <3>
@@ -407,7 +407,7 @@ The reason is when `await` method returns a `WebElement` interface, which is an 
 So we are making the change, the new code is shown in the following listing, `WebElement` is replaced by `Element`,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v1_5/ExplicitWait.java#L11-22[ExplicitWait.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v1_5/ExplicitWait.java#L11-22[ExplicitWait.java]
 ----
 public interface ExplicitWait {
 
@@ -448,7 +448,7 @@ Provide an `optionalElement` method to find optional elements. Again, you want t
 
 [[optional-element]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v2/SearchScope.java#L8-L19[SearchScope.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v2/SearchScope.java#L8-L19[SearchScope.java]
 ----
 public interface SearchScope {
 
@@ -472,7 +472,7 @@ But in older version of Java, `SearchScope` is like this,
 
 [[optional-element-pre-java8]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v1_5_prejava8/SearchScope.java#L3-L11[SearchScope.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v1_5_prejava8/SearchScope.java#L3-L11[SearchScope.java]
 ----
 import org.openqa.selenium.By;
 import com.google.common.base.Optional;  <2>
@@ -558,7 +558,7 @@ default boolean isPresent(Supplier<By> by) {
 Then we can replace the chained method calls in Listing <<explicit-test>> and add another line to check whether the link for `Cancun` is still there. The test asserts it shouldn't be there, since it should close after being clicked.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/tests/ExplicitWait_v2_IT.java#L29-L37[ExplicitWait_v2_TT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/tests/ExplicitWait_v2_IT.java#L29-L37[ExplicitWait_v2_TT.java]
 ----
 browser.click(CHOOSE_LOCATION);
 Element tabMenu = browser.await(LOCATION);
@@ -651,7 +651,7 @@ We are trying to switch to the iframe but it will fail with `IllegalArgumentExce
 [source,java]
 ----
 java.lang.IllegalArgumentException: Argument is of an illegal type:
-swip.ch13framework.v2.Element
+swb.ch13framework.v2.Element
 	at WebElementToJsonConverter.apply(WebElementToJsonConverter.java:81)
 	at RemoteTargetLocator.frame(RemoteWebDriver.java:1003)
 	at WyswygInputFailureIT.failToSwitchToIframe(WyswygInputFailureIT.java:35)
@@ -688,7 +688,7 @@ To do this you can add interface `WrapsDriver` to `DelegatingWebDriver` class as
 
 [[delegating-webdriver]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v3/DelegatingWebDriver.java#L12-L122[DelegatingWebDriver.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v3/DelegatingWebDriver.java#L12-L122[DelegatingWebDriver.java]
 ----
 public class DelegatingWebDriver
     implements WebDriver, JavascriptExecutor, TakesScreenshot,
@@ -713,7 +713,7 @@ public class DelegatingWebDriver
 After this change, this class is safe to be used for framework code and we made it backwards compatible with existing framework. With this class, you can sub-class it, and only override the methods you need to change the behavior of.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v3/Browser.java#L5-L116[Browser.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v3/Browser.java#L5-L116[Browser.java]
 ----
 public class Browser extends DelegatingWebDriver {
 
@@ -726,14 +726,14 @@ public class Browser extends DelegatingWebDriver {
 
 ==== Discussion
 
-By applying Object Oriented principle, we made `Browser` backwards compatible with old tests. Let us go back to chapter 5, Making maintainable tests using the Page Object pattern, and take another look of Listing 5.8 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/d/SearchPage.java[d/SearchPage.java]. In the listing, `SearchPage` class takes a `WebDriver` interface as the constructor parameter, now we are going to pass it a `Browser` object. Will it work? Let us see.
+By applying Object Oriented principle, we made `Browser` backwards compatible with old tests. Let us go back to chapter 5, Making maintainable tests using the Page Object pattern, and take another look of Listing 5.8 link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch05pageobjects/d/SearchPage.java[d/SearchPage.java]. In the listing, `SearchPage` class takes a `WebDriver` interface as the constructor parameter, now we are going to pass it a `Browser` object. Will it work? Let us see.
 
 We create this new test `SearchPageV2IT` and run it with a `BrowserRunner` runner class so it will inject a `Browser` into the test, we then create a `SearchPage` using the `browser` variable,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/tests/SearchPage_v2_IT.java#L12-L27[SearchPage_v2_IT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/tests/SearchPage_v2_IT.java#L12-L27[SearchPage_v2_IT.java]
 ----
-import swip.ch05pageobjects.d.SearchPage;  <1>
+import swb.ch05pageobjects.d.SearchPage;  <1>
 
 @RunWith(BrowserRunner.class)
 public class SearchPage_v2_IT {
@@ -747,7 +747,7 @@ public class SearchPage_v2_IT {
     }
 }
 ----
-<1> This `swip.ch05pageobjects.d.SearchPage` class is for old tests and it expects `WebDriver` interface as the constructor parameter
+<1> This `swb.ch05pageobjects.d.SearchPage` class is for old tests and it expects `WebDriver` interface as the constructor parameter
 <2> We pass a `Browser` class as parameter now and it still works
 
 The test passes, it works! By making `Browser` implementing `WebDriver`, we make it backwards compatible with many existing Page Object we had written in the past.
@@ -768,7 +768,7 @@ Again, use the delegate pattern to delegate the code to another class. To do thi
 
 [[delegating-webelement]]
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v3/DelegatingWebElement.java#L8-L105[DelegatingWebElement.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v3/DelegatingWebElement.java#L8-L105[DelegatingWebElement.java]
 ----
 public class DelegatingWebElement implements WebElement, WrapsElement {   <3>
     private final WebElement delegate;
@@ -791,7 +791,7 @@ public class DelegatingWebElement implements WebElement, WrapsElement {   <3>
 With this class, you can sub-class it, and only override the methods you need to change the behavior of.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v3/Element.java#L5-L16[Element.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v3/Element.java#L5-L16[Element.java]
 ----
 public class Element extends DelegatingWebElement {
 
@@ -806,10 +806,10 @@ public class Element extends DelegatingWebElement {
 
 Creating a delegate allows us to override specific methods, and yet keep our code readable. In this example you have use it to extend `Element` to allow it to be used as a drop-in and backwards compatible replacement for `WebElement` in existing code.
 
-Let is use `LoginForm` class in Listing 5.2 link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch05pageobjects/LoginForm.java[LoginForm.java] from Chapter 5, and create new test using `Browser` and `Element` and this old `LoginForm`,
+Let is use `LoginForm` class in Listing 5.2 link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch05pageobjects/LoginForm.java[LoginForm.java] from Chapter 5, and create new test using `Browser` and `Element` and this old `LoginForm`,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/tests/LoginForm_v2_IT.java#L26-L35[LoginForm_v2_IT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/tests/LoginForm_v2_IT.java#L26-L35[LoginForm_v2_IT.java]
 ----
 @Test
 public void checkLoginForm() throws Exception {
@@ -822,7 +822,7 @@ public void checkLoginForm() throws Exception {
         .until(ExpectedConditions.titleIs("You Are Logged In"));
 }
 ----
-<1> It uses the `swip.ch05pageobjects.LoginForm` class created in Chapter 5 that takes `WebElement` as constructor parameter
+<1> It uses the `swb.ch05pageobjects.LoginForm` class created in Chapter 5 that takes `WebElement` as constructor parameter
 <2> Now we pass an `Element` object to its constructor
 <3> `WebDriverWait` expects `WebDriver` but we pass in `Browser`
 
@@ -834,7 +834,7 @@ Let us look at these two methods,
 
 [[repeated-method]]
 [source,java]
-.Methods in both link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v3/DelegatingWebDriver.java#L49-L57[DelegatingWebDriver.java] and link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v3/DelegatingWebElement.java#L15-L23[DelegatingWebElement.java]
+.Methods in both link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v3/DelegatingWebDriver.java#L49-L57[DelegatingWebDriver.java] and link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v3/DelegatingWebElement.java#L15-L23[DelegatingWebElement.java]
 ----
 @Override
 public List<WebElement> findElements(Supplier<By> by) {
@@ -852,7 +852,7 @@ You can see from Listing <<delegating-webdriver>> and <<delegating-webelement>>,
 And since these two methods are from interface `SearchContext`, we can implement that interface to introduce `DelegatingSearchContext` as super class for `DelegatingWebDriver` and `DelegatingWebElement` and take advantage of Java Generics to have this class take a type, which can be any subtype of `SearchContext`, either a `WebDriver` or a `WebElement`, so in the subclass of `DelegatingWebDriver`, where we use `WebDriver` as the generic type parameter, `T` in `protect final T delegate` is a `WebDriver` class. But in `DelegatingWebElement`, it is `WebElement`. If you just declared it as `SearchContext`, you would need to cast it to `WebDriver` in `DelegatingWebElement` and `WebElement` in `DelegatingWebElement` before you could call the methods of each interface.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v4/DelegatingSearchContext.java#L10-L33[DelegatingSearchContext.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v4/DelegatingSearchContext.java#L10-L33[DelegatingSearchContext.java]
 ----
 public class DelegatingSearchContext<T extends SearchContext>  //<1>
     implements SearchContext, ExplicitWait {
@@ -871,7 +871,7 @@ public class DelegatingSearchContext<T extends SearchContext>  //<1>
 Then we can have `DelegatingWebDriver` extending `DelegatingSearchContext` with type parameter `WebDriver`, delete the variable `WebDriver driver` from it, and delete those two methods in Listing <<repeated-method>> from `DelegatingWebDriver`.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v4/DelegatingWebDriver.java#L11-L108[DelegatingWebDriver.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v4/DelegatingWebDriver.java#L11-L108[DelegatingWebDriver.java]
 ----
 public class DelegatingWebDriver
     extends DelegatingSearchContext<WebDriver> <1>
@@ -895,7 +895,7 @@ image::Browser.png[title=Class diagram of the Browser and its ancestors]
 And have `DelegatingWebElement` extending `DelegatingSearchContext` with type parameter `WebElement`, delete the variable `WebElement element` from it, and delete those two methods in Listing <<repeated-method>> from `DelegatingWebElement`.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-in-practice/source/blob/master/src/test/java/swip/ch13framework/v4/DelegatingWebElement.java#L8-L99[DelegatingWebElement.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch13framework/v4/DelegatingWebElement.java#L8-L99[DelegatingWebElement.java]
 ----
 public class DelegatingWebElement
     extends DelegatingSearchContext<WebElement> //<1>
