@@ -698,7 +698,7 @@ How cleaner it is when compared to Listing <<long-by-name>>.
 [sidebar]
 .Real life example
 ****
-We didn't invent this example, it is from a live website, http://manning.com.
+We didn't invent this example, it is from a live website, http://leanpub.com.
 Once you add a book to cart and go to shopping cart page, you can see this
 quantity input field on that page to allow you to enter a bigger number(or at least we hope so).
 The shopping cart was built using YUI and it is no longer a choice to do UI.

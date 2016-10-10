@@ -756,11 +756,6 @@ https://docs.oracle.com/javase/8/docs/api/index.html
 
 and click the java.util.stream link for that package.
 
-If you are seriously considering learning Java 8, we highly recommend
-the book Java 8 in Action from Manning
-
-https://www.manning.com/books/java-8-in-action
-
 The code is actually used Stream API to map the table row into domain object `T`,
 [source,java]
 ----
