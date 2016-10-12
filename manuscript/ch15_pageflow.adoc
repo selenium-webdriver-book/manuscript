@@ -273,7 +273,7 @@ We now have enough information to start, we will create page class `BookstoreHom
 1. Enter book name on the input field with `class` attribute "navbar-search"
 2. Click the search button with `class` attribute "btn-default" on an element with `id` "secondary-navbar"
 
-By using Technique 37 and 38, we can define this `ClassName` enum for all the `By.ByClassName` locators we are going to use to locate the elements,
+By using enum constants, we can define this `ClassName` enum for all the `By.ByClassName` locators we are going to use to locate the elements,
 
 [[xpath-enum]]
 [source,java]
