@@ -151,13 +151,13 @@ Or (on Ubuntu Linux):
 
 Windows users can download it from the Apache Maven website at https://maven.apache.org.
 
-=== Mozilla Firefox
+=== Google Chrome
 
-Mozilla's Firefox browser is the best supported browser. Unlike other browsers, it is available on every platform, it's standards compliant, and has the simplest out-of-the-box integration with WebDriver.
+Çhrome browser is the best supported browser. Unlike other browsers, it is available on every platform, it's standards compliant, and has the simple out-of-the-box integration with WebDriver.
 
-As usual, Linux users can install Firefox using their package manager; otherwise you can download Firefox from Mozilla at https://www.mozilla.org/.
+As usual, Linux users can install Chrome using their package manager; otherwise you can download Chrome from Chrome.
 
-Later on the book we will look at other browsers such as Chrome, but having Firefox installed now will get you through the first few chapters.
+Later on the book we will look at other browsers such as Firefox, but having Chrome installed now will get you through the first few chapters.
 
 === Git
 
@@ -237,7 +237,7 @@ Create a directory with this `pom.xml`:
     <dependencies>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-firefox-driver</artifactId> <1>
+            <artifactId>selenium-chrome-driver</artifactId> <1>
             <version>LATEST</version> <2>
             <scope>test</scope>
         </dependency>
@@ -276,10 +276,12 @@ Create a directory with this `pom.xml`:
 
 </project>
 ------------------------------------------------------------------------------------------------------------
-<1> You can choose a different browser, e.g. `selenium-chrome-driver` is for the Chrome browser.
+<1> You can choose a different browser, e.g. `selenium-firefox-driver` is for the Chrome browser.
 <2> Always use the latest version that is available.
 <3> Compile using the latest version of Java -- Java 1.8.
 <4> Make sure that tests are run using Maven's failsafe plugin.
+
+To start the driver, you'll need a special binary program to start it up. For Chrome, this is called `chromedriver` and can be found at https://sites.google.com/a/chromium.org/chromedriver/downloads. Download it and then save it into the root of the project.
 
 Create `src/test/java/swb/intro/HelloWebDriverIT.java`:
 
@@ -294,7 +296,7 @@ import org.junit.Test;
 import org.openqa.selenium.By; <1>
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
 
 import static org.junit.Assert.assertEquals;
 
@@ -304,34 +306,36 @@ public class HelloWebDriverIT { <2>
 
     @Before
     public void setUp() throws Exception {
-        driver = new FirefoxDriver(); <3>
+        System.setProperty("webdriver.chrome.driver", "chromedriver"); <3>
+        driver = new ChromeDriver(); <4>
     }
 
     @After
     public void tearDown() throws Exception {
-        driver.quit(); <4>
+        driver.quit(); <5>
     }
 
     @Test
     public void helloWebDriver() throws Exception {
 
-        driver.get("http://localhost:8080/hello-webdriver.html"); <5>
+        driver.get("http://localhost:8080/hello-webdriver.html"); <6>
 
         WebElement pageHeading
-            = driver.findElement(By.tagName("h1")); <6>
+            = driver.findElement(By.tagName("h1")); <7>
 
         assertEquals("Hello WebDriver!",
-            pageHeading.getText()); <7>
+            pageHeading.getText()); <8>
     }
 }
 ------------------------------------------------------------------------------------------------------------------------------------------------
 <1> Standard Java imports for WebDriver.
 <2> We use the IT suffix for test in this book; this is the Maven convention for integration tests that run using the Failsafe plugin footnote:[https://maven.apache.org/surefire/maven-failsafe-plugin/].
-<3> Create a new driver which connected to an instance of the Firefox browser.
-<4> Make sure that the browser quits when the test finishes.
-<5> Open a web page in the browser.
-<6> Locate an element on the current page, in this case the page's heading.
-<7> Verify that the heading is the value you expect.
+<3> Tell web driver via this system property the location of the driver binary.
+<4> Create a new driver which connected to an instance of the Chrome browser.
+<5> Make sure that the browser quits when the test finishes.
+<6> Open a web page in the browser.
+<7> Locate an element on the current page, in this case the page's heading.
+<8> Verify that the heading is the value you expect.
 
 You'll need to start up the test project as shown in the previous section before you run the test.  Then, when you run the test, you should see the browser open a page similar to figure <<hello-webdriver>>.
 
