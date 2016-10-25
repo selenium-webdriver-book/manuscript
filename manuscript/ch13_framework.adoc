@@ -183,7 +183,7 @@ Wrap both `WebElement` and `WebDriver` in new objects, and provide new methods t
 
 Well, how does this help us with waiting? We'd like to have a new method that allows us to find an element, but wait if it is not there. We've already got a method that supports finding elements, so you need to add another that supports waiting. You need to add the same code to two classes. How can you do this? Java 8 allows interfaces to have *default methods* footnote:[https://docs.oracle.com/javase/tutorial/java/IandI/defaultmethods.html]. An interface with a default method is very similar to an abstract class with a concrete methods while a class can only extend one abstract class but implements multiple interfaces.
 
-===== What we do in Java 8
+==== What we do in Java 8
 
 Due to the limitation with abstract class, we decided to use an interface for the purpose of adding explicit wait, but this works only in Java 8.
 
@@ -352,7 +352,7 @@ Guava library was a nice library to provide some nice Java 8 features. Java 8 ha
 
 And alternatively, how can we implement it in project using pre-Java 8 version.
 
-===== What we do in pre-Java 8
+==== What we do in pre-Java 8
 
 If you don't use Java 8, you need to define an empty `await` method in `ExplicitWait` interface and provide the implementation in each class which implements `ExplicitWait`,
 
