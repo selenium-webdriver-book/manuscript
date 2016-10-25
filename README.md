@@ -22,4 +22,8 @@ This book assumes you’re comfortable reading code in Java or a similar languag
 
 **Yujun Liang** is a Technical Agile Coach who teaches agile software development technologies including test automation using Selenium WebDriver. He used to work for ThoughtWorks and helped clients build automation testing for web applications with rich user interaction and complex business logic.
 
+![Yujun Liang](images/yujun-liang.jpg)
+
 **Alex Collins** is a Technical Architect in the UK, a technology blogger, public speaker, and OSS contributor. Alex has been working with Selenium WebDriver since 2011.
+
+![Alex Collins](images/alex-collins.jpg)
