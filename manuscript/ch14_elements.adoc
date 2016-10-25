@@ -116,7 +116,7 @@ From these two examples we demonstrated previously, you can see, there are dupli
 
 It's useful to encapsulate the locating and keying operations into one unit of work: find the element using a given locator, and then interact with the element. This interaction might be to type a value into the input field by entering text, clicking checkboxes, radio buttons, or selecting items from drop-down lists.
 
-===== Text and password inputs and textarea
+=== Text and password inputs and textarea
 
 Adding a `setInputText` method to the `Browser` class to handle the text field input:
 
@@ -191,7 +191,7 @@ public String getInputText(Supplier<By> by) {
 
 You can see how simple it became to set values into input or password fields, this method can be used to set value to a text area HTML element as well.
 
-===== Radio buttons
+=== Radio buttons
 
 We can add a `getRadio(By by)` method into `Browser` class to handle the request to read the value from a radio group to see which one is selected, the logic can be copied from Listing <<NaiveRadioIT>>. Now this `getRadio` can be used to serve that purpose and don't need to repeat the same code again in other tests,
 
@@ -268,7 +268,7 @@ browser.setRadio(Name.FREQUENCY, "monthly"); <1>
 
 These methods help make it easier to read or select a value from `radio` button group. Now, let's look at checkboxes.
 
-===== Checkbox
+=== Checkbox
 
 [[select-html]]
 image::checkbox.png[title=A Checkbox and "Inspect Element" view]
@@ -337,7 +337,7 @@ Again, the interaction of checkboxes is simplified to one method call and the de
 
 Now let us look at another common element, Select.
 
-===== Select and multiple select
+=== Select and multiple select
 
 The Selenium support library provides a `Select` class to handle drop-down operations. But while this works well with static HTML element, it assumes the `option` elements are embedded inside the `select` element as per figure <<select-html>> below.
 
@@ -393,7 +393,7 @@ public Select getSelectLambda(Supplier<By> by) {
 Also, in Java 8, keyword `final` is longer needed here but it is still a final variable
 ****
 
-===== Click and DoubleClick Mouse Action
+=== Click and DoubleClick Mouse Action
 
 Besides normal form elements, we can also encapsulate mouse action into `Browser`. Let us revisit Listing 3.11 link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch03interacting/MouseInputIT.java#L30-34[MouseInputIT.java]
 
