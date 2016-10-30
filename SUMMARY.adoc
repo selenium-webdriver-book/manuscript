@@ -1,23 +1,25 @@
+= Summary
 
-* [Part 1: Fundamentals](manuscript/part1.adoc)
-* [Chapter 1: First Steps](manuscript/ch01_first_steps.adoc)
-* [Chapter 2: Locating elements on a page](manuscript/ch02_locating_elements.adoc)
-* [Chapter 3: Interacting with elements on a page](manuscript/ch03_interacting_with_elements.adoc)
-* [Chapter 4: Examining a page](manuscript/ch04_examining_a_page.adoc)
-* [Chapter 4: Making maintainable tests using the Page Object pattern](manuscript/ch05_page_objects.adoc)
-* [Chapter 6: What To Do When Something Goes Wrong](manuscript/ch06_what_to_do.adoc)
-* [Part 2: WebDriver APIs In Depth](manuscript/part2.adoc)
-* [Chapter 7: Managing WebDriver](manuscript/ch07_managing_webdriver.adoc)
-* [Chapter 8: Windows, pop-ups, and frames](manuscript/ch08_windows.adoc)
-* [Chapter 9: Unicorns and other beasts: Exotic features of web pages](manuscript/ch09_unicorns.adoc)
-* [Chapter 10: Executing JavaScript using the `JavascriptExecutor` interface](manuscript/ch10_javascript.adoc)
-* [Chapter 11: What you need to know about different browsers](manuscript/ch11_drivers.adoc)
-* [Chapter 12: Wrapping WebDriver and WebElement](manuscript/ch12_wrapping.adoc)
-* [Part 3: Page Based Automation Framework](manuscript/part3.adoc)
-* [Chapter 13: Forming a Framework](manuscript/ch13_framework.adoc)
-* [Chapter 14: Encapsulating and Grouping elements](manuscript/ch14_elements.adoc)
-* [Chapter 15: Automating a page flow](manuscript/ch15_pageflow.adoc)
-* [Chapter 16: Examining HTML Tables](manuscript/ch16_table.adoc)
-* [Chapter 17: Automating jQuery Datepicker](manuscript/ch17_jquerydatepicker.adoc)
-* [Chapter 18: Datepicker Framework](manuscript/ch18_datepicker.adoc)
-* [Appendix A: Selenium Grid](manuscript/apA_selenium_grid.adoc)
+. link:manuscript/part1.adoc[Part 1: Fundamentals]
+.. link:manuscript/ch01_first_steps.adoc[Chapter 1: First Steps]
+.. link:manuscript/ch02_locating_elements.adoc[Chapter 2: Locating elements on a page]
+.. link:manuscript/ch03_interacting_with_elements.adoc[Chapter 3: Interacting with elements on a page]
+.. link:manuscript/ch04_examining_a_page.adoc[Chapter 4: Examining a page]
+.. link:manuscript/ch05_page_objects.adoc[Chapter 4: Making maintainable tests using the Page Object pattern]
+.. link:manuscript/ch06_what_to_do.adoc[Chapter 6: What To Do When Something Goes Wrong]
+. link:manuscript/part2.adoc[Part 2: WebDriver APIs In Depth]
+.. link:manuscript/ch07_managing_webdriver.adoc[Chapter 7: Managing WebDriver]
+.. link:manuscript/ch08_windows.adoc[Chapter 8: Windows, pop-ups, and frames]
+.. link:manuscript/ch09_unicorns.adoc[Chapter 9: Unicorns and other beasts: Exotic features of web pages]
+.. link:manuscript/ch10_javascript.adoc[Chapter 10: Executing JavaScript using the `JavascriptExecutor` interface]
+.. link:manuscript/ch11_drivers.adoc[Chapter 11: What you need to know about different browsers]
+.. link:manuscript/ch12_wrapping.adoc[Chapter 12: Wrapping WebDriver and WebElement]
+. link:manuscript/part3.adoc[Part 3: Page Based Automation Framework]
+.. link:manuscript/ch13_framework.adoc[Chapter 13: Forming a Framework]
+.. link:manuscript/ch14_elements.adoc[Chapter 14: Encapsulating and Grouping elements]
+.. link:manuscript/ch15_pageflow.adoc[Chapter 15: Automating a page flow]
+.. link:manuscript/ch16_table.adoc[Chapter 16: Examining HTML Tables]
+.. link:manuscript/ch17_jquerydatepicker.adoc[Chapter 17: Automating jQuery Datepicker]
+.. link:manuscript/ch18_datepicker.adoc[Chapter 18: Datepicker Framework]
+. link:manuscript/appendices.adoc[Appendices]
+..  link:manuscript/apA_selenium_grid.adoc[Appendix A: Selenium Grid]
