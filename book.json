@@ -1,6 +1,14 @@
 {
-    "plugins": ["anchors"],
-    "title": "Selenium WebDriver: From Fundamentals To Framework",
-    "author": "Alex Collins & Yujun Liang",
-    "language": "en"
+  "plugins": [
+    "anchors",
+    "ga"
+  ],
+  "title": "Selenium WebDriver: From Fundamentals To Framework",
+  "author": "Alex Collins & Yujun Liang",
+  "language": "en",
+  "pluginsConfig": {
+    "ga": {
+      "token": "UA-63355774-1"
+    }
+  }
 }
