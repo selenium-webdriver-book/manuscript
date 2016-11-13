@@ -1,11 +1,18 @@
 #!/bin/sh
 set -eux
 
-gitbook pdf
+git clean -fxd
+
+gitbook install
+
+# ePub
 gitbook epub
-gitbook mobi
 
 ./patch-epub.sh
 
 # brew install epubcheck
 epubcheck book.epub
+
+# other
+gitbook pdf
+gitbook mobi
