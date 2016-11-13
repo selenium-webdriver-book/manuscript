@@ -1,5 +1,6 @@
 {
     "plugins": ["anchors"],
     "title": "Selenium WebDriver: From Fundamentals To Framework",
-    "author": "Alex Collins & Yujun Liang"
+    "author": "Alex Collins & Yujun Liang",
+    "language": "en"
 }
