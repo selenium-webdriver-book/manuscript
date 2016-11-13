@@ -168,7 +168,7 @@ public class CreditCard {
 Where `CreditCardType` class is another enum with some major credit cards,
 
 [source,java]
-.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch15pageflow/domain/CreditCardType.java##L3-L20[CreditCardType.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch15pageflow/domain/CreditCardType.java#L3-L20[CreditCardType.java]
 ----
 public enum CreditCardType {
 

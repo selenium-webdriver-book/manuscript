@@ -27,7 +27,7 @@ The previously demonstrated code are well formed and very concise, but there is 
 
 We are going to move jQuery specific implementation out of main datepicker classes, so those classes can be used as framework code.
 
-We will rename Listing 17.23 link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch18datepicker/jquery/v3/Datepicker.java##L23-L29[JQueryDatepicker.java] to `Datepicker` to remove all jQuery specific implementation to accept general `Calendar`, `YearPicker`, `MonthPicker` and `DayPicker` classes as parameters.
+We will rename Listing 17.23 link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch18datepicker/jquery/v3/Datepicker.java#L23-L29[JQueryDatepicker.java] to `Datepicker` to remove all jQuery specific implementation to accept general `Calendar`, `YearPicker`, `MonthPicker` and `DayPicker` classes as parameters.
 
 [[datepicker-source]]
 [source,java]
@@ -410,7 +410,7 @@ public interface DayPicker {
 }
 ----
 
-And have the `JQueryDayPicker` implementing this interface and change its `pickDay` method to `pick`, link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch18datepicker/jquery/v3/JQueryDayPicker.java##L10-L24[JQueryDayPicker.java]
+And have the `JQueryDayPicker` implementing this interface and change its `pickDay` method to `pick`, link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch18datepicker/jquery/v3/JQueryDayPicker.java#L10-L24[JQueryDayPicker.java]
 
 [source,java]
 ----
@@ -586,7 +586,7 @@ public class BootstrapDayPicker implements DayPicker {
 <5> The first td same as the day string is the only one we are looking for
 <6> Wait for the calendar become invisible
 
-You can run the following test to see how it works, and the style of this test is more concise than Listing <<jQueryDatePickerPage-V5>>,
+You can run the following test to see how it works, and the style of this test is more concise than the previous listing,
 
 [source,java]
 .link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch18datepicker/tests/BootstrapDatepicker_v1_IT.java#L27-L33[BootstrapDatepicker_v1_IT.java]
@@ -679,7 +679,7 @@ First, implement the functions to read the year and month.
 We need to implement the functions to read the year and month information displayed on calendar, `ReactCalendarDisplayValue` implements `Function<Browser, Integer>` and we use its constants as the parameter for the constructor of `CalendarPicker` class in Listing <<CalendarPicker>>.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch18datepicker/react/ReactCalendarDisplayValue.java##L8-L38[ReactCalendarDisplayValue.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch18datepicker/react/ReactCalendarDisplayValue.java#L8-L38[ReactCalendarDisplayValue.java]
 ----
 import static swb.locators.react.ReactByClassName.CALENDAR;          <5>
 import static swb.locators.react.ReactByClassName.DISPLAY_MONTH_YEAR;   <6>
@@ -717,11 +717,11 @@ And ReactJS calendar controls for various buttons.
 
 ===== Organizing ReactJS Calendar Controls
 
-`ReactCalendarControls` implements `Consumer<Browser>` so its constants can be used as the parameter for the constructor of `CalendarPicker` class in Listing <<CalendarPicker>>. And `CalendarPicker` class is used as the parameters when constructing an instance of `Datepicker` class, as shown in Listing <<BoostrapDatepickerPage>>.
+`ReactCalendarControls` implements `Consumer<Browser>` so its constants can be used as the parameter for the constructor of `CalendarPicker` class in Listing <<CalendarPicker>>. And `CalendarPicker` class is used as the parameters when constructing an instance of `Datepicker` class, as shown in Listing for `BoostrapDatepickerPage`.
 
 [[ReactCalendarControls]]
 [source,java]
-.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch18datepicker/react/ReactCalendarControls.java##L7-L47[ReactCalendarControls.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch18datepicker/react/ReactCalendarControls.java£L7-L47[ReactCalendarControls.java]
 ----
 import static swb.locators.react.ReactByXpath.TRIGGER_BY;  <6>
 import static swb.locators.react.ReactByClassName.*;  <6>

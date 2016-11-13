@@ -408,7 +408,7 @@ new Actions(driver)
 We can move this logic of locating an element and creating an `Action` object and doubleClick it into `Browser` class as `doubleClick(by)` method.
 
 [source,java]
-.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch14elements/v5/Browser.java##L127-L130[Browser.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch14elements/v5/Browser.java#L127-L130[Browser.java]
 ----
 public void doubleClick(Supplier<By> by) {  <1>
     Element element = await(by);
@@ -654,6 +654,9 @@ On a page with many elements, a page object has become hard to understand becaus
 
 In software development, there is a technique called *Delegate Pattern* footnote:[https://en.wikipedia.org/wiki/Delegation_pattern], instead of having one class that does everything, it breaks out some helper classes to manage the details. The master class just delegates the work to its helper classes. It is widely used to reduce the complexity of the code. We are going to create page objects by composing objects together by applying this principle.
 
+[[billing-information]]
+image::billing-information.png[title=Billing Information Form]
+
 On some pages, there are many many elements that you need to interact with. If we expose all the elements via a page object, it will have many many methods. Lets consider the forms illustrated in Figure <<billing-information>> and <<Other_Information_Form>>, which are on the same page of bookstore application. To complete this form, you need complete over twenty fields, which could result in a page object with over twenty fields. Rather than have a single complex page object, this class could be broken up into two classes, one for the "billing information", and one for the "other information".
 
 For now, let us use the fields on __Other Information__ form (Figure <<Other Information Form>>) and write a `ShoppingCartPage` class to modify the value of those fields. We can see that it has the following fields:
@@ -716,7 +719,7 @@ And the test is lengthy too,
 
 [[longer_test]]
 [source,java]
-.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch14elements/tests/NaiveShoppingCartPageIT.java#L#L34-L47[NaiveShoppingCartPageIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch14elements/tests/NaiveShoppingCartPageIT.java#L34-L47[NaiveShoppingCartPageIT.java]
 ----
 @Test
 public void weShouldBeABleToCompleteOtherInformationIndividually() {

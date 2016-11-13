@@ -313,7 +313,7 @@ And add `LOCATION` to `Id` locator supplier enum,
 LOCATION("location"),
 ----
 
-You can see in the following test, `await` can be called from both `Browser` and `Element`, and this test is much smaller than Listing <<explicit-waits>>, only one quarter of the code, which explains why we want to use framework.
+You can see in the following test, `await` can be called from both `Browser` and `Element`, and this test is much smaller than Listing <<explicit-waits1>>, only one quarter of the code, which explains why we want to use framework.
 
 [[explicit-test]]
 [source,java]
@@ -397,6 +397,7 @@ Regardless whether you use Java 8 or not, the test is same as Listing <<explicit
 
 The examples give us a clear idea of some of the benefits of wrapping up common WebDriver classes. But you need to invoke the constructor of the `Element` every time you use the `await` method.
 
+[[less-optimal]]
 [source,java]
 ----
 Element tabMenu = new Element(browser.await(Id.LOCATION));
