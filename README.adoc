@@ -20,6 +20,12 @@ Web applications are difficult to test because so much depends on the way a user
 
 This book assumes you’re comfortable reading code in Java or a similar language and that you know the basics of building and testing applications. No WebDriver experience is required.
 
+== Errata and Discussion
+
+If you find any errors or problems with this book, or if you want to talk about the content:
+
+https://github.com/selenium-webdriver-book/manuscript/issues
+
 == About the authors
 
 image:yujun-liang.jpg[] **Yujun Liang** is a Technical Agile Coach who teaches agile software development technologies including test automation using Selenium WebDriver. He used to work for ThoughtWorks and helped clients build automation testing for web applications with rich user interaction and complex business logic.
