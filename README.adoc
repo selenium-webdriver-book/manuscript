@@ -16,15 +16,34 @@ Web applications are difficult to test because so much depends on the way a user
 * Making maintainable tests
 * Automated testing techniques
 
+== Testimonials
+
+Quotes from our early access reviewers:
+
+
+[quote]
+____
+Excellent coverage of a key technology in the web testing space.
+____
+
+[quote]
+____
+An essential book for anyone interested in doing WebDriver integration testing. You should have some familiarity with Java development (including basic use of Maven). It starts with basic Selenium WebDriver usage but there’s plenty more. It’s clear that the authors have been using this technology in a professional setting for quite some time as the book is littered with one technique after another which can be used to address problems one can expect when testing real world web applications.
+____
+
+[quote]
+____
+This book is a very practical guide to Selenium WebDriver. The book is loaded with practical examples with their solutions. I have already used techniques to solve problems at work.
+____
+
+[quote]
+____
+It’s a really good introduction to the framework and I like the way the authors have attempted to provide practical solutions to the problems one faces when trying to automate certain types of tests.
+____
+
 == About the reader
 
 This book assumes you’re comfortable reading code in Java or a similar language and that you know the basics of building and testing applications. No WebDriver experience is required.
-
-== Errata and Discussion
-
-If you find any errors or problems with this book, or if you want to talk about the content:
-
-https://github.com/selenium-webdriver-book/manuscript/issues
 
 == About the authors
 
