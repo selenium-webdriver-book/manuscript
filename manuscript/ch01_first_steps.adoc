@@ -276,7 +276,7 @@ Create a directory with this `pom.xml`:
 
 </project>
 ------------------------------------------------------------------------------------------------------------
-<1> You can choose a different browser, e.g. `selenium-firefox-driver` is for the Chrome browser.
+<1> You can choose a different browser, e.g. `selenium-firefox-driver` is for the Firefox browser.
 <2> Always use the latest version that is available.
 <3> Compile using the latest version of Java -- Java 1.8.
 <4> Make sure that tests are run using Maven's failsafe plugin.
