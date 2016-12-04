@@ -1,1 +1,15 @@
 Free, Selenium 3.0 compatible, and at over 420 pages this book will help you learn the fundamentals of the WebDriver API such as locating and interacting with web pages, through advanced topics such as Page Objects and mobile testing, and finally teach you how to build up your own web application testing framework.
+
+To download the book (it's free) go here:
+
+https://selenium-webdriver-book.github.io/?utm_source=github
+
+Quotes from our early access reviewers:
+
+> Excellent coverage of a key technology in the web testing space.
+
+> An essential book for anyone interested in doing WebDriver integration testing. You should have some familiarity with Java development (including basic use of Maven). It starts with basic Selenium WebDriver usage but there’s plenty more. It’s clear that the authors have been using this technology in a professional setting for quite some time as the book is littered with one technique after another which can be used to address problems one can expect when testing real world web applications.
+
+> This book is a very practical guide to Selenium WebDriver. The book is loaded with practical examples with their solutions. I have already used techniques to solve problems at work.
+
+> It’s a really good introduction to the framework and I like the way the authors have attempted to provide practical solutions to the problems one faces when trying to automate certain types of tests.

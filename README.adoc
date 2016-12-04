@@ -20,7 +20,6 @@ Web applications are difficult to test because so much depends on the way a user
 
 Quotes from our early access reviewers:
 
-
 [quote]
 ____
 Excellent coverage of a key technology in the web testing space.
@@ -40,6 +39,12 @@ ____
 ____
 It’s a really good introduction to the framework and I like the way the authors have attempted to provide practical solutions to the problems one faces when trying to automate certain types of tests.
 ____
+
+== Errata and Discussion
+
+If you find any errors or problems with this book, or if you want to talk about the content:
+  
+https://github.com/selenium-webdriver-book/manuscript/issues
 
 == About the reader
 
