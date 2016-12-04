@@ -231,7 +231,7 @@ Once we reach the target month, we need to click the day on the monthly calendar
 
 We learnt from earlier chapters that enum is a good practice to organize locators. And we are going to define enum constants to organize these locators, as illustrated by following table.
 
-.Elements, locators and enums for jQuery patepicker
+.Elements, locators and enums for jQuery datepicker
 [width="80%",cols="2,2,3",options="header"]
 |=====
 | Elements
