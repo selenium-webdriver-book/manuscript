@@ -7,7 +7,7 @@ This chapter covers
 * Extracting general purpose datepicker framework
 * Automating other datepickers using the framework
 
-In this chapter, we will continue from where we left on last chapter, refactor the code into a Datepicker framework and apply the framework in automating datepickerd built on other major JavaScript libraries such as Bootstrap, ReactJS, Material-UI and JsDatePick.
+In this chapter, we will continue from where we left on last chapter, refactor the code into a Datepicker framework and apply the framework in automating datepickers built on other major JavaScript libraries such as Bootstrap, ReactJS, Material-UI and JsDatePick.
 
 By the end of this chapter, not only you will learn the technique and apply it in your day to day work, you can also learn skills to apply the framework to many datepickers, as well as the principles and practices of developing an emergent framework and apply them in your career do develop frameworks to automate other web widgets that are not covered by this book.
 
@@ -751,7 +751,7 @@ public enum ReactCalendarControls implements Consumer<Browser> {    //<6>
     PREVIOUS_YEAR {...}  <5>
 }
 ----
-<1> Clicking the tigger to display the calendar
+<1> Clicking the trigger to display the calendar
 <2> Clicking the next month button
 <3> Clicking the previous month button
 <4> Since there is no next year button, clicking the next month button 12 times

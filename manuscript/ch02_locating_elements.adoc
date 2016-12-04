@@ -156,7 +156,7 @@ driver.findElement(By.name("email"));
 
 ==== Locating by element tag name
 
-This locator finds elements by their HTML tag name. Since there are often many repeating uses of most tags, it is not often possible to use this method to locate a single element. But it can be combined with other locators to effectively locate elements. One time you will find it useful is for locating the page's heading, as there is usuall only one of these:
+This locator finds elements by their HTML tag name. Since there are often many repeating uses of most tags, it is not often possible to use this method to locate a single element. But it can be combined with other locators to effectively locate elements. One time you will find it useful is for locating the page's heading, as there is usually only one of these:
 
 [source,html]
 ----
