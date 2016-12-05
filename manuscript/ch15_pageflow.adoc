@@ -687,7 +687,7 @@ public void addToCartAndSetSomeInformation() {
 <3> Transit to book page on the same browser
 <4> Click "add to cart" button
 <5> Click the cart image on top
-<6> In junit, method annotated with `@Before` is executed before each test method
+<6> In JUnit, method annotated with `@Before` is executed before each test method
 
 Then the exception flow in this method.
 
