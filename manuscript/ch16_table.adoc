@@ -32,7 +32,7 @@ Let is tale a loos of the HTML behind this table, there is an `id` attribute for
     </tbody>
 </table>
 ----
-<1> We assume when we develop a web application with a table, we use TH tag for table header.
+<1> We assume when we develop a web application with a table, we use `TH` tag for table header.
 
 From the table, how can we locate all the table cells? In Chapter 2 we introduced a technique related to locate a cell on a table using CssSelector. And in Chapter 12 we introduced an interface `Table` and provided a `SimpleTable` implementation for you to locate a cell by its row number and column number. We believe the technique in Chapter 12 greatly simplifies your tasks of locating cells with known positions on a table.
 
