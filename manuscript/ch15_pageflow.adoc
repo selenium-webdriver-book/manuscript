@@ -30,7 +30,7 @@ Let us start by visiting this famous bookstore at http://localhost:8080/bookstor
 [[Manning_Homepage]]
 image::bookstore.png[title=Bookstore Homepage]
 
-We are going to go to home page, search for a book called "Selenium WebDriver in Practice" and click the link on search results to load that book. Then click "add to cart" button to go to shopping cart page and enter required information to make a purchase. We will enter wrong information so the transaction won't go through. (But if you really like the book, you can give correct information and make a purchase.) The purchase flow can be illustrated by this diagram in Figure <<Page_Flow>>
+We are going to go to home page, search for a book called "Selenium WebDriver Book" and click the link on search results to load that book. Then click "add to cart" button to go to shopping cart page and enter required information to make a purchase. We will enter wrong information so the transaction won't go through. (But if you really like the book, you can give correct information and make a purchase.) The purchase flow can be illustrated by this diagram in Figure <<Page_Flow>>
 
 [[Page_Flow]]
 image::page-flow.png[title=Page Flow]
@@ -38,7 +38,7 @@ image::page-flow.png[title=Page Flow]
 In general, here are the steps to complete the purchase:
 
 * Enter http://localhost:8080/bookstore/ in the address bar and hit enter, land on the bookstore's home page as illustrated by Figure <<Manning_Homepage>>.
-* Type "Selenium WebDriver in Practice" into the search box and click the search button and get some search results.
+* Type "Selenium WebDriver Book" into the search box and click the search button and get some search results.
 * Click the first link on the page to go to the book details page.
 * Click "add to cart" button to add the book the the shopping cart.
 * Click the cart image button and it will take you to shopping cart page with these 3 forms.
@@ -683,11 +683,11 @@ public void addToCartAndSetSomeInformation() {
 }
 ----
 <1> Open Bookstore home page
-<2> Search a book called "Selenium WebDriver in Practice"
+<2> Search a book called "Selenium WebDriver Book"
 <3> Transit to book page on the same browser
 <4> Click "add to cart" button
 <5> Click the cart image on top
-<6> In junit, method annotated with `@Before` is executed before each test method
+<6> In JUnit, method annotated with `@Before` is executed before each test method
 
 Then the exception flow in this method.
 
