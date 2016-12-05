@@ -469,7 +469,7 @@ We then use the same framework to automate the datepicker built using Bootstrap.
 
 === Automating Bootstrap datepicker
 
-Bootstrap is a very popular web framework, so we are going to use its datapicker to demonstrate the applicability of this Datepicker framework. We are going to use Web Developer Tool to inspect the elements of this datepicker.
+Bootstrap is a very popular web framework, so we are going to use its datepicker to demonstrate the applicability of this Datepicker framework. We are going to use Web Developer Tool to inspect the elements of this datepicker.
 
 ==== Identifying the elements of Bootstrap datepicker
 

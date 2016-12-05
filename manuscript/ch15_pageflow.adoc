@@ -560,7 +560,7 @@ The confirmation page displays an order number, so the page class will have this
 
 image::ConfirmationPage.png[title=Confirmation page]
 
-And we can see the order number "#00008" is on a `span` with `class` attribute "order-number" on a containter with `id` attribute `orderNumber`, so we can find the container using `By.id("orderNumber")` first and narrow down the search using `By.className("order-number")` and put the logic inside the `getOrderNumber` method of `ConfirmationPage` class.
+And we can see the order number "#00008" is on a `span` with `class` attribute "order-number" on a container with `id` attribute `orderNumber`, so we can find the container using `By.id("orderNumber")` first and narrow down the search using `By.className("order-number")` and put the logic inside the `getOrderNumber` method of `ConfirmationPage` class.
 
 [[ConfirmationPage]]
 [source,java]
