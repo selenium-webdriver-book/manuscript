@@ -580,10 +580,10 @@ public class BootstrapDayPicker implements DayPicker {
 }
 ----
 <1> After clicking the day from the month, bootstrap doesn't closed the calendar so need to click outside the calendar to close it
-<2> Find the calendar and then find all td elements on the calendar
-<3> Find all td elements with the text same as the day string
+<2> Find the calendar and then find all `td` elements on the calendar
+<3> Find all `td` elements with the text same as the day string
 <4> Click it, that is the day we want to pick
-<5> The first td same as the day string is the only one we are looking for
+<5> The first `td` same as the day string is the only one we are looking for
 <6> Wait for the calendar become invisible
 
 You can run the following test to see how it works, and the style of this test is more concise than the previous listing,
@@ -784,9 +784,9 @@ public class ReactDayPicker implements DayPicker {
 }
 ----
 <1> Find the calendar and then find all div elements on the calendar
-<2> Find all td elements with the text same as the day string
+<2> Find all `td` elements with the text same as the day string
 <3> Click it, that is the day we want to pick
-<4> The first td same as the day string is the only one we are looking for
+<4> The first `td` same as the day string is the only one we are looking for
 <5> Wait for the calendar become invisible
 
 We then add `ReactDatepickerPage` class, just like what we did for jQuery and Bootstrap.
@@ -1094,7 +1094,7 @@ import static swb.locators.jsdatepick.JsDatepickById.*;
 import static swb.locators.jsdatepick.JsDatepickByClassName.*;
 ----
 
-But if you don't like the repeative method declaration in this enum, you can change the code to use the following style,
+But if you don't like the repetitive method declaration in this enum, you can change the code to use the following style,
 
 [source,java]
 .link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch18datepicker/jsdatepick/JsDatepickControlsLambda.java#L30-L41[JsDatepickControlsLambda.java]

@@ -153,7 +153,7 @@ We are going to introduce a domain class to represent the people table we are tr
 
 === Creating domain object super class
 
-Instead of using array of strings, we can create an entity class to represent the data on each row. For the particular table example, we will create a `Person` class. Unlike the Java class you might create for the production code, you may not need to provide getters for this class. But it does need at least an `equals` method for comparison and a `toString` method for debugging purposes. Now you can see by overriding the `equals` method in `Person` class, we effectively encapsulate the logic to compare two instance of `Person` class. We can create one instance and use it as the expectation and read the data row on one HTML table and create another instance, then we can use the `Assert.assertEquals` method from junit testing framework. While it will be cumbersome to use junit if you just extract the data into list of strings, the expectation data will not be type safe as shown before .
+Instead of using array of strings, we can create an entity class to represent the data on each row. For the particular table example, we will create a `Person` class. Unlike the Java class you might create for the production code, you may not need to provide getters for this class. But it does need at least an `equals` method for comparison and a `toString` method for debugging purposes. Now you can see by overriding the `equals` method in `Person` class, we effectively encapsulate the logic to compare two instance of `Person` class. We can create one instance and use it as the expectation and read the data row on one HTML table and create another instance, then we can use the `Assert.assertEquals` method from JUnit testing framework. While it will be cumbersome to use JUnit if you just extract the data into list of strings, the expectation data will not be type safe as shown before .
 
 In tests, We need to compare the equality of other domain objects and output debugging messages for developer to analyze the cause of the failure. So we need to provide some customized `equals`, `hashCode` and `toString` method to those classes as well. In order not to repeat those methods in every classes we create, we introduce this `DomainBase` class as the super class for those domain classes, so they don't need to provide these methods if the can use these default ones in `DomainBase` class,
 
@@ -383,7 +383,7 @@ public <T> String diff(List<T> rows1, List<T> rows2, String s) {   <7>
     return diff.isEmpty() ? "" : s + diff + "\n";  <6>
 }
 ----
-<1> This method is used to output the contents so junit can compare expected result with actual result.
+<1> This method is used to output the contents so JUnit can compare expected result with actual result.
 <2> Generate the difference of headers
 <3> Find out the rows in expected but not in actual
 <4> Find out the rows in actual but not in expected
@@ -659,7 +659,7 @@ public String describeDiff(CityTableContents other) {  <1>
 ----
 <1> The code in this method is almost same as `PersonTableContents`, the only different is the parameter `CityTableContents`
 
-And you can run the following test to verify the result. You need to comment out the line starting with `@Ignore` annotation to activate this test, otherwise it is ignored by junit test framework,
+And you can run the following test to verify the result. You need to comment out the line starting with `@Ignore` annotation to activate this test, otherwise it is ignored by JUnit test framework,
 
 [source,java]
 .link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch16table/tests/CityTable_v1_IT.java#L63-83[CityTable_v1_IT.java]

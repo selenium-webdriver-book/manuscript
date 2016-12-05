@@ -829,7 +829,7 @@ This will result in you seeing the browser loading and your page appearing as pe
 [[appium-android-flow]]
 image::appium-android-flow.png[title="Appium Android flow"]
 
-A couple of notes on Appium. First, it only supports a subset of locators: XPath and class name. Also, some methods, such as swbe and pinch, are not currently supported. But it is rapidly improving, so by the time you read this, this might have changed!
+A couple of notes on Appium. First, it only supports a subset of locators: XPath and class name. Also, some methods, such as swipe and pinch, are not currently supported. But it is rapidly improving, so by the time you read this, this might have changed!
 
 == Summary
 

@@ -797,7 +797,7 @@ This coding style makes test code more concise. But you don't have to use it if 
 
 Normally we don't include import statement for classes in the book, but we are going to show you all the import statements of this test. It doesn't import any classes or interfaces from Selenium Library, which mean we wrap WebDriver inside page object so the test code even doesn't have knowledge of Selenium WebDriver.
 
-Among the classes we import in this test, these are junit classes and static method.
+Among the classes we import in this test, these are JUnit classes and static method.
 
 [source,java]
 ----
