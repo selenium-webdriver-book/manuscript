@@ -361,7 +361,7 @@ Here is an example of clicking on an element:
             .click();
 ----
 
-To double-click the submit button, you could use the `Mouse` class (thought we'll show you a better way shortly):
+To double-click the submit button, you could use the `Mouse` class (though we'll show you a better way shortly):
 
 [source,java]
 .Double-clicking
