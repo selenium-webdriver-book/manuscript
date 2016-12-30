@@ -457,7 +457,7 @@ Consider this one, suggested by Chrome:
 #login > div:nth-child(1) > input.btn.btn-primary
 -------------------------------------------------
 
-If the divs were reordered, and this would no longer be valid. Optimal, easy to maintain selectors are concise and accurate.
+If the divs were reordered, then this would no longer be valid. Optimal, easy to maintain selectors are concise and accurate.
 
 === Locating table cells using CSS selectors
 
