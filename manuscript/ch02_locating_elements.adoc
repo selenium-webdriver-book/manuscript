@@ -138,7 +138,7 @@ If ID is available, make it your first choice.
 
 ==== Locating by input name
 
-This a locator which locates elements by the value of the `name` attribute. Normally it can only be used to locate form elements built using: `<input>`, `<button>`, `<select>`, and `<textarea>`. Remember, if the same name is used for multiple elements on the same page, only the first encountered element will be returned. So before using this locator, you need to check whether the name is unique on the page. If it is, then it can be used; otherwise, other locators (or combination thereof) will need to be used.
+This is a locator which locates elements by the value of the `name` attribute. Normally it can only be used to locate form elements built using: `<input>`, `<button>`, `<select>`, and `<textarea>`. Remember, if the same name is used for multiple elements on the same page, only the first encountered element will be returned. So before using this locator, you need to check whether the name is unique on the page. If it is, then it can be used; otherwise, other locators (or combination thereof) will need to be used.
 
 On the login page, there is an email input:
 
