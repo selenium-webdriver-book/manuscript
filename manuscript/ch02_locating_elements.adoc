@@ -878,7 +878,7 @@ Any one of these can be legitimately changed by their author. Nowhere in the lis
 
 === Using a common CSS class prefix to create your own automation namespace
 
-The HTML of the web site is designed for making the web site look good and customers happy. But what about our test automation? We can please everyone! This technique will show you how to mark up the HTML in such a way that changes to the HTML needed to styling or anything else won't affect your tests.
+The HTML of the web site is designed for making the web site look good and customers happy. But what about our test automation? We can please everyone! This technique will show you how to mark up the HTML in such a way that changes to the HTML needed for styling or anything else won't affect your tests.
 
 
 
