@@ -651,7 +651,7 @@ WebDriver provides a small support library. This contains a number of useful cla
 
 === Locating by ID or name
 
-This locator finds by the value of either ID or name attribute. This is useful for situations where you expect a page to change, and you want to be robust to that change. This is especially useful if the automation code doesn't live with the production code, and you can't guarantee they will get updated in step with one another. It is an example of __backward/forward__ compatibility. It means you can update you test before the change is made, and it will still pass both before and after the change has occured.
+This locator finds by the value of either ID or name attribute. This is useful for situations where you expect a page to change, and you want to be robust to that change. This is especially useful if the automation code doesn't live with the production code, and you can't guarantee they will get updated in step with one another. It is an example of __backward/forward__ compatibility. It means you can update you test before the change is made, and it will still pass both before and after the change has occurred.
 
 Consider this password input:
 
