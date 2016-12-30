@@ -461,7 +461,7 @@ If the divs were reordered, then this would no longer be valid. Optimal, easy to
 
 === Locating table cells using CSS selectors
 
-HTML tables are a common way to layout data on a web page. As you may wish to locate cell by the heading of the cell's column, then you need to do a series of look ups. Lets look at a technique to make accessing them less complex.
+HTML tables are a common way to layout data on a web page. As you may wish to locate cells by the heading of the cell's column, then you need to do a series of look ups. Lets look at a technique to make accessing them less complex.
 
 
 
