@@ -287,7 +287,7 @@ XPaths are complicated to write and costly to maintain.
 
 
 
-Create locator factories, similar to the methods on the `By` class, for complicated locators. My recommendation would be that because `By` method are not specific to an element, create one generic factory for locating without a tag name, named `ElementBy`, and then create one each for any tag you want to locate. For example, for locating `input` elements by the text of the label they are annotated with:
+Create locator factories, similar to the methods on the `By` class, for complicated locators. My recommendation would be that because `By` methods are not specific to an element, create one generic factory for locating without a tag name, named `ElementBy`, and then create one each for any tag you want to locate. For example, for locating `input` elements by the text of the label they are annotated with:
 
 [source,java]
 .link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch02locatingelements/InputBy.java[InputBy.java]
