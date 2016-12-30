@@ -277,7 +277,7 @@ XPath is good choice, but it's often better to try and solve locating problems u
 
 That's a great variety of locators! They are all orientated around the knowing the string that you need to pass to create it. For XPath and CSS locators, these can be long and complex. We can reduce the complexity of our code by encapsulating commonly used locators into small factories that we can then reuse. For example, rather than having a locator for finding inputs using an XPath, it might be easier to create a locator specifically for the task of locating inputs.
 
-=== Creating A Locator Factory For Complex Locators
+=== Creating a locator factory for complex locators
 
 You may find yourself creating locators that are similar to one another. For these common ones, you can reduce the verbosity of your code by having factories to create them.
 
