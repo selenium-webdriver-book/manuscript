@@ -354,7 +354,7 @@ Or multiple attributes:
 input[type='text'][name='email']
 ----
 
-Note that if the attribute is its default value, like `type` could be in this example, then its values will be  undefined. You will not be able to locate is this way.
+Note that if the attribute is its default value, like `type` could be in this example, then its values will be  undefined. You will not be able to locate it this way.
 
 You can also refine a locator by the attributes prefix:
 
