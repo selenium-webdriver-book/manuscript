@@ -515,7 +515,7 @@ table#users-table tbody tr:nth-child(1) td:nth-child(3)
 ----
 
 [sidebar]
-.CSS3 And HTML Unit Driver
+.CSS3 and HTML unit driver
 ****
 If you are using HTML Unit Driver, you may find that examples that use CSS3 selector syntax (like :nth-child) do not work.
 ****
