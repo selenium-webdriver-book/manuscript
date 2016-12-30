@@ -69,7 +69,7 @@ There a number of great reasons to choose WebDriver:
 
 == What WebDriver cannot do
 
-WebDriver provides a way to control a web browser, but that is all. When you buy a new car, you get a manual that will tell you how to operate the radio and how to change the oil. But that manual won't tell you the best place to get your car serviced, or teach you how to drive. Like driving a car, there are things you must do for yourself. Here are some things WebDriver does not do:
+WebDriver provides a way to control a web browser, but that is all. When you buy a new car, you get a manual that will tell you how to operate the radio and how change the oil. But that manual won't tell you the best place to get your car serviced, or teach you how to drive. Like driving a car, there are things you must do for yourself. Here are some things WebDriver does not do:
 
 * WebDriver doesn’t have the control of the timing of the elements appearing on web page. Some might appear later and you'll need to handle this yourself.
 * WebDriver does not know when things have changed on the page, so you can't ask it to tell you when things have changed.
