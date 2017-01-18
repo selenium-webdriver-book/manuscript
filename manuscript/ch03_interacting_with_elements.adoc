@@ -509,7 +509,7 @@ If you have a group of radio buttons, each button will have the same name. This 
 [source,java]
 ----
     driver
-        .findElement(By.xpath("//label[contains(.,'email')]/input]"))
+        .findElement(By.xpath("//label[contains(.,'email')]/input"))
         .click();
 ----
 
@@ -541,7 +541,7 @@ To working with a select, you wrap it in a `Select` object. The `Select` class i
 We can use the `Select` class as follows:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch03interacting/FormIT.java[FormIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch03interacting/RegistrationFormIT.java[RegistrationFormIT.java]
 ----
     new Select(driver.findElement(By.name("hearAbout")))
         .selectByVisibleText("Friend");
@@ -550,7 +550,7 @@ We can use the `Select` class as follows:
 `Select` can be used for single and multi-choice selects:
 
 [source,java]
-.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch03interacting/FormIT.java[FormIT.java]
+.link:https://github.com/selenium-webdriver-book/source/blob/master/src/test/java/swb/ch03interacting/RegistrationFormIT.java[RegistrationFormIT.java]
 ----
     Select interestsSelect = new Select(driver.findElement(By.name("interest")));
     interestsSelect.selectByVisibleText("Movies");
