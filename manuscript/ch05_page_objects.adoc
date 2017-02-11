@@ -509,7 +509,7 @@ Firstly, you'll call `PageFactory.initElements(driver, YourPageObject.class)`. T
 
 [sidebar]
 ****
-Page objects that use `PageFactory` must be created using `initElements` If this not used, the the object will have null fields and will not work as expected.
+Page objects that use `PageFactory` must be created using `initElements` If this is not used, the the object will have null fields and will not work as expected.
 ****
 
 Then, for each field in your object that is a `WebElement`, `PageFactory` determines the correct locator to find it. If it is annotated with the `@FindBy` annotation, then the `PageFactory` will use that to determine the locator. Otherwise, it assumes there is an element on the page who ID, or name is the same as the field's name.
