@@ -90,7 +90,7 @@ It also allows you to perform additional actions when there is an exception usin
 
 == Base URL driver
 
-In a chapter 7 we looked at a technique that allowed you to use base URL for your URLs in you test by inject the URL into you test class. To use that technique you need to modify every class that you wanted to use it in. This can be achieved by wrapping a web driver to automatically prefix the base URL if it is missing very time you invoke `get`.
+In a chapter 7 we looked at a technique that allowed you to use base URL for your URLs in your test by inject the URL into your test class. To use that technique you need to modify every class that you wanted to use it in. This can be achieved by wrapping a web driver to automatically prefix the base URL if it is missing very time you invoke `get`.
 
 === Creating a driver that automatically prefixes URLs with a base URL
 
@@ -167,7 +167,7 @@ Finally, you can use it in your code:
 driver.get("/index.html");
 ----
 
-And set it to different locations when you run you tests:
+And set it to different locations when you run your tests:
 
 [source,bash]
 ----
@@ -822,4 +822,4 @@ You will see extensive usage of this technique in part 3.
 * Providing an interface to access table cells on a `WebElement` representing a HTML table.
 * Wrapping `By` locators inside enum and let the enum implement `Supplier<By>` to simplify parameter passing
 
-This is the end of part two. In part three of this book we will look at how you can build a framework for you tests to run in that will reduce the amount of code you need write.
+This is the end of part two. In part three of this book we will look at how you can build a framework for your tests to run in that will reduce the amount of code you need write.
