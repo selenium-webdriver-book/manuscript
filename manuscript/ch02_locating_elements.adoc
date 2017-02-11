@@ -577,7 +577,7 @@ Next, lets look at an example of chaining search context together.
 
 === Narrowing down by locating within chained search contexts
 
-You can combine search contexts together. For example, if you can locate a form within a page, you can then easily find the submit button for that form by using the `findElement` method of the form. But if you need to search the whole page, you might have many buttons. Is this technique we will look at how we can chain searches together to find an element easily and accurately.
+You can combine search contexts together. For example, if you can locate a form within a page, you can then easily find the submit button for that form by using the `findElement` method of the form. But if you need to search the whole page, you might have many buttons. In this technique we will look at how we can chain searches together to find an element easily and accurately.
 
 
 

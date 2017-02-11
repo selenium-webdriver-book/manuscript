@@ -342,7 +342,7 @@ This is all rather laborious, when you just want simply click on an item. We wil
 
 === Clicking and double-clicking with the mouse
 
-The second main way to interact with a page is by clicking on elements using the mouse. Is this technique you'll see the two main ways you can achieve this using WebDriver, and meet the `Actions` class.
+The second main way to interact with a page is by clicking on elements using the mouse. In this technique you'll see the two main ways you can achieve this using WebDriver, and meet the `Actions` class.
 
 
 
