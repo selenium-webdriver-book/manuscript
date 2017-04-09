@@ -273,7 +273,7 @@ To enter text into this WYSWYG form you will:
 <3> Clear the existing text.
 <4> Send our unformatted text.
 <5> Switch back to the original frame.
-<6> Click the bold button.
+<6> Click the italic button.
 <7> Switch back to the editor.
 <8> Type italic text.
 <9> Switch back to root window.
