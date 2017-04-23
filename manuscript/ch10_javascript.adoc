@@ -431,8 +431,8 @@ Use the `JavascriptExecutor` interface to replace the `Notification` function wi
 ----
 Notification = function(title, options) { <1>
     var n = this;  <2>
-    Notification.title = title; <3>
-    Notification.options = options;
+    notificationTitle = title; <3>
+    notificationOptions = options;
     setTimeout(function() { <4>
         (n.onshow || function() {}) (); <5>
     }, 50);
